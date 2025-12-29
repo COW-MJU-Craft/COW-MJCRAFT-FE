@@ -19,11 +19,18 @@ const LoginPage = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
       {/* 로고 섹션 */}
       <div className="mb-10">
-        <img
-          src="/src/assets/logo1.png"
-          alt="Myongji University"
-          className="w-60 h-auto object-contain"
-        />
+        <a
+          href="https://www.mju.ac.kr/sites/mjukr/intro/intro.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <img
+            src="/src/assets/logo1.png"
+            alt="Myongji University"
+            className="w-60 h-auto object-contain"
+          />
+        </a>
       </div>
 
       <form onSubmit={handleLogin} className="w-full max-w-md space-y-6">
