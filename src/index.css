@@ -1,1 +1,15 @@
 @import 'tailwindcss';
+@import './styles/font.css';
+
+@theme {
+  --color-primary: #022964;
+  --color-app-bg: #f6f8fc;
+  --color-surface: #ffffff;
+}
+
+@layer base {
+  body {
+    background: var(--color-app-bg);
+    color: rgb(15 23 42);
+  }
+}

@@ -3,12 +3,12 @@ import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 import fs from 'fs';
 import path from 'path';
-import type { Connect } from 'vite';
+import type { Connect, Plugin } from 'vite';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    // 개발 환경에서만 동작하는 목업 엔드포인트
+const mockUsersPlugin = (): Plugin => {
+  return {
+    name: 'mock-users-writer',
+    apply: 'serve', // 개발 서버에서만 동작
     configureServer(server) {
       const mockFilePath = path.resolve(process.cwd(), 'mock-users.json');
 
@@ -29,13 +29,24 @@ export default defineConfig({
             res.end(JSON.stringify({ success: true }));
           } catch (error) {
             res.statusCode = 500;
-            res.end(JSON.stringify({ success: false, message: 'Failed to write mock file' }));
+            res.end(
+              JSON.stringify({
+                success: false,
+                message: 'Failed to write mock file',
+              })
+            );
           }
         });
       };
 
       server.middlewares.use(handler);
     },
+  };
+};
+
+export default defineConfig({
+  plugins: [react(), tailwindcss(), mockUsersPlugin()],
+  server: {
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

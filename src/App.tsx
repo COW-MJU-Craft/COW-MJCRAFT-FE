@@ -1,29 +1,32 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
+import { Route, Routes } from 'react-router-dom';
+import SiteLayout from './components/SiteLayout';
 import MainPage from './pages/MainPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
 
-function App() {
+function Placeholder({ title }: { title: string }) {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route
-            path="/main"
-            element={
-              <ProtectedRoute>
-                <MainPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <div className="mx-auto max-w-6xl px-4 py-12">
+      <h1 className="font-heading text-3xl text-primary">{title}</h1>
+      <p className="mt-2 text-slate-600">페이지 작업 예정</p>
+    </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<SiteLayout />}>
+        <Route path="/" element={<MainPage />} />
+
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+
+        <Route path="/about" element={<Placeholder title="명지공방 소개" />} />
+        <Route path="/resources" element={<Placeholder title="무료 배포" />} />
+        <Route path="/settlements" element={<Placeholder title="정산" />} />
+        <Route path="/contact" element={<Placeholder title="문의" />} />
+      </Route>
+    </Routes>
+  );
+}
