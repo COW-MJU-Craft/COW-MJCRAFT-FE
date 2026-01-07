@@ -1,7 +1,11 @@
-// src/pages/SettlementsPage.tsx
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Reveal from '../components/Reveal';
-import { calcReport, settlementsApi, sumItems } from '../api/settlements';
+import {
+  calcReport,
+  getItemTotal,
+  settlementsApi,
+  sumItems,
+} from '../api/settlements';
 import type { SettlementReport } from '../types/settlements';
 
 function money(n: number) {
@@ -41,42 +45,40 @@ export default function SettlementsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [term, setTerm] = useState<'all' | string>('all');
+  const mountedRef = useRef(true);
 
-  const load = () => {
-    setLoading(true);
-    setError(null);
-    settlementsApi
-      .list()
-      .then(setReports)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    // 초기값이 이미 loading=true, error=null 이라서
-    // effect 안에서 setState를 "동기"로 호출할 필요가 없음
+  const load = useCallback((options?: { reset?: boolean }) => {
+    const shouldReset = options?.reset ?? true;
+    if (shouldReset) {
+      setLoading(true);
+      setError(null);
+    }
     settlementsApi
       .list()
       .then((data) => {
-        if (cancelled) return;
+        if (!mountedRef.current) return;
         setReports(data);
         setError(null);
       })
       .catch((e) => {
-        if (cancelled) return;
+        if (!mountedRef.current) return;
         setError(e instanceof Error ? e.message : String(e));
       })
       .finally(() => {
-        if (cancelled) return;
+        if (!mountedRef.current) return;
         setLoading(false);
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      load({ reset: false });
+    }, 0);
+    return () => {
+      mountedRef.current = false;
+      window.clearTimeout(timerId);
+    };
+  }, [load]);
 
   const terms = useMemo(() => {
     const set = new Set(reports.map((r) => r.term));
@@ -95,12 +97,12 @@ export default function SettlementsPage() {
           <div>
             <h1 className="font-heading text-3xl text-primary">정산</h1>
             <p className="mt-2 text-slate-600">
-              학기별 정산 결과를 확인할 수 있어요.
+              학기별 정산 내역을 확인할 수 있어요.
             </p>
           </div>
 
           <button
-            onClick={load}
+            onClick={() => load()}
             className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             새로고침
@@ -108,7 +110,6 @@ export default function SettlementsPage() {
         </div>
       </Reveal>
 
-      {/* ✅ 학기 필터 */}
       <Reveal delayMs={60} className="mt-6 flex flex-wrap gap-2">
         <TabButton active={term === 'all'} onClick={() => setTerm('all')}>
           전체
@@ -122,17 +123,17 @@ export default function SettlementsPage() {
 
       {loading && (
         <Reveal className="mt-6 rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
-          불러오는 중...
+          정산 내역 불러오는 중...
         </Reveal>
       )}
 
       {!loading && error && (
         <Reveal className="mt-6 rounded-3xl border border-rose-200 bg-white p-8">
           <div className="text-sm font-bold text-rose-700">
-            정산 데이터를 불러오지 못했어요: {error}
+            정산 내역을 불러오지 못했습니다: {error}
           </div>
           <button
-            onClick={load}
+            onClick={() => load()}
             className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
           >
             다시 시도
@@ -142,7 +143,7 @@ export default function SettlementsPage() {
 
       {!loading && !error && filtered.length === 0 && (
         <Reveal className="mt-6 rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
-          표시할 정산 데이터가 없어요.
+          등록된 정산 내역이 없어요.
         </Reveal>
       )}
 
@@ -151,16 +152,14 @@ export default function SettlementsPage() {
           delayMs={90}
           className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white"
         >
-          {/* 표 헤더 */}
           <div className="grid grid-cols-12 gap-0 border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-bold text-slate-600">
-            <div className="col-span-4">프로젝트</div>
+            <div className="col-span-4">프로젝트명</div>
             <div className="col-span-2">학기</div>
             <div className="col-span-2 text-right">매출</div>
             <div className="col-span-2 text-right">지출</div>
-            <div className="col-span-2 text-right">잔액</div>
+            <div className="col-span-2 text-right">순이익</div>
           </div>
 
-          {/* 표 로우(아코디언) */}
           {filtered.map((r) => {
             const c = calcReport(r);
             const profitCls = c.profit >= 0 ? 'text-primary' : 'text-rose-600';
@@ -199,39 +198,37 @@ export default function SettlementsPage() {
                   </div>
                 </summary>
 
-                {/* 펼쳤을 때 상세 */}
                 <div className="px-5 pb-6 text-sm text-slate-700">
                   <div className="rounded-2xl bg-slate-50 p-4">
                     <div className="text-xs font-bold text-slate-600">요약</div>
                     <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
                       <div className="rounded-xl bg-white p-3">
-                        <div className="text-xs text-slate-500">총매출</div>
+                        <div className="text-xs text-slate-500">매출 합계</div>
                         <div className="mt-1 font-bold">
                           {money(c.salesTotal)}
                         </div>
                       </div>
                       <div className="rounded-xl bg-white p-3">
-                        <div className="text-xs text-slate-500">총지출</div>
+                        <div className="text-xs text-slate-500">지출 합계</div>
                         <div className="mt-1 font-bold">
                           {money(c.expenseTotal)}
                         </div>
                       </div>
                       <div className="rounded-xl bg-white p-3">
-                        <div className="text-xs text-slate-500">이익률</div>
+                        <div className="text-xs text-slate-500">수익률</div>
                         <div className={`mt-1 font-bold ${profitCls}`}>
                           {c.profitRate.toFixed(2)}%
                         </div>
                       </div>
                     </div>
 
-                    {/* 매출 */}
                     <div className="mt-6">
                       <div className="font-heading text-lg text-slate-900">
                         매출
                       </div>
                       {r.sales.length === 0 ? (
                         <div className="mt-2 text-sm text-slate-500">
-                          데이터 없음
+                          등록된 항목이 없어요.
                         </div>
                       ) : (
                         <div className="mt-3 space-y-2">
@@ -242,13 +239,13 @@ export default function SettlementsPage() {
                             >
                               <div className="text-slate-700">{it.label}</div>
                               <div className="font-bold text-slate-900">
-                                {money(it.amount)}
+                                {money(getItemTotal(it))}
                               </div>
                             </div>
                           ))}
                           <div className="mt-3 h-px bg-slate-200" />
                           <div className="flex items-center justify-between">
-                            <div className="font-bold text-slate-900">총계</div>
+                            <div className="font-bold text-slate-900">합계</div>
                             <div className="font-bold text-slate-900">
                               {money(sumItems(r.sales))}
                             </div>
@@ -257,7 +254,6 @@ export default function SettlementsPage() {
                       )}
                     </div>
 
-                    {/* 지출 */}
                     <div className="mt-8">
                       <div className="font-heading text-lg text-slate-900">
                         지출
@@ -265,7 +261,7 @@ export default function SettlementsPage() {
 
                       {r.expenseGroups.length === 0 ? (
                         <div className="mt-2 text-sm text-slate-500">
-                          데이터 없음
+                          등록된 항목이 없어요.
                         </div>
                       ) : (
                         <div className="mt-3 space-y-6">
@@ -295,7 +291,7 @@ export default function SettlementsPage() {
                                         {it.label}
                                       </div>
                                       <div className="font-bold text-slate-900">
-                                        {money(it.amount)}
+                                        {money(getItemTotal(it))}
                                       </div>
                                     </div>
                                   ))}
