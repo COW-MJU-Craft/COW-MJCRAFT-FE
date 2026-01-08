@@ -1,7 +1,6 @@
-ï»¿import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Reveal from '../components/Reveal';
-import { adminApi } from '../api/admin';
 import {
   loadAdminContent,
   saveAdminContent,
@@ -23,10 +22,9 @@ import AdminSettlementsSection from './admin/AdminSettlementsSection';
 import AdminEditSection from './admin/AdminEditSection';
 
 export default function AdminDashboardPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const section = location.hash.replace('#', '') || 'edit';
-  const [checking, setChecking] = useState(true);
+  const [checking] = useState(false);
   const [meName] = useState<string | null>(null);
   const [content, setContent] = useState<AdminContent>(() =>
     loadAdminContent()
@@ -50,16 +48,10 @@ export default function AdminDashboardPage() {
       map[term] = list;
     });
     return map;
-  }, [content.projectsIntro]);
-
-  useEffect(() => {
-    setChecking(false);
-  }, []);
-
-  if (checking) {
+  }, [content.projectsIntro]);  if (checking) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
-        ê´€ë¦¬ì ê¶Œí•œ í™•ì¸ ì¤‘...
+        °ü¸®ÀÚ ±ÇÇÑ È®ÀÎ Áß...
       </div>
     );
   }
@@ -75,10 +67,10 @@ export default function AdminDashboardPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="font-heading text-3xl text-primary">
-              ê´€ë¦¬ì ëŒ€ì‹œë³´ë“œ
+              °ü¸®ÀÚ ´ë½Ãº¸µå
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              {meName ? `${meName} ê³„ì •ìœ¼ë¡œ ë¡œê·¸ì¸ ë¨` : 'ê´€ë¦¬ì ê¶Œí•œ'}
+              {meName ? `${meName} °èÁ¤À¸·Î ·Î±×ÀÎ µÊ` : '°ü¸®ÀÚ ±ÇÇÑ'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -90,7 +82,7 @@ export default function AdminDashboardPage() {
               }}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
             >
-              {dirty ? 'ë³€ê²½ì‚¬í•­ ì €ì¥' : 'ì €ì¥ë¨'}
+              {dirty ? 'º¯°æ»çÇ× ÀúÀå' : 'ÀúÀåµÊ'}
             </button>
           </div>
         </div>
@@ -129,3 +121,6 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+
+
