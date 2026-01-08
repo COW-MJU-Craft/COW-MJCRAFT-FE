@@ -1,6 +1,8 @@
-﻿import { Link, Outlet, useLocation } from 'react-router-dom';
+﻿import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { adminApi } from '../api/admin';
 
 const NAV_ITEMS = [
+  { label: '회원정보 수정', href: '/admin#edit' },
   { label: '소개', href: '/admin#about' },
   { label: '링크', href: '/admin#links' },
   { label: '링크트리', href: '/admin#linktree' },
@@ -11,13 +13,14 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminLayout() {
+  const navigate = useNavigate();
   const location = useLocation();
-  const active = location.hash || '#about';
+  const active = location.hash || '#edit';
 
   return (
     <div className="min-h-screen bg-app-bg font-body text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4">
           <Link
             to="/admin"
             className="font-heading text-lg text-primary"
@@ -25,7 +28,7 @@ export default function AdminLayout() {
           >
             명지공방
           </Link>
-          <nav className="flex flex-wrap items-center gap-1">
+          <nav className="flex flex-1 flex-wrap items-center gap-1">
             {NAV_ITEMS.map((item) => {
               const hash = `#${item.href.split('#')[1] ?? ''}`;
               const isActive = active === hash;
@@ -45,6 +48,19 @@ export default function AdminLayout() {
               );
             })}
           </nav>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await adminApi.logout();
+              } finally {
+                navigate('/');
+              }
+            }}
+            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+          >
+            로그아웃
+          </button>
         </div>
       </header>
       <main className="pt-10">

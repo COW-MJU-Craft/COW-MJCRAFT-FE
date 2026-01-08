@@ -1,0 +1,9 @@
+﻿{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://54.180.142.40:8080/api/:path*"
+    }
+  ]
+}
