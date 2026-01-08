@@ -1,18 +1,18 @@
 ﻿// src/api/admin.ts
 import { api } from './client';
 
-export type AdminMe = {
-  id: number;
-  username: string;
-  role: string; // e.g. "ADMIN"
-};
+// export type AdminMe = {
+//   userId: number;
+//   username: string;
+//   role: string; // e.g. "ADMIN"
+// };
 
 export type AdminLoginBody = {
-  username: string;
+  userId: string;
   password: string;
 };
 
-const ADMIN_BASE = import.meta.env.VITE_ADMIN_API_BASE_URL ?? '/remote';
+const ADMIN_BASE = import.meta.env.VITE_API_BASE_URL ?? '/remote';
 
 function joinBase(path: string) {
   const base = ADMIN_BASE.endsWith('/') ? ADMIN_BASE.slice(0, -1) : ADMIN_BASE;
@@ -27,9 +27,9 @@ export const adminApi = {
     });
   },
 
-  me() {
-    return api<AdminMe>(joinBase('/api/admin/me'));
-  },
+  // me() {
+  //   return api<AdminMe>(joinBase('/api/admin/me'));
+  // },
 
   logout() {
     return api<void>(joinBase('/api/admin/logout'), { method: 'POST' });

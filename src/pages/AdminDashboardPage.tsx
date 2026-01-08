@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
   const location = useLocation();
   const section = location.hash.replace('#', '') || 'about';
   const [checking, setChecking] = useState(true);
-  const [meName, setMeName] = useState<string | null>(null);
+  const [meName] = useState<string | null>(null);
   const [content, setContent] = useState<AdminContent>(() =>
     loadAdminContent()
   );
@@ -49,22 +49,8 @@ export default function AdminDashboardPage() {
   }, [content.projectsIntro]);
 
   useEffect(() => {
-    let active = true;
-    adminApi
-      .me()
-      .then((me) => {
-        if (!active) return;
-        setMeName(me.username);
-        setChecking(false);
-      })
-      .catch(() => {
-        if (!active) return;
-        navigate('/admin/login');
-      });
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
+    setChecking(false);
+  }, []);
 
   if (checking) {
     return (

@@ -5,16 +5,12 @@ import { adminApi } from '../api/admin';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('admin');
+  const [userId, setUserId] = useState('admin');
   const [password, setPassword] = useState('admin1234');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [me, setMe] = useState<{
-    id: number;
-    username: string;
-    role: string;
-  } | null>(null);
+  const [me, setMe] = useState<null>(null);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -38,9 +34,7 @@ export default function AdminLoginPage() {
             setMe(null);
 
             try {
-              await adminApi.login({ username, password });
-              const data = await adminApi.me();
-              setMe(data);
+              await adminApi.login({ userId, password });
               navigate('/admin');
             } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
@@ -54,8 +48,8 @@ export default function AdminLoginPage() {
           <label className="block">
             <div className="mb-1 text-sm font-bold text-slate-700">아이디</div>
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
               autoComplete="username"
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
               placeholder="admin"
@@ -116,16 +110,7 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          {me && (
-            <div className="rounded-2xl bg-primary/10 p-4 text-sm font-bold text-primary">
-              관리자 확인 완료!
-              <div className="mt-2 text-xs text-slate-700">
-                <pre className="whitespace-pre-wrap break-words font-mono">
-                  {JSON.stringify(me, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
+          {me && null}
         </form>
       </Reveal>
     </div>

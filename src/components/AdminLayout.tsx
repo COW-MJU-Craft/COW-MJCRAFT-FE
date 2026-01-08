@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+﻿import { Link, Outlet, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { label: '소개', href: '/admin#about' },
@@ -15,7 +15,7 @@ export default function AdminLayout() {
   const active = location.hash || '#about';
 
   return (
-    <div className="min-h-screen bg-app-bg text-slate-900 font-body">
+    <div className="min-h-screen bg-app-bg font-body text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link
