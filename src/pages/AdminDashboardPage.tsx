@@ -7,7 +7,10 @@ import {
   saveAdminContent,
   type AdminContent,
 } from '../utils/adminContent';
-import { loadFeedbackEntries, type FeedbackEntry } from '../utils/feedbackStore';
+import {
+  loadFeedbackEntries,
+  type FeedbackEntry,
+} from '../utils/feedbackStore';
 import { loadAdminSettlements } from '../utils/adminSettlements';
 import type { SettlementReport } from '../types/settlements';
 import AdminAboutSection from './admin/AdminAboutSection';
@@ -17,11 +20,12 @@ import AdminLinktreeSection from './admin/AdminLinktreeSection';
 import AdminLinksSection from './admin/AdminLinksSection';
 import AdminProjectsSection from './admin/AdminProjectsSection';
 import AdminSettlementsSection from './admin/AdminSettlementsSection';
+import AdminEditSection from './admin/AdminEditSection';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const section = location.hash.replace('#', '') || 'about';
+  const section = location.hash.replace('#', '') || 'edit';
   const [checking, setChecking] = useState(true);
   const [meName] = useState<string | null>(null);
   const [content, setContent] = useState<AdminContent>(() =>
@@ -88,39 +92,22 @@ export default function AdminDashboardPage() {
             >
               {dirty ? '변경사항 저장' : '저장됨'}
             </button>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await adminApi.logout();
-                } finally {
-                  navigate('/');
-                }
-              }}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-            >
-              로그아웃
-            </button>
           </div>
         </div>
       </Reveal>
-
+      {section === 'edit' && <AdminEditSection />}
       {section === 'about' && (
         <AdminAboutSection content={content} updateContent={updateContent} />
       )}
-
       {section === 'links' && (
         <AdminLinksSection content={content} updateContent={updateContent} />
       )}
-
       {section === 'linktree' && (
         <AdminLinktreeSection content={content} updateContent={updateContent} />
       )}
-
       {section === 'projects' && (
         <AdminProjectsSection content={content} updateContent={updateContent} />
       )}
-
       {section === 'settlements' && (
         <AdminSettlementsSection
           settlements={settlements}
@@ -130,14 +117,12 @@ export default function AdminDashboardPage() {
           projectOptionsByTerm={projectOptionsByTerm}
         />
       )}
-
       {section === 'form' && (
         <AdminFeedbackFormSection
           content={content}
           updateContent={updateContent}
         />
       )}
-
       {section === 'feedback' && (
         <AdminFeedbackListSection entries={entries} setEntries={setEntries} />
       )}

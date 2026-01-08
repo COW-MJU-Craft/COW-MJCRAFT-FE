@@ -1,16 +1,17 @@
 ﻿import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../components/Reveal';
-import { adminApi } from '../api/admin';
+import { loadAdminEdit, verifyAdminEdit } from '../utils/adminEdit';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const [userId, setUserId] = useState('admin');
-  const [password, setPassword] = useState('admin1234');
+  const [userId, setUserId] = useState(() => loadAdminEdit().userId);
+  const [password, setPassword] = useState(
+    () => loadAdminEdit().password
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [me, setMe] = useState<null>(null);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -31,10 +32,12 @@ export default function AdminLoginPage() {
             e.preventDefault();
             setLoading(true);
             setError(null);
-            setMe(null);
 
             try {
-              await adminApi.login({ userId, password });
+              const isValid = verifyAdminEdit(userId, password);
+              if (!isValid) {
+                throw new Error('아이디 또는 비밀번호가 올바르지 않습니다.');
+              }
               navigate('/admin');
             } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
@@ -109,8 +112,6 @@ export default function AdminLoginPage() {
               </div>
             </div>
           )}
-
-          {me && null}
         </form>
       </Reveal>
     </div>
