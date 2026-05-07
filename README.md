@@ -45,6 +45,10 @@ src/
 
 - 개발 서버에서 `/api`는 `vite.config.ts`의 프록시 설정을 따릅니다.
 - 배포 환경에서는 `vercel.json` 리라이트 규칙을 사용합니다.
+- GA4를 사용하려면 `VITE_GA4_MEASUREMENT_ID`에 GA4 측정 ID(`G-...`)를 설정합니다.
+- 개발 확인용 footer 배지는 로컬 개발 환경에서 자동 표시되며, 배포 환경에서는 `VITE_SHOW_GA4_FOOTER_BADGE=true`일 때만 표시됩니다.
+- `VITE_GA4_DEBUG_MODE=true`를 설정하면 GA4 DebugView에서 page_view 이벤트를 확인할 수 있습니다.
+- `VITE_GA4_REPORT_URL`에 Analytics 리포트 URL을 넣으면 footer 배지에서 GA4 화면으로 이동할 수 있습니다.
 
 ## 스크립트
 

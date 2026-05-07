@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Header from './Header';
+import GoogleAnalyticsFooterStatus from './GoogleAnalyticsFooterStatus';
 import { noticesApi } from '../api/notices';
 import { formatYmd, parseDateLike } from '../utils/date';
 
@@ -317,10 +318,13 @@ export default function SiteLayout() {
               © {new Date().getFullYear()} MJU Craft Studio. All rights
               reserved.
             </p>
-            <p>
-              Designed &amp; built by{' '}
-              <span className="font-semibold text-slate-500">COW</span>
-            </p>
+            <div className="flex flex-col items-start gap-2 md:items-end">
+              <p>
+                Designed &amp; built by{' '}
+                <span className="font-semibold text-slate-500">COW</span>
+              </p>
+              {isHome && <GoogleAnalyticsFooterStatus />}
+            </div>
           </div>
         </div>
       </footer>
