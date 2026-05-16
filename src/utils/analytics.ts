@@ -2,12 +2,13 @@ export const GA4_MEASUREMENT_ID = (
   import.meta.env.VITE_GA4_MEASUREMENT_ID ?? ''
 ).trim();
 
-export const GA4_DEBUG_MODE = import.meta.env.VITE_GA4_DEBUG_MODE === 'true';
+export const GA4_DEBUG_MODE =
+  import.meta.env.DEV && import.meta.env.VITE_GA4_DEBUG_MODE === 'true';
 
 export const GA4_REPORT_URL = (import.meta.env.VITE_GA4_REPORT_URL ?? '').trim();
 
 export const SHOW_GA4_FOOTER_BADGE =
-  import.meta.env.DEV || import.meta.env.VITE_SHOW_GA4_FOOTER_BADGE === 'true';
+  import.meta.env.DEV && import.meta.env.VITE_SHOW_GA4_FOOTER_BADGE === 'true';
 
 export const isGA4Enabled = GA4_MEASUREMENT_ID.length > 0;
 
