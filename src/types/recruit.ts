@@ -15,7 +15,7 @@ export const DEPARTMENT_OPTIONS: Array<{ value: DepartmentType; label: string }>
   { value: 'MARKETING', label: '마케팅' },
   { value: 'DESIGN', label: '디자인' },
   { value: 'FINANCE', label: '재무' },
-  { value: 'OPERATION', label: '운영' },
+  { value: 'OPERATION', label: '기획' },
 ];
 
 export function getDepartmentLabel(value: DepartmentType | string | null): string {
