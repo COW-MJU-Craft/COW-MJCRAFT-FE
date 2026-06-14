@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Reveal from '../../components/Reveal';
 import { AlertCircle } from 'lucide-react';
+import AutoResizeTextarea from '../../components/AutoResizeTextarea';
 import {
   applicationsApi,
   type ApplicationFormResponse,
@@ -715,7 +716,7 @@ export default function ApplyPage() {
                     })}
                   </div>
                 ) : (
-                  <input
+                  <AutoResizeTextarea
                     value={String(value ?? '')}
                     onChange={(e) =>
                       handleAnswerChange(q.formQuestionId, e.target.value)
@@ -907,7 +908,7 @@ export default function ApplyPage() {
                         })}
                       </div>
                     ) : (
-                      <input
+                      <AutoResizeTextarea
                         value={String(value ?? '')}
                         onChange={(e) =>
                           handleAnswerChange(q.formQuestionId, e.target.value)
@@ -1101,7 +1102,7 @@ export default function ApplyPage() {
                         })}
                       </div>
                     ) : (
-                      <input
+                      <AutoResizeTextarea
                         value={String(value ?? '')}
                         onChange={(e) =>
                           handleAnswerChange(q.formQuestionId, e.target.value)
@@ -1266,7 +1267,7 @@ export default function ApplyPage() {
                     })}
                   </div>
                 ) : (
-                  <input
+                  <AutoResizeTextarea
                     value={String(value ?? '')}
                     onChange={(e) =>
                       handleAnswerChange(q.formQuestionId, e.target.value)
