@@ -44,13 +44,13 @@ export default function FloatingSns() {
   const kakaoUrl = snsLinks?.kakaoUrl ?? null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2.5 md:bottom-6 md:right-6 md:gap-3">
+    <div className="fixed bottom-6 right-6 z-50 hidden flex-col items-end gap-3 md:flex">
       {instagramUrl && (
         <a
           href={instagramUrl}
           target="_blank"
           rel="noreferrer"
-          className="h-11 w-11 overflow-hidden rounded-full shadow-lg md:h-13 md:w-13"
+          className="h-13 w-13 overflow-hidden rounded-full shadow-lg"
           aria-label="Instagram"
         >
           <img
@@ -66,7 +66,7 @@ export default function FloatingSns() {
           href={kakaoUrl}
           target="_blank"
           rel="noreferrer"
-          className="h-11 w-11 overflow-hidden rounded-full shadow-lg md:h-13 md:w-13"
+          className="h-13 w-13 overflow-hidden rounded-full shadow-lg"
           aria-label="Kakao"
         >
           <img
@@ -80,7 +80,7 @@ export default function FloatingSns() {
       <button
         type="button"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="h-11 w-11 rounded-full bg-[#002968] text-[11px] font-bold text-white shadow-lg md:h-13 md:w-13 md:text-sm"
+        className="h-13 w-13 rounded-full bg-[#002968] text-sm font-bold text-white shadow-lg"
       >
         TOP
       </button>
