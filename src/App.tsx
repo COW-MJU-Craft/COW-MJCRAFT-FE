@@ -41,7 +41,9 @@ import GoogleAnalytics from './components/GoogleAnalytics';
 
 export default function App() {
   const location = useLocation();
-  const hideFloatingSns = location.pathname.startsWith('/admin');
+  const hideFloatingSns =
+    location.pathname.startsWith('/admin') ||
+    location.pathname === '/apply/new';
 
   return (
     <>
