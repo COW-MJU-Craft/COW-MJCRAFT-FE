@@ -32,6 +32,10 @@ export function formatYmd(value: DateLike): string {
     if (!y || !m || !d) return '-';
     return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   }
-  if (typeof value === 'string') return value.trim() || '-';
+  if (typeof value === 'string') {
+    const date = parseDateLike(value);
+    if (date) return formatYmd(date);
+    return value.trim() || '-';
+  }
   return '-';
 }

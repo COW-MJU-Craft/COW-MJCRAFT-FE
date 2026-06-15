@@ -37,13 +37,28 @@ function isLikelyFileKey(value: string) {
   );
 }
 
+function getDisplayFileName(answer: AdminApplicationAnswerItem) {
+  const fromServer = answer.fileName?.trim();
+  if (fromServer) return fromServer;
+
+  const value = answer.value?.trim() ?? '';
+  if (!value) return '첨부 파일';
+  if (isLikelyUrl(value)) return value;
+
+  const lastSegment = value.split('/').filter(Boolean).pop() ?? value;
+  return lastSegment.replace(
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-/,
+    '',
+  );
+}
+
 function getQuestionLabel(
   questionMap: Record<number, AdminFormQuestion>,
   formQuestionId: number,
 ) {
   const q = questionMap[formQuestionId];
-  if (!q) return `Q#${formQuestionId}`;
-  return q.label?.trim() || `Q#${formQuestionId}`;
+  if (!q) return '질문';
+  return q.label?.trim() || '질문';
 }
 
 function getQuestionAnswerType(
@@ -67,8 +82,11 @@ function AnswerCard({
   const fileLike =
     answerType.includes('FILE') || isLikelyUrl(value) || isLikelyFileKey(value);
 
-  const fileUrl = (answer.fileUrl ?? '').trim();
-  const hasFileUrl = /^https?:\/\//i.test(fileUrl);
+  const previewUrl = (answer.previewUrl ?? answer.fileUrl ?? '').trim();
+  const downloadUrl = (answer.downloadUrl ?? answer.fileUrl ?? '').trim();
+  const hasPreviewUrl = /^https?:\/\//i.test(previewUrl);
+  const hasDownloadUrl = /^https?:\/\//i.test(downloadUrl);
+  const displayFileName = getDisplayFileName(answer);
 
   const handleCopy = async () => {
     if (!value) return;
@@ -85,36 +103,47 @@ function AnswerCard({
       <p className="text-xs font-semibold text-slate-500">
         {getQuestionLabel(questionMap, answer.formQuestionId)}
       </p>
-      <p className="mt-0.5 text-[11px] text-slate-400">
-        Q#{answer.formQuestionId}
-      </p>
 
       {!value ? (
         <p className="mt-2 text-sm text-slate-500">응답 없음</p>
       ) : fileLike ? (
         <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
-          <p className="truncate text-xs text-slate-500">{value}</p>
+          <p className="truncate text-sm font-semibold text-slate-700">
+            {displayFileName}
+          </p>
 
           <div className="mt-2 flex flex-wrap gap-2">
-            {hasFileUrl ? (
+            {hasPreviewUrl && (
               <a
-                href={fileUrl}
+                href={previewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
-                파일 열기/다운로드
+                미리보기
               </a>
-            ) : isLikelyUrl(value) ? (
+            )}
+            {hasDownloadUrl && (
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-95"
+              >
+                다운로드
+              </a>
+            )}
+            {!hasPreviewUrl && !hasDownloadUrl && isLikelyUrl(value) && (
               <a
                 href={value}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
-                파일 열기/다운로드
+                파일 열기
               </a>
-            ) : (
+            )}
+            {!hasPreviewUrl && !hasDownloadUrl && !isLikelyUrl(value) && (
               <button
                 type="button"
                 onClick={() => void handleCopy()}
@@ -125,9 +154,9 @@ function AnswerCard({
             )}
           </div>
 
-          {!hasFileUrl && !isLikelyUrl(value) && (
+          {!hasPreviewUrl && !hasDownloadUrl && !isLikelyUrl(value) && (
             <p className="mt-2 text-[11px] text-amber-600">
-              fileUrl이 없어 파일 키만 표시합니다.
+              파일 링크가 없어 파일 키만 복사할 수 있어요.
             </p>
           )}
         </div>
@@ -182,7 +211,7 @@ export default function AdminApplicationDetailPage() {
 
   const dateLabel = useMemo(() => {
     if (!detail) return '-';
-    const date = parseDateLike(detail.updatedAt ?? detail.createdAt);
+    const date = parseDateLike(detail.createdAt ?? detail.updatedAt);
     return date ? formatYmd(date) : '-';
   }, [detail]);
 
@@ -210,7 +239,7 @@ export default function AdminApplicationDetailPage() {
 
     const ok = await confirm.open({
       title: '지원서 삭제',
-      description: `지원서(${detail.applicationId})를 삭제할까요?`,
+      description: '이 지원서를 삭제할까요?',
       danger: true,
       confirmText: '삭제',
     });
@@ -219,10 +248,10 @@ export default function AdminApplicationDetailPage() {
 
     try {
       await adminApplicationsApi.delete(String(detail.applicationId));
-      toast.success('삭제되었습니다.');
+      toast.success('지원서를 삭제했어요.');
       navigate(`/admin/applications?formId=${formId}`);
     } catch {
-      toast.error('삭제에 실패했습니다.');
+      toast.error('지원서를 삭제하지 못했어요.');
     }
   }, [confirm, detail, formId, navigate, toast]);
 
@@ -279,13 +308,12 @@ export default function AdminApplicationDetailPage() {
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-slate-500">
-              #{detail.applicationId}
+            <p className="text-lg font-bold text-slate-900">
+              {detail.applicantName?.trim() || '이름 없음'}
             </p>
-            <p className="mt-1 text-lg font-bold text-slate-900">
-              {detail.studentId}
+            <p className="mt-1 text-xs text-slate-500">
+              학번 {detail.studentId} · 접수일 {dateLabel}
             </p>
-            <p className="mt-1 text-xs text-slate-500">{dateLabel}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -319,6 +347,23 @@ export default function AdminApplicationDetailPage() {
         className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div className="space-y-6">
+          <section>
+            <h2 className="text-sm font-bold text-slate-700">기본 정보</h2>
+            <div className="mt-2 space-y-2 text-sm text-slate-600">
+              {(detail.basicAnswers ?? []).length === 0 ? (
+                <p>추가 기본 정보가 없습니다.</p>
+              ) : (
+                (detail.basicAnswers ?? []).map((ans) => (
+                  <AnswerCard
+                    key={`basic-${ans.formQuestionId}`}
+                    answer={ans}
+                    questionMap={questionMap}
+                  />
+                ))
+              )}
+            </div>
+          </section>
+
           <section>
             <h2 className="text-sm font-bold text-slate-700">공통 질문</h2>
             <div className="mt-2 space-y-2 text-sm text-slate-600">

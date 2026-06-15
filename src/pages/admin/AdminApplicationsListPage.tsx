@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Search, X } from 'lucide-react';
 import Reveal from '../../components/Reveal';
+import BackArrowIcon from '../../components/BackArrowIcon';
 import { useConfirm } from '../../components/confirm/useConfirm';
 import { useToast } from '../../components/toast/useToast';
 import {
@@ -24,6 +26,21 @@ const RESULT_OPTIONS: Array<{
 
 type SortOrder = 'desc' | 'asc';
 
+const RESULT_LABELS = RESULT_OPTIONS.reduce<
+  Partial<Record<AdminApplicationResultStatus, string>>
+>((acc, option) => {
+  if (option.value !== 'all') acc[option.value] = option.label;
+  return acc;
+}, {});
+
+function getFormStatusLabel(open: boolean) {
+  return open ? '현재 모집 중' : '비공개';
+}
+
+function getResultStatusLabel(status: AdminApplicationResultStatus) {
+  return RESULT_LABELS[status] ?? status;
+}
+
 export default function AdminApplicationsListPage() {
   const confirm = useConfirm();
   const toast = useToast();
@@ -42,6 +59,12 @@ export default function AdminApplicationsListPage() {
     'all' | AdminApplicationResultStatus
   >('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const selectedFormId = params.get('formId') ?? '';
+  const selectedForm = forms.find(
+    (form) => String(form.formId) === selectedFormId,
+  );
+  const selectedFormTitle = selectedForm?.title ?? '선택한 지원서';
+  const hasActiveFilter = query.trim() !== '' || resultFilter !== 'all';
 
   const load = useCallback(async (targetFormId: string) => {
     if (!targetFormId.trim()) {
@@ -96,6 +119,7 @@ export default function AdminApplicationsListPage() {
       if (!normalized) return true;
       return (
         item.studentId.toLowerCase().includes(normalized) ||
+        (item.applicantName ?? '').toLowerCase().includes(normalized) ||
         String(item.applicationId).includes(normalized)
       );
     });
@@ -123,7 +147,7 @@ export default function AdminApplicationsListPage() {
     async (item: AdminApplicationListItem) => {
       const ok = await confirm.open({
         title: '지원서 삭제',
-        description: `지원서(${item.applicationId})를 삭제할까요?`,
+        description: '이 지원서를 삭제할까요?',
         danger: true,
         confirmText: '삭제',
       });
@@ -131,11 +155,11 @@ export default function AdminApplicationsListPage() {
 
       try {
         await adminApplicationsApi.delete(String(item.applicationId));
-        toast.success('삭제되었습니다.');
+        toast.success('지원서를 삭제했어요.');
         const currentFormId = params.get('formId') ?? '';
         if (currentFormId) await load(currentFormId);
       } catch {
-        toast.error('삭제에 실패했습니다.');
+        toast.error('지원서를 삭제하지 못했어요.');
       }
     },
     [confirm, load, params, toast],
@@ -146,9 +170,20 @@ export default function AdminApplicationsListPage() {
       <Reveal>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-heading text-3xl text-primary">지원서 관리</h1>
+            <div className="mb-4">
+              <Link
+                to="/admin/forms"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-700"
+              >
+                <BackArrowIcon className="h-5 w-5" />
+                지원서 관리
+              </Link>
+            </div>
+            <h1 className="font-heading text-3xl text-primary">지원자 보기</h1>
             <p className="mt-2 text-sm text-slate-600">
-              '모집 양식을 선택하면 해당 지원서 목록을 조회할 수 있습니다.'
+              {selectedFormId
+                ? `${selectedFormTitle}에 제출한 지원자를 확인할 수 있어요`
+                : '지원서를 선택하면 지원자가 제출한 내용을 확인할 수 있어요'}
             </p>
           </div>
         </div>
@@ -156,50 +191,83 @@ export default function AdminApplicationsListPage() {
 
       <Reveal
         delayMs={120}
-        className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="mt-6 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
       >
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          {formsLoading ? (
-            <div className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-400 md:w-72">
-              양식 목록 불러오는 중...
-            </div>
-          ) : forms.length > 0 ? (
-            <select
-              value={formId}
-              onChange={(e) => setFormId(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:w-72"
-            >
-              <option value="">양식 선택</option>
-              {forms.map((form) => (
-                <option key={form.formId} value={String(form.formId)}>
-                  [{form.open ? 'OPEN' : 'CLOSE'}] {form.title}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              value={formId}
-              onChange={(e) => setFormId(e.target.value)}
-              placeholder="formId 입력"
-              className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:w-64"
-            />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-bold text-slate-900">지원자 목록</p>
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+              {filtered.length > 0
+                ? `${filtered.length}명`
+                : hasActiveFilter
+                  ? '검색 결과 없음'
+                  : '지원자 없음'}
+            </span>
+            {list.length !== filtered.length && (
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                전체 {list.length}명
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-end">
+          {!selectedFormId && (
+            <>
+              {formsLoading ? (
+                <div className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm text-slate-400 lg:w-72">
+                  지원서 목록을 불러오는 중...
+                </div>
+              ) : forms.length > 0 ? (
+                <select
+                  value={formId}
+                  onChange={(e) => setFormId(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 lg:w-72"
+                >
+                  <option value="">지원서 선택</option>
+                  {forms.map((form) => (
+                    <option key={form.formId} value={String(form.formId)}>
+                      [{getFormStatusLabel(form.open)}] {form.title}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={formId}
+                  onChange={(e) => setFormId(e.target.value)}
+                  placeholder="지원서 ID 입력"
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 lg:w-64"
+                />
+              )}
+
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-95"
+              >
+                조회
+              </button>
+            </>
           )}
 
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-95"
-          >
-            조회
-          </button>
-
-          <div className="flex w-full flex-col gap-2 md:flex-1 md:flex-row md:items-center md:justify-end">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="학번/지원서ID 검색"
-              className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:w-64"
-            />
+            <div className="relative w-full lg:w-72">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="이름/학번 검색"
+                className="w-full rounded-2xl border border-slate-200 py-2.5 pl-10 pr-10 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  className="absolute right-2.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="검색어 지우기"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
             <select
               value={resultFilter}
               onChange={(e) =>
@@ -207,7 +275,7 @@ export default function AdminApplicationsListPage() {
                   e.target.value as AdminApplicationResultStatus | 'all',
                 )
               }
-              className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700"
+              className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"
             >
               {RESULT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -218,7 +286,7 @@ export default function AdminApplicationsListPage() {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-              className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700"
+              className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"
             >
               <option value="desc">최신순</option>
               <option value="asc">오래된순</option>
@@ -244,27 +312,24 @@ export default function AdminApplicationsListPage() {
 
         <div className="divide-y divide-slate-100">
           {filtered.map((item) => {
-            const date = formatYmd(item.updatedAt ?? item.createdAt);
+            const date = formatYmd(item.createdAt ?? item.updatedAt);
+            const applicantName = item.applicantName?.trim() || '이름 없음';
             return (
-              <div
-                key={item.applicationId}
-                className="flex items-center gap-4 py-4"
-              >
-                <div className="w-24 text-xs font-semibold text-slate-500">
-                  #{item.applicationId}
-                </div>
+              <div key={item.applicationId} className="flex items-center gap-4 py-4">
                 <div className="flex-1">
                   <p className="text-sm font-bold text-slate-900">
-                    {item.studentId}
+                    {applicantName}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">{date}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    학번 {item.studentId} · 접수일 {date}
+                  </p>
                   <p className="mt-1 text-xs text-slate-500">
                     1지망 {getDepartmentLabel(item.firstDepartment)} / 2지망{' '}
                     {getDepartmentLabel(item.secondDepartment)}
                   </p>
                 </div>
                 <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-                  {item.resultStatus}
+                  {getResultStatusLabel(item.resultStatus)}
                 </span>
                 <div className="flex gap-2">
                   <Link
