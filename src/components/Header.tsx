@@ -16,8 +16,13 @@ export default function Header() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setMobileHeaderVisible(true);
+    const frame = window.requestAnimationFrame(() => {
+      setMobileHeaderVisible(true);
+    });
     lastScrollYRef.current = window.scrollY;
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
   }, [location.hash, location.pathname, location.search]);
 
   useEffect(() => {

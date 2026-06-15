@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import type { Project } from '../api/projects';
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -75,12 +75,6 @@ export default function ApplyForm({ project }: { project: Project }) {
     depositDate: '',
     depositAmount: '',
   });
-
-  useEffect(() => {
-    if (buyer.campus === '자연캠퍼스') {
-      setPickup((prev) => ({ ...prev, method: '택배 배송' }));
-    }
-  }, [buyer.campus]);
 
   const totalOrderQty =
     order.stickerQty + order.badgeQty + order.keyringQty;
@@ -302,12 +296,16 @@ export default function ApplyForm({ project }: { project: Project }) {
               </div>
               <select
                 value={buyer.campus}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const campus = e.target.value as BuyerInfo['campus'];
                   setBuyer((prev) => ({
                     ...prev,
-                    campus: e.target.value as BuyerInfo['campus'],
-                  }))
-                }
+                    campus,
+                  }));
+                  if (campus === '자연캠퍼스') {
+                    setPickup((prev) => ({ ...prev, method: '택배 배송' }));
+                  }
+                }}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
               >
                 <option value="" disabled>

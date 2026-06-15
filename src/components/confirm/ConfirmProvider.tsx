@@ -1,35 +1,12 @@
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PropsWithChildren,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 import ConfirmModal from '../ConfirmModal';
-
-export type ConfirmOptions = {
-  title: string;
-  description?: string;
-  confirmText?: string;
-  cancelText?: string;
-  danger?: boolean;
-  confirmDisabled?: boolean;
-};
-
-type ConfirmContextValue = {
-  open: (options: ConfirmOptions) => Promise<boolean>;
-  run: (options: ConfirmOptions, action: () => Promise<void>) => Promise<boolean>;
-};
+import { ConfirmContext, type ConfirmOptions } from './ConfirmContext';
 
 type ConfirmState = {
   open: boolean;
   loading: boolean;
   options: ConfirmOptions;
 };
-
-export const ConfirmContext = createContext<ConfirmContextValue | null>(null);
 
 const DEFAULT_OPTIONS: ConfirmOptions = {
   title: '확인',

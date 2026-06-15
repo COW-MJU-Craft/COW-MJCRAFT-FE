@@ -18,6 +18,16 @@ type AdminIntroduceMainEditorState = {
   heroLogos: HeroLogoItem[];
 };
 
+type AdminIntroduceMainResponse = {
+  title?: string | null;
+  subtitle?: string | null;
+  summary?: string | null;
+  heroLogos?: Array<{
+    key?: string | null;
+    imageUrl?: string | null;
+  }> | null;
+} | null;
+
 const DEFAULT_MAIN: AdminIntroduceMainEditorState = {
   title: '',
   subtitle: '',
@@ -47,7 +57,9 @@ async function uploadToS3(uploadUrl: string, file: File, contentType: string) {
   if (!response.ok) throw new Error('S3 업로드에 실패했습니다.');
 }
 
-function normalizeMain(payload: any): AdminIntroduceMainEditorState {
+function normalizeMain(
+  payload: AdminIntroduceMainResponse,
+): AdminIntroduceMainEditorState {
   if (!payload) return DEFAULT_MAIN;
 
   return {
@@ -56,7 +68,7 @@ function normalizeMain(payload: any): AdminIntroduceMainEditorState {
     summary: payload.summary ?? '',
     heroLogos: Array.isArray(payload.heroLogos)
       ? payload.heroLogos
-          .map((l: any) => ({
+          .map((l) => ({
             key: (l.key ?? '').trim(),
             imageUrl: l.imageUrl ?? undefined,
           }))

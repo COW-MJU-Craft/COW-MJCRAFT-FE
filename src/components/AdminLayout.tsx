@@ -5,10 +5,6 @@ import AdminHeaderMobile from './AdminHeaderMobile';
 import { isLoggedIn } from '../utils/auth';
 
 export default function AdminLayout() {
-  if (!isLoggedIn()) {
-    return <Navigate to="/login" replace />;
-  }
-
   const location = useLocation();
   const [mobileHeaderVisible, setMobileHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
@@ -70,6 +66,10 @@ export default function AdminLayout() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  if (!isLoggedIn()) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-app-bg text-slate-900">

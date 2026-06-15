@@ -1,28 +1,11 @@
-import { createContext, useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
-
-export type ToastType = 'success' | 'error' | 'info';
-
-export type ToastPayload = {
-  type: ToastType;
-  message: string;
-  durationMs?: number;
-};
-
-type ToastContextValue = {
-  show: (payload: ToastPayload) => void;
-  success: (message: string, durationMs?: number) => void;
-  error: (message: string, durationMs?: number) => void;
-  info: (message: string, durationMs?: number) => void;
-  clear: () => void;
-};
+import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
+import { ToastContext, type ToastPayload, type ToastType } from './ToastContext';
 
 type ToastState = {
   type: ToastType;
   message: string;
   durationMs: number;
 } | null;
-
-export const ToastContext = createContext<ToastContextValue | null>(null);
 
 const DEFAULT_DURATION_MS = 3000;
 
