@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import ApplicationCheckForm from '../../components/ApplicationCredentialForm';
 import { applicationsApi } from '../../api/applications';
@@ -23,7 +24,15 @@ function normalizeResult(raw?: string | null) {
   return { label: raw ?? '미발표', tone: 'neutral' as ResultTone };
 }
 
+function parseFormIdParam(value: string | null) {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 export default function ApplicationResultPage() {
+  const [searchParams] = useSearchParams();
+  const formId = parseFormIdParam(searchParams.get('formId'));
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -98,6 +107,7 @@ export default function ApplicationResultPage() {
     setLoading(true);
     try {
       const res = await applicationsApi.getResult({
+        formId,
         studentId: studentId.trim(),
         password: password.trim(),
       });
