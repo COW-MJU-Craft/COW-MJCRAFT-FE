@@ -897,7 +897,7 @@ export default function AdminFormDetailPage() {
                           추가해 주세요.
                         </p>
                       )}
-                    {section.questions.map((q) => (
+                    {section.questions.map((q, questionIndex) => (
                       <div
                         key={q.formQuestionId}
                         className="rounded-xl border border-slate-100 bg-white p-4"
@@ -922,7 +922,7 @@ export default function AdminFormDetailPage() {
                             <div className="flex flex-wrap items-start justify-between gap-2">
                               <div>
                                 <span className="text-xs font-semibold text-slate-500">
-                                  #{q.questionOrder}
+                                  #{questionIndex + 1}
                                 </span>
                                 <p className="font-semibold text-slate-900">
                                   {q.label}
