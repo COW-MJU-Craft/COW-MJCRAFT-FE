@@ -356,8 +356,21 @@ export default function ApplicationManagePage() {
       }
     }
 
+    const submittedAnswers = { ...answers };
+    const submittedFiles = { ...files };
     const payloadAnswers = questionSource.map((q) => {
-      const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
+      const visibleForDepartment = shouldShowByDepartment(
+        q.sectionType,
+        q.departmentType,
+        selectedDepartments,
+      );
+      if (!visibleForDepartment) {
+        delete submittedAnswers[q.formQuestionId];
+        delete submittedFiles[q.formQuestionId];
+      }
+      const value = visibleForDepartment
+        ? normalizeAnswerValue(answers[q.formQuestionId] ?? null)
+        : null;
       return { formQuestionId: q.formQuestionId, value: value ?? null };
     });
 
@@ -372,11 +385,13 @@ export default function ApplicationManagePage() {
         answers: payloadAnswers,
       });
 
+      setAnswers(submittedAnswers);
+      setFiles(submittedFiles);
       setSnapshot({
         firstDepartment,
         secondDepartment,
-        answers: { ...answers },
-        files: { ...files },
+        answers: submittedAnswers,
+        files: submittedFiles,
       });
       alert('지원서가 저장되었습니다.');
     } catch {
