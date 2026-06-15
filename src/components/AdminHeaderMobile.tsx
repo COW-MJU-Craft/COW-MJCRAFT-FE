@@ -15,7 +15,7 @@ const LEADING_NAV_ITEMS = [
 const TRAILING_NAV_ITEMS = [
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
-  { key: 'forms', label: '모집 양식', href: '/admin/forms' },
+  { key: 'forms', label: '지원서 관리', href: '/admin/forms' },
   { key: 'payouts', label: '정산', href: '/admin#payouts' },
 ];
 
