@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../components/Reveal';
@@ -90,12 +90,8 @@ export default function NoticesPage() {
     queryFn: () => noticesApi.list(),
   });
 
-  const notices: NoticeResponse[] = data ?? [];
+  const notices = useMemo<NoticeResponse[]>(() => data ?? [], [data]);
   const error = isError ? '공지사항을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.' : null;
-
-  useEffect(() => {
-    setPage(1);
-  }, [query, imageFilter, sortOrder]);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -182,7 +178,10 @@ export default function NoticesPage() {
           {/* 검색: 모바일에서는 한 줄, 데스크톱에서는 한 줄 */}
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             placeholder="제목/내용 검색"
             className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:flex-1"
           />
@@ -191,7 +190,10 @@ export default function NoticesPage() {
           <div className="flex w-full items-center gap-2 md:w-auto">
             <select
               value={imageFilter}
-              onChange={(e) => setImageFilter(e.target.value as ImageFilter)}
+              onChange={(e) => {
+                setImageFilter(e.target.value as ImageFilter);
+                setPage(1);
+              }}
               className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 md:flex-none md:min-w-[120px]"
             >
               {FILTER_OPTIONS.map((option) => (
@@ -203,7 +205,10 @@ export default function NoticesPage() {
 
             <select
               value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              onChange={(e) => {
+                setSortOrder(e.target.value as SortOrder);
+                setPage(1);
+              }}
               className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 md:flex-none md:min-w-[120px]"
             >
               {SORT_OPTIONS.map((option) => (

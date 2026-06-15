@@ -6,6 +6,7 @@ export type AdminApplicationResultStatus = 'PASS' | 'FAIL' | 'NOT_PUBLISHED';
 export type AdminApplicationListItem = {
   applicationId: number;
   studentId: string;
+  applicantName?: string | null;
   firstDepartment: DepartmentType;
   secondDepartment: DepartmentType;
   resultStatus: AdminApplicationResultStatus;
@@ -17,16 +18,21 @@ export type AdminApplicationAnswerItem = {
   formQuestionId: number;
   value: string | null;
   fileUrl?: string | null;
+  previewUrl?: string | null;
+  downloadUrl?: string | null;
+  fileName?: string | null;
 };
 
 export type AdminApplicationDetail = {
   applicationId: number;
   studentId: string;
+  applicantName?: string | null;
   firstDepartment: DepartmentType;
   secondDepartment: DepartmentType;
   resultStatus: AdminApplicationResultStatus;
   createdAt?: string | number[] | null;
   updatedAt?: string | number[] | null;
+  basicAnswers?: AdminApplicationAnswerItem[];
   commonAnswers?: AdminApplicationAnswerItem[];
   firstDepartmentAnswers?: AdminApplicationAnswerItem[];
   secondDepartmentAnswers?: AdminApplicationAnswerItem[];

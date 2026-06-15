@@ -30,10 +30,15 @@ export default function SiteLayout() {
   }, [noticesData]);
 
   useEffect(() => {
-    setSlideIndex((prev) => {
-      if (visibleNotices.length === 0) return 0;
-      return Math.min(prev, visibleNotices.length - 1);
+    const frame = window.requestAnimationFrame(() => {
+      setSlideIndex((prev) => {
+        if (visibleNotices.length === 0) return 0;
+        return Math.min(prev, visibleNotices.length - 1);
+      });
     });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
   }, [visibleNotices.length]);
 
   const moveNotice = useCallback(
