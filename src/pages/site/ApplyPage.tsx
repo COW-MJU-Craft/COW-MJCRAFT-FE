@@ -1030,9 +1030,9 @@ export default function ApplyPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 md:py-12">
+    <div className="mx-auto max-w-[1320px] px-4 py-10 md:py-12">
       <Reveal>
-        <div>
+        <div className="mx-auto max-w-[920px]">
           <div>
             <p className="text-sm font-bold text-slate-400">지원하기</p>
             <h1 className="mt-2 font-heading text-3xl leading-tight text-primary md:text-4xl">
@@ -1093,9 +1093,9 @@ export default function ApplyPage() {
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-24 space-y-3">
+      <div className="relative mt-8 lg:min-h-screen">
+        <aside className="hidden lg:fixed lg:left-[max(1rem,calc((100vw-920px)/2-220px))] lg:top-24 lg:z-10 lg:block lg:w-[180px]">
+          <div className="space-y-3">
             <div className="space-y-2 border-l border-slate-200 pl-4">
               {sectionRail.map((section) => {
                 const isCurrent = section.key === activeSectionKey;
@@ -1138,7 +1138,7 @@ export default function ApplyPage() {
           </div>
         </aside>
 
-        <main className="min-w-0 space-y-6">
+        <main className="mx-auto min-w-0 max-w-[920px] space-y-6">
           <div className="sticky top-16 z-20 -mx-4 overflow-x-auto bg-[#f5f7fb]/95 px-4 py-2 backdrop-blur lg:hidden">
             <div className="flex min-w-max gap-2">
               {sectionRail.map((section) => {
