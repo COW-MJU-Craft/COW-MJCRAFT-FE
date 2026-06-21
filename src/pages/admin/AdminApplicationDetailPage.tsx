@@ -31,8 +31,9 @@ function isLikelyFileKey(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return false;
   if (isLikelyUrl(trimmed)) return false;
+  if (/\s/.test(trimmed)) return false;
   return (
-    trimmed.includes('/') ||
+    /^uploads\/recruit\/answers\/.+/i.test(trimmed) ||
     /\.(pdf|docx?|pptx?|xlsx?|zip|hwp|png|jpe?g|webp)$/i.test(trimmed)
   );
 }
