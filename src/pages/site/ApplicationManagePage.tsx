@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import ApplicationCheckForm from '../../components/ApplicationCredentialForm';
 import {
   applicationsApi,
+  type ApplicationAnswer,
   type ApplicationFormResponse,
   type ApplicationQuestion,
   type ApplicationReadResponse,
@@ -14,6 +16,8 @@ import type { DepartmentType } from '../../types/recruit';
 type AnswerValue = string | string[] | null;
 type FileState = {
   key?: string | null;
+  fileName?: string | null;
+  fileUrl?: string | null;
   uploading?: boolean;
   error?: string | null;
 };
@@ -22,6 +26,7 @@ type Snapshot = {
   firstDepartment: DepartmentType | '';
   secondDepartment: DepartmentType | '';
   answers: Record<number, AnswerValue>;
+  files: Record<number, FileState>;
 };
 
 function parseOptions(raw?: string | null): string[] {
@@ -57,15 +62,12 @@ function getAnswerType(raw?: string | null) {
 }
 
 function collectAnswers(data?: ApplicationReadResponse | null) {
-  const list: Array<{ formQuestionId: number; value: string | null }> = [];
-  const push = (
-    arr?: Array<{ formQuestionId: number; value: string | null }> | null,
-  ) => {
+  const list: ApplicationAnswer[] = [];
+  const push = (arr?: ApplicationAnswer[] | null) => {
     if (!arr) return;
-    arr.forEach((a) =>
-      list.push({ formQuestionId: a.formQuestionId, value: a.value ?? null }),
-    );
+    arr.forEach((a) => list.push(a));
   };
+  push(data?.basicAnswers);
   push(data?.commonAnswers);
   push(data?.firstDepartmentAnswers);
   push(data?.secondDepartmentAnswers);
@@ -75,6 +77,23 @@ function collectAnswers(data?: ApplicationReadResponse | null) {
 function normalizeDepartment(value: string): DepartmentType | '' {
   const hit = DEPARTMENT_OPTIONS.find((opt) => opt.value === value);
   return hit ? hit.value : '';
+}
+
+function parseFormIdParam(value: string | null) {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function getUploadedFileLabel(value: AnswerValue, file?: FileState) {
+  if (file?.fileName) return file.fileName;
+  if (typeof value !== 'string' || !value.trim()) return '';
+
+  const basename = value.split('/').filter(Boolean).pop() ?? value;
+  return basename.replace(
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-/,
+    '',
+  );
 }
 
 function isCommonSection(sectionType?: string | null) {
@@ -104,6 +123,8 @@ function shouldShowByDepartment(
 }
 
 export default function ApplicationManagePage() {
+  const [searchParams] = useSearchParams();
+  const formId = parseFormIdParam(searchParams.get('formId'));
   const [openForm, setOpenForm] = useState<ApplicationFormResponse | null>(
     null,
   );
@@ -184,6 +205,7 @@ export default function ApplicationManagePage() {
     setLoading(true);
     try {
       const res = await applicationsApi.read({
+        formId,
         studentId: studentId.trim(),
         password: password.trim(),
       });
@@ -198,10 +220,22 @@ export default function ApplicationManagePage() {
       setReadData(res);
 
       const next: Record<number, AnswerValue> = {};
+      const nextFiles: Record<number, FileState> = {};
       collectAnswers(res).forEach((a) => {
-        next[a.formQuestionId] = a.value;
+        const persistedValue = a.fileKey ?? a.value ?? null;
+        next[a.formQuestionId] = persistedValue;
+        if (a.fileKey || a.fileUrl || a.fileName) {
+          nextFiles[a.formQuestionId] = {
+            key: a.fileKey ?? a.value ?? null,
+            fileName: a.fileName ?? null,
+            fileUrl: a.fileUrl ?? null,
+            uploading: false,
+            error: null,
+          };
+        }
       });
       setAnswers(next);
+      setFiles(nextFiles);
 
       const first = normalizeDepartment(String(res.firstDepartment ?? ''));
       const second = normalizeDepartment(String(res.secondDepartment ?? ''));
@@ -212,6 +246,7 @@ export default function ApplicationManagePage() {
         firstDepartment: first,
         secondDepartment: second,
         answers: next,
+        files: nextFiles,
       });
     } catch {
       setLookupError(
@@ -246,7 +281,13 @@ export default function ApplicationManagePage() {
 
       setFiles((prev) => ({
         ...prev,
-        [qid]: { key: target.key, uploading: false, error: null },
+        [qid]: {
+          key: target.key,
+          fileName: target.fileName ?? file.name,
+          fileUrl: null,
+          uploading: false,
+          error: null,
+        },
       }));
       handleAnswerChange(qid, target.key);
     } catch {
@@ -266,11 +307,17 @@ export default function ApplicationManagePage() {
     setFirstDepartment(snapshot.firstDepartment);
     setSecondDepartment(snapshot.secondDepartment);
     setAnswers(snapshot.answers);
+    setFiles(snapshot.files);
     setValidationError(null);
   };
 
   const handleSubmit = async () => {
     setValidationError(null);
+
+    if (readData?.editable === false) {
+      setValidationError('모집이 종료되어 지원서를 수정할 수 없습니다.');
+      return;
+    }
 
     if (!studentId.trim() || !password.trim()) {
       setValidationError('학번과 비밀번호를 입력해주세요.');
@@ -309,14 +356,28 @@ export default function ApplicationManagePage() {
       }
     }
 
+    const submittedAnswers = { ...answers };
+    const submittedFiles = { ...files };
     const payloadAnswers = questionSource.map((q) => {
-      const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
+      const visibleForDepartment = shouldShowByDepartment(
+        q.sectionType,
+        q.departmentType,
+        selectedDepartments,
+      );
+      if (!visibleForDepartment) {
+        delete submittedAnswers[q.formQuestionId];
+        delete submittedFiles[q.formQuestionId];
+      }
+      const value = visibleForDepartment
+        ? normalizeAnswerValue(answers[q.formQuestionId] ?? null)
+        : null;
       return { formQuestionId: q.formQuestionId, value: value ?? null };
     });
 
     setSubmitLoading(true);
     try {
       await applicationsApi.update({
+        formId,
         studentId: studentId.trim(),
         password: password.trim(),
         firstDepartment,
@@ -324,10 +385,13 @@ export default function ApplicationManagePage() {
         answers: payloadAnswers,
       });
 
+      setAnswers(submittedAnswers);
+      setFiles(submittedFiles);
       setSnapshot({
         firstDepartment,
         secondDepartment,
-        answers: { ...answers },
+        answers: submittedAnswers,
+        files: submittedFiles,
       });
       alert('지원서가 저장되었습니다.');
     } catch {
@@ -368,6 +432,11 @@ export default function ApplicationManagePage() {
           {validationError && (
             <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600">
               {validationError}
+            </div>
+          )}
+          {readData.editable === false && (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+              모집이 종료되어 조회만 가능합니다.
             </div>
           )}
 
@@ -453,6 +522,8 @@ export default function ApplicationManagePage() {
                 const type = getAnswerType(q.answerType);
                 const value = answers[q.formQuestionId] ?? '';
                 const options = parseOptions(q.selectOptions);
+                const file = files[q.formQuestionId];
+                const fileLabel = getUploadedFileLabel(value, file);
                 const displayNumber =
                   typeof q.questionOrder === 'number' && q.questionOrder > 0
                     ? q.questionOrder
@@ -481,9 +552,21 @@ export default function ApplicationManagePage() {
                           className="text-sm"
                         />
                         {typeof value === 'string' && value && (
-                          <p className="text-xs text-slate-500">
-                            기존 파일: {value}
-                          </p>
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                            <p className="truncate text-xs font-semibold text-slate-600">
+                              기존 파일: {fileLabel || '첨부 파일'}
+                            </p>
+                            {file?.fileUrl && (
+                              <a
+                                href={file.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                              >
+                                파일 열기
+                              </a>
+                            )}
+                          </div>
                         )}
                         {files[q.formQuestionId]?.uploading && (
                           <span className="text-xs text-slate-500">
@@ -572,7 +655,7 @@ export default function ApplicationManagePage() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={submitLoading}
+                disabled={submitLoading || readData.editable === false}
                 className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:opacity-95 disabled:opacity-60"
               >
                 {submitLoading ? '저장 중...' : '저장'}

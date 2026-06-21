@@ -31,9 +31,13 @@ export type ApplicationFormResponse = {
 export type ApplicationAnswer = {
   formQuestionId: number;
   value: string | null;
+  fileKey?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
 };
 
 export type ApplicationCreateRequest = {
+  formId?: number;
   studentId: string;
   password: string;
   firstDepartment: DepartmentType;
@@ -44,6 +48,7 @@ export type ApplicationCreateRequest = {
 export type ApplicationUpdateRequest = ApplicationCreateRequest;
 
 export type ApplicationReadRequest = {
+  formId?: number;
   studentId: string;
   password: string;
 };
@@ -65,6 +70,7 @@ export type ApplicationReadResponse = {
     title?: string | null;
     content?: string | null;
   } | null;
+  basicAnswers?: ApplicationAnswer[] | null;
   commonAnswers?: ApplicationAnswer[] | null;
   firstDepartmentAnswers?: ApplicationAnswer[] | null;
   secondDepartmentAnswers?: ApplicationAnswer[] | null;
@@ -73,6 +79,7 @@ export type ApplicationReadResponse = {
 };
 
 export type ApplicationResultRequest = {
+  formId?: number;
   studentId: string;
   password: string;
 };
