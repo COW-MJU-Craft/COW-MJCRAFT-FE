@@ -143,4 +143,31 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 - PR 생성이 포함되는 모든 요청은 `/pr` 명시 여부와 관계없이 `.codex/commands/pr.md`를 따른다.
 - 머지가 포함되는 모든 요청은 `/merge` 명시 여부와 관계없이 `.codex/commands/merge.md`를 따른다.
 
+### Git 작업 요청 해석 규칙
+
+사용자가 명령어를 정확히 쓰지 않아도, 요청 문장에 포함된 최종 목표를 기준으로 필요한 `.codex/commands/*.md`를 모두 읽고 순서대로 따른다.
+
+예:
+
+- "커밋해줘", "변경사항 저장해줘"
+  - `.codex/commands/commit.md`를 읽고 따른다.
+- "푸쉬까지 진행해줘", "push까지 해줘"
+  - `.codex/commands/commit.md`를 읽고 커밋 절차를 따른다.
+  - 커밋 후 push 승인 절차까지 진행한다.
+- "PR 작성까지 진행해줘", "PR 본문 써줘"
+  - `.codex/commands/pr.md`를 읽고 PR 설명 작성 및 `.ai-workspace/pr.md` 저장까지 진행한다.
+  - PR 생성은 별도 승인 없이는 하지 않는다.
+- "PR 생성까지 진행해줘", "PR 올려줘"
+  - `.codex/commands/commit.md`와 `.codex/commands/pr.md`를 모두 읽고 따른다.
+  - 커밋, push, PR 생성은 각 승인 게이트를 지킨다.
+- "PR 푸쉬까지 진행해줘"
+  - PR은 push 이후 생성 가능하므로, 의미가 불명확하면 "push 후 PR 생성"으로 해석한다.
+  - `.codex/commands/commit.md`와 `.codex/commands/pr.md`를 모두 읽고 따른다.
+- "머지까지 진행해줘"
+  - `.codex/commands/commit.md`, `.codex/commands/pr.md`, `.codex/commands/merge.md`를 모두 읽고 순서대로 따른다.
+  - 커밋, push, PR 생성, merge는 각 승인 게이트를 지킨다.
+
+요청이 "까지 진행" 형태여도 승인 게이트는 생략하지 않는다.
+단, 사용자가 직전 단계의 실행 명령과 대상을 이미 확인한 뒤 "승인", "진행", "계속"이라고 답하면 해당 게이트의 승인으로 본다.
+
 `.codex/commands`의 내용이 이 파일과 충돌하면 `AGENTS.md`를 우선한다.
