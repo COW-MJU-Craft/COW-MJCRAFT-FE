@@ -125,7 +125,7 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 
 ## Codex 커맨드 워크플로우
 
-사용자가 아래 명령을 요청하면 `.codex/commands/<command>.md`를 먼저 읽고 해당 절차를 따른다.
+사용자가 아래 명령을 요청하거나 요청 내용에 해당 작업이 포함되면 `.codex/commands/<command>.md`를 먼저 읽고 해당 절차를 따른다.
 
 | 명령 | 용도 |
 |---|---|
@@ -138,5 +138,9 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 | `/merge` | 승인 후 PR 병합 |
 
 `/feature`는 작은 문구 수정, 단순 스타일 조정, 파일 하나짜리 버그 수정에는 과할 수 있다. 그런 경우 `/plan`, `/impl`, `/review`, `/commit`을 필요한 만큼만 사용한다.
+
+- 커밋이 포함되는 모든 요청은 `/commit` 명시 여부와 관계없이 `.codex/commands/commit.md`를 따른다.
+- PR 생성이 포함되는 모든 요청은 `/pr` 명시 여부와 관계없이 `.codex/commands/pr.md`를 따른다.
+- 머지가 포함되는 모든 요청은 `/merge` 명시 여부와 관계없이 `.codex/commands/merge.md`를 따른다.
 
 `.codex/commands`의 내용이 이 파일과 충돌하면 `AGENTS.md`를 우선한다.
