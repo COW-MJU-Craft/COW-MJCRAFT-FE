@@ -12,12 +12,13 @@
 ```bash
 git branch --show-current
 git status -sb
-git log main..HEAD --oneline
-git diff main...HEAD --stat
-git diff main...HEAD
+git fetch origin main
+git log origin/main..HEAD --oneline
+git diff origin/main...HEAD --stat
+git diff origin/main...HEAD
 ```
 
-base 브랜치가 `main`이 아니면 실제 기본 브랜치를 확인하고 그 기준으로 비교한다.
+base 브랜치가 `main`이 아니면 실제 기본 브랜치를 확인하고 그 기준으로 비교한다. 로컬 브랜치가 아닌 **origin의 최신 상태**를 기준으로 한다.
 
 ### 2. PR 템플릿 확인
 
@@ -75,9 +76,14 @@ gh pr create --title "<제목>" --body "$(cat .ai-workspace/pr.md)"
 
 승인받은 경우에만 PR을 생성한다.
 
-### 7. PR 생성 후 보고
+### 7. PR 생성 후 보고 및 상태 파일 정리
 
-PR URL을 사용자에게 보고한다.
+PR URL을 사용자에게 보고하고, `.ai-workspace/pr.md` 상단에 완료 기록을 추가한다
+(다음 작업이 낡은 초안을 읽지 않게):
+
+```text
+> ✅ 완료 — PR: <URL> (생성일)
+```
 사용자가 merge를 원하면 `/merge` 절차로 이어간다.
 
 ## 주의사항
