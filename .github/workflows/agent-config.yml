@@ -1,0 +1,21 @@
+name: Agent Config Check
+
+on:
+  push:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  agent-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 에이전트 설정 구조 검증 (심링크/CLAUDE.md)
+        run: |
+          set -e
+          test -d .agents/commands || { echo "::error::.agents/commands 없음"; exit 1; }
+          test -L .claude/commands && test -e .claude/commands || { echo "::error::.claude/commands 심링크 깨짐"; exit 1; }
+          test -L .codex/commands && test -e .codex/commands || { echo "::error::.codex/commands 심링크 깨짐"; exit 1; }
+          grep -q "@AGENTS.md" CLAUDE.md || { echo "::error::CLAUDE.md에 @AGENTS.md import 없음"; exit 1; }
+          echo "OK"
