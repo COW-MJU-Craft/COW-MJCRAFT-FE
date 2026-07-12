@@ -1,5 +1,9 @@
 # FE CI/CD·하네스 리팩토링 계획
 
+> ✅ **완료 (2026-07-13)** — ⓪~⑤ 전부 main 병합·운영 반영됨. 기록용 아카이브.
+> 최종 상태: GHCR 이미지 배포(nginx/1.27.5 서빙 확인), PR 게이트 5종 + main ruleset 활성,
+> Vitest 14개, GA4 빌드 변수 이관, healthcheck IPv4 수정. 기존 Coolify Static 리소스는 중지(일주일 후 삭제).
+
 > 작성: 2026-07-12 · 기준: origin/main `3f89ced` · 배포 방향: Coolify 단일화 (결정됨)
 > 근거: 백엔드(cow-mju-craft)에서 검증 완료된 패턴 이식. 완료 시 상단에 ✅ 배너 후 아카이브.
 
