@@ -21,7 +21,6 @@ import OrderCompletePage from './pages/site/OrderCompletePage';
 import OrderLookupPage from './pages/site/OrderLookupPage';
 import OrderViewPage from './pages/site/OrderViewPage';
 import LoginPage from './pages/site/LoginPage';
-import OAuthCallbackPage from './pages/site/OAuthCallbackPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProjectsListPage from './pages/admin/AdminProjectsListPage';
 import AdminProjectEditorPage from './pages/admin/AdminProjectEditorPage';
@@ -73,8 +72,6 @@ export default function App() {
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/oauth/kakao/callback" element={<OAuthCallbackPage />} />
-          <Route path="/oauth/naver/callback" element={<OAuthCallbackPage />} />
         </Route>
 
         <Route element={<AdminLayout />}>
