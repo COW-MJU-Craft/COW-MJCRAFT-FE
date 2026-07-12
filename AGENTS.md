@@ -181,6 +181,18 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 
 ---
 
+## 테스트 컨벤션
+
+**작성 의무**: 새 로직(유틸, api 모듈, 훅) 추가 또는 기존 로직 변경 시 해당 부분의 테스트를 함께 작성한다.
+
+- 도구: Vitest + React Testing Library (`npm test` / `npm run test:watch`)
+- 위치: 대상 파일 옆에 `*.test.ts(x)` (예: `src/utils/date.test.ts`)
+- 우선순위: 순수 함수·api 모듈 > 훅 > 컴포넌트. 스타일·마크업만 바뀌는 컴포넌트 테스트는 강제하지 않는다
+- 깡통 테스트 금지 — assertion 없는 테스트, 구현 복사 테스트는 작성하지 않는다
+- 참고 예시: `src/api/client.test.ts` (fetch mock, 토큰 부착·에러 처리), `src/utils/date.test.ts` (경계값)
+
+---
+
 ## 핸드오프/상태 문서 컨벤션
 
 에이전트가 작업 인계 문서(핸드오프, 계획, 상태 파일)를 작성할 때:
