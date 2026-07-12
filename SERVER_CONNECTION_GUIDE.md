@@ -12,7 +12,7 @@
 ## 개발/배포 연결 방식
 
 - 개발 환경: `vite.config.ts`에서 `/api` 프록시 사용
-- 배포 환경: `vercel.json`의 rewrite로 `/api` 요청을 백엔드로 전달
+- 배포 환경: 빌드 시 `VITE_API_BASE_URL`이 https://api.mju-craft.shop/api 로 주입되어 API를 직접 호출 (Dockerfile ARG)
 
 ## 토큰 처리
 
@@ -23,4 +23,4 @@
 ## 서버 주소 변경 시
 
 - 개발용: `.env`의 `VITE_API_BASE_URL` 값 수정
-- 배포용: `vercel.json`의 API rewrite 대상 수정
+- 배포용: `Dockerfile`의 `VITE_API_BASE_URL` ARG 기본값 또는 deploy.yml 수정

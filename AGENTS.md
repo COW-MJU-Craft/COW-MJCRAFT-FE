@@ -15,9 +15,14 @@
 | 라우팅 | React Router DOM |
 | 서버 상태 | TanStack React Query |
 | 아이콘 | lucide-react |
-| 배포 | Vercel |
+| 배포 | Coolify — GitHub Actions가 GHCR 이미지 빌드·push 후 웹훅 트리거 (deploy.yml) |
 
 ## 주요 명령어
+
+**최초 셋업 (clone 후 1회)**
+```bash
+bash scripts/setup-hooks.sh   # pre-commit 훅 활성화 (main 커밋 차단·시크릿 차단)
+```
 
 ```bash
 npm run dev      # 개발 서버 실행
@@ -123,9 +128,11 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 - `node_modules`, `dist` 같은 생성물 수정 또는 커밋
 - 원인을 확인하지 않은 추측성 수정
 
-## Codex 커맨드 워크플로우
+## AI 에이전트 커맨드 워크플로우
 
-사용자가 아래 명령을 요청하거나 요청 내용에 해당 작업이 포함되면 `.codex/commands/<command>.md`를 먼저 읽고 해당 절차를 따른다.
+커맨드 원본은 `.agents/commands/`에 있다. `.claude/commands/`와 `.codex/commands/`는 이 디렉토리를 가리키는 심링크이므로, **수정은 반드시 `.agents/commands/`에서만** 한다.
+
+사용자가 아래 명령을 요청하거나 요청 내용에 해당 작업이 포함되면 `.agents/commands/<command>.md`를 먼저 읽고 해당 절차를 따른다.
 
 | 명령 | 용도 |
 |---|---|
@@ -139,35 +146,46 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 
 `/feature`는 작은 문구 수정, 단순 스타일 조정, 파일 하나짜리 버그 수정에는 과할 수 있다. 그런 경우 `/plan`, `/impl`, `/review`, `/commit`을 필요한 만큼만 사용한다.
 
-- 커밋이 포함되는 모든 요청은 `/commit` 명시 여부와 관계없이 `.codex/commands/commit.md`를 따른다.
-- PR 생성이 포함되는 모든 요청은 `/pr` 명시 여부와 관계없이 `.codex/commands/pr.md`를 따른다.
-- 머지가 포함되는 모든 요청은 `/merge` 명시 여부와 관계없이 `.codex/commands/merge.md`를 따른다.
+- 커밋이 포함되는 모든 요청은 `/commit` 명시 여부와 관계없이 `.agents/commands/commit.md`를 따른다.
+- PR 생성이 포함되는 모든 요청은 `/pr` 명시 여부와 관계없이 `.agents/commands/pr.md`를 따른다.
+- 머지가 포함되는 모든 요청은 `/merge` 명시 여부와 관계없이 `.agents/commands/merge.md`를 따른다.
 
 ### Git 작업 요청 해석 규칙
 
-사용자가 명령어를 정확히 쓰지 않아도, 요청 문장에 포함된 최종 목표를 기준으로 필요한 `.codex/commands/*.md`를 모두 읽고 순서대로 따른다.
+사용자가 명령어를 정확히 쓰지 않아도, 요청 문장에 포함된 최종 목표를 기준으로 필요한 `.agents/commands/*.md`를 모두 읽고 순서대로 따른다.
 
 예:
 
 - "커밋해줘", "변경사항 저장해줘"
-  - `.codex/commands/commit.md`를 읽고 따른다.
+  - `.agents/commands/commit.md`를 읽고 따른다.
 - "푸쉬까지 진행해줘", "push까지 해줘"
-  - `.codex/commands/commit.md`를 읽고 커밋 절차를 따른다.
+  - `.agents/commands/commit.md`를 읽고 커밋 절차를 따른다.
   - 커밋 후 push 승인 절차까지 진행한다.
 - "PR 작성까지 진행해줘", "PR 본문 써줘"
-  - `.codex/commands/pr.md`를 읽고 PR 설명 작성 및 `.ai-workspace/pr.md` 저장까지 진행한다.
+  - `.agents/commands/pr.md`를 읽고 PR 설명 작성 및 `.ai-workspace/pr.md` 저장까지 진행한다.
   - PR 생성은 별도 승인 없이는 하지 않는다.
 - "PR 생성까지 진행해줘", "PR 올려줘"
-  - `.codex/commands/commit.md`와 `.codex/commands/pr.md`를 모두 읽고 따른다.
+  - `.agents/commands/commit.md`와 `.agents/commands/pr.md`를 모두 읽고 따른다.
   - 커밋, push, PR 생성은 각 승인 게이트를 지킨다.
 - "PR 푸쉬까지 진행해줘"
   - PR은 push 이후 생성 가능하므로, 의미가 불명확하면 "push 후 PR 생성"으로 해석한다.
-  - `.codex/commands/commit.md`와 `.codex/commands/pr.md`를 모두 읽고 따른다.
+  - `.agents/commands/commit.md`와 `.agents/commands/pr.md`를 모두 읽고 따른다.
 - "머지까지 진행해줘"
-  - `.codex/commands/commit.md`, `.codex/commands/pr.md`, `.codex/commands/merge.md`를 모두 읽고 순서대로 따른다.
+  - `.agents/commands/commit.md`, `.agents/commands/pr.md`, `.agents/commands/merge.md`를 모두 읽고 순서대로 따른다.
   - 커밋, push, PR 생성, merge는 각 승인 게이트를 지킨다.
 
 요청이 "까지 진행" 형태여도 승인 게이트는 생략하지 않는다.
 단, 사용자가 직전 단계의 실행 명령과 대상을 이미 확인한 뒤 "승인", "진행", "계속"이라고 답하면 해당 게이트의 승인으로 본다.
 
 `.codex/commands`의 내용이 이 파일과 충돌하면 `AGENTS.md`를 우선한다.
+
+---
+
+## 핸드오프/상태 문서 컨벤션
+
+에이전트가 작업 인계 문서(핸드오프, 계획, 상태 파일)를 작성할 때:
+
+1. **기준점 기록 필수** — 문서 상단에 작성 시각, 기준 브랜치, HEAD SHA를 적는다
+2. **완료 처리 규칙 명시** — 완료 시 처리 방법(배너 후 아카이브 또는 삭제)을 문서 안에 적는다
+3. **완료된 문서는 즉시 닫는다** — 방치된 완료 문서는 다음 에이전트에게 틀린 컨텍스트를 준다
+4. **영구 정보는 AGENTS.md로 이관** — 일회성 문서에 영구 규칙을 남기지 않는다

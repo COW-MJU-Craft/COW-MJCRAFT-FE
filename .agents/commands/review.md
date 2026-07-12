@@ -9,12 +9,15 @@ FAIL 항목은 수정안을 제시하고 사용자 승인을 받는다.
 
 ### 1. 변경사항 파악
 
+브랜치에서 이미 커밋한 변경까지 포함해 리뷰한다 — 미커밋 diff만 보면 커밋 후 실행 시 리뷰가 빈다.
+
 ```bash
-git diff HEAD
-git diff --cached
+git fetch origin main
+git diff origin/main...HEAD   # 브랜치의 커밋된 변경 전체
+git diff HEAD                 # 아직 커밋하지 않은 변경
 ```
 
-두 명령 모두 결과가 비어있으면 즉시 다음 메시지를 출력하고 종료한다.
+두 diff 모두 비어있으면 즉시 다음 메시지를 출력하고 종료한다.
 
 ```text
 리뷰할 변경사항이 없습니다.
