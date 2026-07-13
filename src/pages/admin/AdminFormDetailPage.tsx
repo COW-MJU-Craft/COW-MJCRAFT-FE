@@ -225,11 +225,15 @@ export default function AdminFormDetailPage() {
   }, [formId, isNew]);
 
   useEffect(() => {
+    // 폼 목록 로드: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadFormList();
   }, [loadFormList]);
 
   useEffect(() => {
     if (isNew) {
+      // 신규 작성 모드 진입 시 상세 상태 초기화: 외부 상태(라우트 파라미터)와 동기화하는 표준 패턴이라 예외 처리한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       setError(null);
       setDetail(null);

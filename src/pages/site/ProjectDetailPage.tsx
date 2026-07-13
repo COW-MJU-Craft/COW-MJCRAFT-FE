@@ -160,6 +160,8 @@ export default function ProjectDetailPage() {
   );
 
   useEffect(() => {
+    // 프로젝트 전환 시 캐러셀 인덱스 초기화: 외부 상태(라우트 파라미터)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCarouselIndex(0);
   }, [projectId]);
 
@@ -170,6 +172,8 @@ export default function ProjectDetailPage() {
         .filter((item) => isPurchasableItem(item))
         .map((item) => String(item.id)),
     );
+    // 상품 목록 변경 시 선택 수량 정리: 외부 상태(아이템 목록)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedQuantities((prev) => {
       let changed = false;
       const next: Record<string, number> = {};

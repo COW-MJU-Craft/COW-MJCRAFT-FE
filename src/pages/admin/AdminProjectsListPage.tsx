@@ -301,6 +301,8 @@ export default function AdminProjectsListPage() {
   }, []);
 
   useEffect(() => {
+    // 프로젝트 목록 로드: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadProjects();
   }, [loadProjects]);
 

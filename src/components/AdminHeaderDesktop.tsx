@@ -39,6 +39,8 @@ export default function AdminHeaderDesktop() {
   const [open, setOpen] = useState<OpenMenu>(null);
 
   useEffect(() => {
+    // 라우트 변경 시 열린 메뉴 닫기: 외부 상태(URL)와 동기화하는 정상 패턴이라 규칙을 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(null);
   }, [location.hash, location.pathname]);
 

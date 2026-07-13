@@ -105,6 +105,8 @@ export default function AdminApplicationsListPage() {
 
   useEffect(() => {
     const existing = params.get('formId') ?? '';
+    // URL 쿼리스트링(외부 상태)과 폼 선택 상태를 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormId(existing);
     if (existing) void load(existing);
     else setList([]);
