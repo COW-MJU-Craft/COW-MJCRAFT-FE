@@ -19,7 +19,7 @@ test.describe('스모크: 핵심 라우트 렌더링', () => {
     await page.goto('/login');
 
     await expect(
-      page.getByRole('heading', { name: '관리자 로그인' }),
+      page.getByRole('heading', { name: '관리자 로그인', level: 1 }),
     ).toBeVisible();
     await expect(page.getByPlaceholder('아이디를 입력해주세요.')).toBeVisible();
     await expect(
@@ -34,7 +34,7 @@ test.describe('스모크: 핵심 라우트 렌더링', () => {
 
     await expect(page).toHaveURL(/\/login$/);
     await expect(
-      page.getByRole('heading', { name: '관리자 로그인' }),
+      page.getByRole('heading', { name: '관리자 로그인', level: 1 }),
     ).toBeVisible();
   });
 
