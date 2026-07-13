@@ -83,6 +83,40 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # 프로덕션 빌드(vite build/preview) 실행에 필요 — lint-build job과 같은 이유
+    env:
+      VITE_API_BASE_URL: https://api.mju-craft.shop/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Playwright 브라우저 설치
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: Playwright 스모크 테스트
+        run: npm run test:e2e
+
+      - name: 테스트 리포트 업로드 (실패 시)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   docker-build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
