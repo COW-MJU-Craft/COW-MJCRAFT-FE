@@ -17,31 +17,12 @@ import {
   loadOrderDraft,
   saveOrderDraft,
 } from '../../utils/orderDraft';
+import { loadDaumPostcodeScript } from '../../utils/daumPostcode';
 
 type OrderLocationState = {
   source?: 'cart' | 'direct';
   items?: CartItem[];
 };
-
-type DaumPostcodeResult = {
-  zonecode: string;
-  roadAddress?: string;
-  jibunAddress?: string;
-};
-
-type DaumPostcode = {
-  new (options: { oncomplete: (data: DaumPostcodeResult) => void }): {
-    open: (options?: { left?: number; top?: number }) => void;
-  };
-};
-
-declare global {
-  interface Window {
-    daum?: {
-      Postcode: DaumPostcode;
-    };
-  }
-}
 
 type BuyerType = 'STUDENT' | 'STAFF' | 'EXTERNAL';
 type CampusType = 'SEOUL' | 'YONGIN';
@@ -537,7 +518,16 @@ export default function OrderPage() {
     }
   };
 
-  const openDeliveryPostcode = () => {
+  const openDeliveryPostcode = async () => {
+    try {
+      await loadDaumPostcodeScript();
+    } catch {
+      toast.error(
+        '주소 검색 스크립트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+      );
+      return;
+    }
+
     if (!window.daum) {
       toast.error(
         '주소 검색 스크립트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
