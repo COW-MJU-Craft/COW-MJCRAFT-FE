@@ -8,6 +8,9 @@ on:
 env:
   VITE_API_BASE_URL: https://api.mju-craft.shop/api
 
+permissions:
+  contents: read
+
 jobs:
   lint-build:
     runs-on: ubuntu-latest
@@ -39,3 +42,19 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.21.2 \
             detect --source /repo --no-banner --redact --exit-code 1
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (high 이상 취약점 gate)
+        run: npm audit --audit-level=high
