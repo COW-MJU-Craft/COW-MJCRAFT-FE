@@ -14,7 +14,7 @@
 - lucide-react (icons)
 - Fetch API 기반 커스텀 클라이언트 (`src/api/client.ts`)
 - ESLint 9 (flat config, react-hooks/refresh 포함)
-- Vercel 배포 (배포 및 리라이트 설정)
+- Docker + nginx 배포 (Coolify — GitHub Actions가 GHCR 이미지 빌드·push 후 웹훅 트리거)
 
 ## 프로젝트 구조
 
@@ -85,8 +85,10 @@ npm run lint     # ESLint 실행
 
 ## 배포
 
-- `vercel.json`의 rewrite로 `/api` 요청을 백엔드로 프록시
-- 정적 SPA 라우팅을 위해 모든 경로를 `/`로 리라이트
+- GitHub Actions(`deploy.yml`)가 Docker 이미지를 빌드해 GHCR에 push하고, Coolify 웹훅을 트리거한다
+- nginx(`nginx.conf`)가 정적 SPA 라우팅을 담당: `/api/`는 프런트가 처리하지 않고(백엔드 도메인 직접 호출), 그 외 경로는 `/index.html`로 폴백
+- 배포 후 `/version.json`으로 실제 배포된 커밋 SHA를 확인할 수 있다(스모크 체크에서 사용)
+- 롤백은 `rollback.yml` workflow_dispatch로 특정 SHA 이미지를 `:latest`로 재태깅해 진행한다
 
 ## 코드 품질
 

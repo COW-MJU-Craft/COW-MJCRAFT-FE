@@ -24,17 +24,9 @@ if echo "$staged" | grep -qE "$blocked_files"; then
     exit 1
 fi
 
-# 2-b. application*.yml에 리터럴 시크릿 값이 추가되는지 확인 (${ENV} 플레이스홀더는 허용)
-yml_secrets="$(git diff --cached -U0 -- '*application*.yml' | grep -E '^\+' \
-    | grep -iE '(password|secret|access-?key|secret-?key)\s*:' \
-    | grep -vE ':\s*(\$\{[A-Z_]+\}|\s*$)' || true)"
-if [ -n "$yml_secrets" ]; then
-    echo "[pre-commit] 차단: application*.yml에 리터럴 시크릿 값이 감지됐습니다. \${ENV_VAR} 플레이스홀더를 사용하세요:" >&2
-    echo "$yml_secrets" >&2
-    exit 1
-fi
-
-# 2-c. gitleaks가 있으면 staged 스캔, 없으면 패턴 grep 폴백
+# 2-b. gitleaks가 있으면 staged 스캔, 없으면 패턴 grep 폴백
+# (참고: 이 레포는 Vite/React FE라 application*.yml 같은 백엔드 설정 포맷이
+#  없다 — 예전에 BE 훅에서 그대로 복사돼 항상 no-op이던 체크는 제거함)
 if command -v gitleaks &>/dev/null; then
     if ! gitleaks protect --staged --no-banner --redact; then
         echo "[pre-commit] 차단: gitleaks가 staged 변경에서 시크릿을 감지했습니다." >&2
