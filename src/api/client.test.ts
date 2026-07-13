@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// 401 시 clearAuth 호출 검증을 위해 mock
+// 401 시 clearAuth 호출 검증 + 토큰 조회를 auth 모듈에 위임하는지 확인하기 위해 mock
 vi.mock('../utils/auth', () => ({
   clearAuth: vi.fn(),
+  getAccessToken: vi.fn(() => null),
 }));
 
 import { api, ApiError, withApiBase } from './client';
-import { clearAuth } from '../utils/auth';
+import { clearAuth, getAccessToken } from '../utils/auth';
 
 function mockFetch(status: number, body: unknown) {
   return vi.fn().mockResolvedValue(
@@ -18,8 +19,8 @@ function mockFetch(status: number, body: unknown) {
 }
 
 beforeEach(() => {
-  localStorage.clear();
   vi.clearAllMocks();
+  vi.mocked(getAccessToken).mockReturnValue(null);
 });
 
 afterEach(() => {
@@ -46,7 +47,7 @@ describe('api', () => {
   });
 
   it('토큰이 있으면 Authorization 헤더를 붙인다', async () => {
-    localStorage.setItem('accessToken', 'tok123');
+    vi.mocked(getAccessToken).mockReturnValue('tok123');
     const f = mockFetch(200, { resultType: 'SUCCESS', httpStatusCode: 200, message: '', data: null });
     vi.stubGlobal('fetch', f);
 

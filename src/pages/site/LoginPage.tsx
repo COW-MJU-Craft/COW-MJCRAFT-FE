@@ -12,8 +12,6 @@ type AdminLoginResponse = {
   loginId?: string;
 };
 
-const LOGIN_ID_KEY = 'admin_login_id';
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -93,8 +91,6 @@ export default function LoginPage() {
 
       const name = (result.loginId ?? userId.trim()).trim() || 'USER';
       setAuth({ accessToken: result.accessToken, userName: name });
-
-      if (result.loginId) localStorage.setItem(LOGIN_ID_KEY, result.loginId);
 
       setStatus('success');
       navigate('/admin', { replace: true });

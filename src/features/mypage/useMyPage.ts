@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { mypageApi } from '../../api/mypage';
 import type { MyPageProfile } from '../../api/mypage';
 import { ApiError } from '../../api/client';
-import { setAuth } from '../../utils/auth';
+import { getAccessToken, setAuth } from '../../utils/auth';
 import type { ProfileForm } from './Types';
 import { DEFAULT_FORM } from './Types';
 
@@ -159,7 +159,7 @@ export default function useMyPage() {
       }
 
       setAuth({
-        accessToken: localStorage.getItem('accessToken') ?? '',
+        accessToken: getAccessToken() ?? '',
         userName: state.form.name,
       });
 

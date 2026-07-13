@@ -1,4 +1,4 @@
-﻿import { clearAuth } from "../utils/auth";
+﻿import { clearAuth, getAccessToken } from "../utils/auth";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -18,12 +18,6 @@ export class ApiError extends Error {
     this.status = status;
     this.body = body;
   }
-}
-
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? "accessToken";
-
-function getAccessToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
 }
 
 type RequestOptions = {
