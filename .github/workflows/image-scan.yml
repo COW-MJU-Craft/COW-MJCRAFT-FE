@@ -1,0 +1,98 @@
+name: Image Security Scan
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "nginx.conf"
+      - "security-headers.conf"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/image-scan.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "nginx.conf"
+      - "security-headers.conf"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/image-scan.yml"
+  schedule:
+    # 매주 월요일 04:00 UTC — 코드 변경 없이도 베이스 이미지(node/nginx)에
+    # 새로 등록되는 CVE를 정기적으로 감지하기 위함
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: image-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: 이미지 빌드 (스캔 전용, push 없음)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: cowmjucraft-fe:scan
+          build-args: |
+            BUILD_SHA=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Trivy(aquasecurity/trivy-action) 대신 Grype/Syft(Anchore)를 쓴다.
+      # trivy-action은 2026년에 두 차례 공급망 공격을 당해(GHSA-69fq-xp46-6x23,
+      # CVE-2026-33634) 태그 대부분이 자격증명 탈취 페이로드로 강제 push된
+      # 이력이 있다. Grype/Syft는 같은 사고 이력이 없고, 공급망 위험을 줄이려면
+      # action 참조도 태그 대신 GitHub에서 서명 검증된 immutable release 커밋
+      # SHA로 고정하는 게 안전하다(태그는 이번 사고처럼 재지정될 수 있음).
+      #
+      # 1단계: 관찰 전용. HIGH 이상이 나와도 빌드를 막지 않고 GitHub Security
+      # 탭에 결과만 올린다. 베이스 이미지(node/nginx) CVE 현황을 먼저 파악한
+      # 뒤, 별도 PR에서 severity gate(fail-build: true)를 켤지 정한다.
+      # CSP를 Report-Only로 먼저 켰던 것과 같은 이유.
+      - name: Grype 취약점 스캔 (SARIF)
+        # anchore/scan-action v7.4.0 (2026-03-20, GPG 서명 확인된 immutable release)
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
+        continue-on-error: true
+        with:
+          image: cowmjucraft-fe:scan
+          output-format: sarif
+          output-file: grype-results.sarif
+          severity-cutoff: high
+          fail-build: false
+          only-fixed: true
+
+      - name: Grype 결과를 GitHub Security 탭에 업로드
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: grype-results.sarif
+
+      - name: SBOM 생성 (SPDX, Syft)
+        # anchore/sbom-action v0.24.0 (2026-03-20, GPG 서명 확인된 immutable release)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+        with:
+          image: cowmjucraft-fe:scan
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: SBOM 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.spdx.json
+          retention-days: 90
