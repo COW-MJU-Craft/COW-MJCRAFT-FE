@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: ["main"]
 
-env:
-  VITE_API_BASE_URL: https://api.mju-craft.shop/api
-
 permissions:
   contents: read
 
@@ -20,6 +17,11 @@ jobs:
   lint-build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # VITE_API_BASE_URL은 build(npm run build)에서만 필요하다.
+    # workflow 전체에 걸면 test job도 이 값을 물려받아
+    # "env 미설정" 케이스를 검증하는 테스트가 깨지므로 이 job에만 한정한다.
+    env:
+      VITE_API_BASE_URL: https://api.mju-craft.shop/api
     steps:
       - uses: actions/checkout@v4
 
