@@ -20,7 +20,7 @@
     "@tanstack/react-query-devtools": "^5.101.2",
     "lucide-react": "^0.577.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.0",
+    "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.1",
     "remark-breaks": "^4.0.0",
