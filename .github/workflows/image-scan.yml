@@ -1,0 +1,88 @@
+name: Image Security Scan
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "nginx.conf"
+      - "security-headers.conf"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/image-scan.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "nginx.conf"
+      - "security-headers.conf"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/image-scan.yml"
+  schedule:
+    # 매주 월요일 04:00 UTC — 코드 변경 없이도 베이스 이미지(node/nginx)에
+    # 새로 등록되는 CVE를 정기적으로 감지하기 위함
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: image-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: 이미지 빌드 (스캔 전용, push 없음)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: cowmjucraft-fe:scan
+          build-args: |
+            BUILD_SHA=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 1단계: 관찰 전용. HIGH/CRITICAL이 나와도 빌드를 막지 않고
+      # GitHub Security 탭에 결과만 올린다. 베이스 이미지(node/nginx)
+      # CVE 현황을 먼저 파악한 뒤, 별도 PR에서 severity gate(예: exit-code
+      # 강제 실패)를 켤지 정한다. CSP를 Report-Only로 먼저 켰던 것과 같은 이유.
+      - name: Trivy 취약점 스캔 (SARIF)
+        uses: aquasecurity/trivy-action@0.28.0
+        continue-on-error: true
+        with:
+          image-ref: cowmjucraft-fe:scan
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Trivy 결과를 GitHub Security 탭에 업로드
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: SBOM 생성 (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: cowmjucraft-fe:scan
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: SBOM 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.spdx.json
+          retention-days: 90
