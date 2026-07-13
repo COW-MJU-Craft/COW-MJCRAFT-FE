@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
@@ -11,9 +12,14 @@ env:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +39,7 @@ jobs:
 
   secret-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,6 +52,7 @@ jobs:
 
   dependency-audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -58,3 +66,47 @@ jobs:
 
       - name: npm audit (high 이상 취약점 gate)
         run: npm audit --audit-level=high
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Docker 이미지 빌드 검증 (push 없음)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+
+  agent-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 에이전트 설정 구조 검증 (심링크/CLAUDE.md)
+        run: |
+          set -e
+          test -d .agents/commands || { echo "::error::.agents/commands 없음"; exit 1; }
+          test -L .claude/commands && test -e .claude/commands || { echo "::error::.claude/commands 심링크 깨짐"; exit 1; }
+          test -L .codex/commands && test -e .codex/commands || { echo "::error::.codex/commands 심링크 깨짐"; exit 1; }
+          grep -q "@AGENTS.md" CLAUDE.md || { echo "::error::CLAUDE.md에 @AGENTS.md import 없음"; exit 1; }
+          echo "OK"
