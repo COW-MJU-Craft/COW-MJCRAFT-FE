@@ -41,6 +41,8 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            BUILD_SHA=${{ github.event.workflow_run.head_sha }}
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ github.event.workflow_run.head_sha }}
@@ -53,22 +55,31 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
 
       - name: Verify deployment (smoke check)
+        env:
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           BASE_URL="${{ vars.FE_BASE_URL || 'https://mju-craft.shop' }}"
           echo "smoke target: ${BASE_URL}"
-          # 200 + 실제 SPA HTML인지 확인 (200만 보면 안 됨 — 백엔드 교훈)
+          echo "expected sha: ${EXPECTED_SHA}"
+          # SPA HTML이 뜨는지 + /version.json이 이번에 배포한 커밋과 일치하는지 함께 확인한다.
+          # (200만 보면 안 됨 — 캐시되거나 이전 버전이 그대로 떠 있어도 200이 나올 수 있음)
           ok=""
           for i in $(seq 1 20); do
             sleep 15
             body=$(curl -s --max-time 10 "${BASE_URL}/" || echo "")
-            if echo "$body" | grep -q 'id="root"'; then
-              echo "attempt ${i}/20: SPA HTML OK"
+            if ! echo "$body" | grep -q 'id="root"'; then
+              echo "attempt ${i}/20: SPA HTML 아직 아님"
+              continue
+            fi
+            deployed_sha=$(curl -s --max-time 10 "${BASE_URL}/version.json" | grep -o '"sha":"[^"]*"' | cut -d'"' -f4 || echo "")
+            if [ "$deployed_sha" = "$EXPECTED_SHA" ]; then
+              echo "attempt ${i}/20: OK (배포된 sha=${deployed_sha})"
               ok=1
               break
             fi
-            echo "attempt ${i}/20: 아직 정상 응답 아님"
+            echo "attempt ${i}/20: SPA는 응답하나 sha 불일치 (배포됨=${deployed_sha:-없음}, 기대값=${EXPECTED_SHA})"
           done
           if [ -z "$ok" ]; then
-            echo "::error::배포 후 smoke check 실패 — 5분 내 정상 HTML 미확인"
+            echo "::error::배포 후 smoke check 실패 — 5분 내 기대한 커밋(${EXPECTED_SHA})으로 확인 안 됨"
             exit 1
           fi
