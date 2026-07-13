@@ -10,6 +10,33 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+    # 서로 버전이 어긋나면 안 되는(또는 항상 같이 다니는) 패키지들은 묶어서
+    # 하나의 PR로만 올라오게 한다. react와 react-dom이 따로 올라가서
+    # 버전이 어긋나 프로덕션이 죽었던 사고(2026-07) 재발 방지.
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+      tanstack-query:
+        patterns:
+          - "@tanstack/react-query*"
+      dnd-kit:
+        patterns:
+          - "@dnd-kit/*"
+      eslint-tooling:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "typescript-eslint"
+          - "globals"
 
   - package-ecosystem: github-actions
     directory: /
