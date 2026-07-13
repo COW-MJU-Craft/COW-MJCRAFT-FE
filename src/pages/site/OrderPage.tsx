@@ -12,6 +12,11 @@ import {
   removeCartItem,
   type CartItem,
 } from '../../utils/cart';
+import {
+  clearOrderDraft,
+  loadOrderDraft,
+  saveOrderDraft,
+} from '../../utils/orderDraft';
 
 type OrderLocationState = {
   source?: 'cart' | 'direct';
@@ -96,7 +101,6 @@ type OrderDraft = {
 
 type LookupCheckState = 'idle' | 'checking' | 'available' | 'taken' | 'error';
 
-const ORDER_DRAFT_STORAGE_KEY = 'cow_order_draft_v2';
 
 const INPUT_CLASS =
   'mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-[13px] outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 sm:text-sm';
@@ -217,128 +221,8 @@ function formatMoney(value: number) {
   return value.toLocaleString();
 }
 
-function sanitizeCartItems(raw: unknown): CartItem[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.reduce<CartItem[]>((acc, entry) => {
-    if (!entry || typeof entry !== 'object') return acc;
-    const item = entry as Partial<CartItem>;
-    if (!item.itemId || !item.projectId || !item.name) return acc;
-    if (typeof item.price !== 'number' || !Number.isFinite(item.price))
-      return acc;
-    const quantity =
-      typeof item.quantity === 'number' && Number.isFinite(item.quantity)
-        ? Math.max(1, Math.trunc(item.quantity))
-        : 1;
 
-    acc.push({
-      itemId: String(item.itemId),
-      projectId: String(item.projectId),
-      name: String(item.name),
-      price: item.price,
-      thumbnailUrl: item.thumbnailUrl ?? null,
-      status: item.status,
-      saleType: item.saleType,
-      quantity,
-      mergedByDuplicateAdd: Boolean(item.mergedByDuplicateAdd),
-    });
-    return acc;
-  }, []);
-}
 
-function loadOrderDraft(): OrderDraft | null {
-  try {
-    const raw = localStorage.getItem(ORDER_DRAFT_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<OrderDraft>;
-    if (!parsed || typeof parsed !== 'object') return null;
-
-    const source = parsed.source === 'direct' ? 'direct' : 'cart';
-    const stepCandidate = Number(parsed.step ?? 0);
-    const step = ([0, 1, 2, 3, 4] as number[]).includes(stepCandidate)
-      ? (stepCandidate as OrderStep)
-      : 0;
-    const items = sanitizeCartItems(parsed.items);
-
-    const buyerTypeCandidate =
-      parsed.buyer && typeof parsed.buyer === 'object'
-        ? (parsed.buyer as { buyerType?: string }).buyerType
-        : undefined;
-    const buyerType: BuyerType =
-      buyerTypeCandidate === 'OUTSIDER'
-        ? 'EXTERNAL'
-        : buyerTypeCandidate === 'STUDENT' ||
-            buyerTypeCandidate === 'STAFF' ||
-            buyerTypeCandidate === 'EXTERNAL'
-          ? buyerTypeCandidate
-          : 'STUDENT';
-
-    const campusCandidate = parsed.buyer?.campus;
-    const campus: BuyerForm['campus'] =
-      campusCandidate === 'SEOUL' || campusCandidate === 'YONGIN'
-        ? campusCandidate
-        : 'SEOUL';
-
-    const methodCandidate = parsed.fulfillment?.method;
-    const method: FulfillmentMethod =
-      methodCandidate === 'DELIVERY' ? 'DELIVERY' : 'PICKUP';
-    const legacyLookupRecord =
-      parsed.lookup && typeof parsed.lookup === 'object'
-        ? (parsed.lookup as Record<string, unknown>)
-        : undefined;
-    const legacyDepositorName =
-      typeof legacyLookupRecord?.depositorName === 'string'
-        ? legacyLookupRecord.depositorName
-        : '';
-
-    return {
-      source,
-      step,
-      items,
-      agreements: {
-        privacy: Boolean(parsed.agreements?.privacy),
-        noRefund: Boolean(parsed.agreements?.noRefund),
-        cancelRisk: Boolean(parsed.agreements?.cancelRisk),
-      },
-      buyer: {
-        buyerType,
-        campus,
-        name: parsed.buyer?.name ?? '',
-        departmentOrMajor: parsed.buyer?.departmentOrMajor ?? '',
-        studentNo: parsed.buyer?.studentNo ?? '',
-        phone: parsed.buyer?.phone ?? '',
-        refundBank: parsed.buyer?.refundBank ?? '',
-        refundAccount: parsed.buyer?.refundAccount ?? '',
-        referralSource: parsed.buyer?.referralSource ?? '',
-        email: parsed.buyer?.email ?? '',
-      },
-      lookup: {
-        lookupId: parsed.lookup?.lookupId ?? '',
-        password: parsed.lookup?.password ?? '',
-        passwordConfirm: parsed.lookup?.passwordConfirm ?? '',
-      },
-      payment: {
-        // Backward compatibility: old drafts stored depositorName under lookup.
-        depositorName: parsed.payment?.depositorName ?? legacyDepositorName,
-      },
-      fulfillment: {
-        method,
-        receiverName: parsed.fulfillment?.receiverName ?? '',
-        receiverPhone: parsed.fulfillment?.receiverPhone ?? '',
-        infoConfirmed: Boolean(parsed.fulfillment?.infoConfirmed),
-        postalCode: parsed.fulfillment?.postalCode ?? '',
-        addressLine1: parsed.fulfillment?.addressLine1 ?? '',
-        addressLine2: parsed.fulfillment?.addressLine2 ?? '',
-        deliveryMemo: parsed.fulfillment?.deliveryMemo ?? '',
-      },
-    };
-  } catch {
-    return null;
-  }
-}
-
-function saveOrderDraft(draft: OrderDraft) {
-  localStorage.setItem(ORDER_DRAFT_STORAGE_KEY, JSON.stringify(draft));
-}
 
 function isBlank(value: string) {
   return value.trim().length === 0;
@@ -401,11 +285,14 @@ export default function OrderPage() {
   const state = (location.state ?? {}) as OrderLocationState;
 
   const [draft, setDraft] = useState<OrderDraft>(() => {
+    // 보안 정책: 이름/전화/이메일/주소/환불계좌/비밀번호 등은 저장하지 않으므로
+    // 여기서 복원되는 것은 진행 단계(step)와 선택 상품(items)뿐이다.
+    // buyer/lookup/payment/fulfillment는 새로고침 시 항상 빈 값으로 시작한다.
     const saved = loadOrderDraft();
-    const base: OrderDraft = saved ?? {
-      source: 'cart',
-      items: loadCartItems(),
-      step: 0,
+    const base: OrderDraft = {
+      source: saved?.source ?? 'cart',
+      items: saved?.items ?? loadCartItems(),
+      step: saved?.step ?? 0,
       agreements: DEFAULT_AGREEMENTS,
       buyer: DEFAULT_BUYER,
       lookup: DEFAULT_LOOKUP,
@@ -760,7 +647,7 @@ export default function OrderPage() {
     setIsSubmitting(true);
     try {
       const result = await ordersApi.createOrder(payload);
-      localStorage.removeItem(ORDER_DRAFT_STORAGE_KEY);
+      clearOrderDraft();
       if (draft.source === 'cart') {
         clearCartItems();
       }

@@ -37,16 +37,6 @@ type FileState = {
   error?: string | null;
 };
 
-type ApplyDraft = {
-  version: 1;
-  studentId: string;
-  firstDepartment: DepartmentType | '';
-  secondDepartment: DepartmentType | '';
-  answers: Record<number, AnswerValue>;
-  files: Record<number, FileState>;
-  savedAt: number;
-};
-
 function parseOptions(raw?: string | null): string[] {
   if (!raw) return [];
   const trimmed = raw.trim();
@@ -73,20 +63,24 @@ function getSectionId(key: QuestionGroupKey) {
   return `apply-section-${key}`;
 }
 
-function getDraftStorageKey(formId?: number | string | null) {
-  return formId ? `mju-craft:apply-draft:${formId}` : null;
-}
+// 보안 정책: 지원서 자동저장 기능은 완전히 제거됐다 (학번/답변/업로드 key 등
+// 민감정보를 브라우저 저장소에 남기지 않기 위함). 화면을 벗어나면 작성 중이던
+// 내용은 사라진다. 아래는 과거 버전이 남긴 구버전 draft를 1회성으로 정리한다.
+const LEGACY_APPLY_DRAFT_KEY_PREFIX = 'mju-craft:apply-draft:';
 
-function formatDraftSavedAt(savedAt?: number) {
-  if (!savedAt) return null;
-  const date = new Date(savedAt);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleString('ko-KR', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+function clearLegacyApplyDrafts() {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith(LEGACY_APPLY_DRAFT_KEY_PREFIX)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    // storage 접근 불가 환경은 무시한다.
+  }
 }
 
 function normalizeAnswerValue(value: AnswerValue) {
@@ -222,8 +216,6 @@ export default function ApplyPage() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [pendingDraft, setPendingDraft] = useState<ApplyDraft | null>(null);
-
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const [firstDepartment, setFirstDepartment] = useState<DepartmentType | ''>(
@@ -241,8 +233,6 @@ export default function ApplyPage() {
   const [activeSectionKey, setActiveSectionKey] =
     useState<QuestionGroupKey>('basic');
   const activeSectionRef = useRef<QuestionGroupKey>('basic');
-  const restoredDraftKeyRef = useRef<string | null>(null);
-  const draftHydratedRef = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -261,127 +251,11 @@ export default function ApplyPage() {
     void load();
   }, [load]);
 
+  // 자동저장을 완전히 제거했으므로 여기서는 과거 버전이 남긴 구버전
+  // draft(학번·답변·업로드 key 포함)만 1회성으로 정리한다.
   useEffect(() => {
-    const draftKey = getDraftStorageKey(form?.formId);
-    if (!draftKey || restoredDraftKeyRef.current === draftKey) return;
-
-    restoredDraftKeyRef.current = draftKey;
-    draftHydratedRef.current = false;
-    setPendingDraft(null);
-
-    try {
-      const raw = window.localStorage.getItem(draftKey);
-      if (!raw) {
-        draftHydratedRef.current = true;
-        return;
-      }
-
-      const draft = JSON.parse(raw) as Partial<ApplyDraft>;
-      if (draft.version !== 1) {
-        window.localStorage.removeItem(draftKey);
-        draftHydratedRef.current = true;
-        return;
-      }
-
-      setPendingDraft({
-        version: 1,
-        studentId: draft.studentId ?? '',
-        firstDepartment: draft.firstDepartment ?? '',
-        secondDepartment: draft.secondDepartment ?? '',
-        answers: draft.answers ?? {},
-        files: draft.files ?? {},
-        savedAt: draft.savedAt ?? Date.now(),
-      });
-    } catch {
-      window.localStorage.removeItem(draftKey);
-      draftHydratedRef.current = true;
-      setPendingDraft(null);
-    } finally {
-      if (!window.localStorage.getItem(draftKey)) {
-        draftHydratedRef.current = true;
-      }
-    }
-  }, [form?.formId]);
-
-  useEffect(() => {
-    const draftKey = getDraftStorageKey(form?.formId);
-    if (!draftKey || !draftHydratedRef.current) return;
-
-    const timer = window.setTimeout(() => {
-      const hasDraft =
-        Boolean(studentId.trim()) ||
-        Boolean(firstDepartment) ||
-        Boolean(secondDepartment) ||
-        Object.values(answers).some((value) => normalizeAnswerValue(value)) ||
-        Object.values(files).some((file) => file?.key);
-
-      if (!hasDraft) {
-        window.localStorage.removeItem(draftKey);
-        return;
-      }
-
-      const draft: ApplyDraft = {
-        version: 1,
-        studentId,
-        firstDepartment,
-        secondDepartment,
-        answers,
-        files: Object.fromEntries(
-          Object.entries(files).map(([questionId, file]) => [
-            questionId,
-            {
-              key: file.key ?? null,
-              fileName: file.fileName,
-              fileSize: file.fileSize,
-              uploading: false,
-              error: null,
-            },
-          ]),
-        ) as Record<number, FileState>,
-        savedAt: Date.now(),
-      };
-
-      window.localStorage.setItem(draftKey, JSON.stringify(draft));
-    }, 400);
-
-    return () => window.clearTimeout(timer);
-  }, [
-    answers,
-    files,
-    firstDepartment,
-    form?.formId,
-    secondDepartment,
-    studentId,
-  ]);
-
-  useEffect(() => {
-    if (!pendingDraft) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [pendingDraft]);
-
-  const handleLoadDraft = useCallback(() => {
-    if (!pendingDraft) return;
-
-    setStudentId(pendingDraft.studentId);
-    setFirstDepartment(pendingDraft.firstDepartment);
-    setSecondDepartment(pendingDraft.secondDepartment);
-    setAnswers(pendingDraft.answers);
-    setFiles(pendingDraft.files);
-    setPendingDraft(null);
-    draftHydratedRef.current = true;
-  }, [pendingDraft]);
-
-  const handleStartFresh = useCallback(() => {
-    const draftKey = getDraftStorageKey(form?.formId);
-    if (draftKey) window.localStorage.removeItem(draftKey);
-
-    setPendingDraft(null);
-    draftHydratedRef.current = true;
-  }, [form?.formId]);
+    clearLegacyApplyDrafts();
+  }, []);
 
   const selectedDepartments = useMemo(() => {
     const set = new Set<DepartmentType>();
@@ -624,8 +498,6 @@ export default function ApplyPage() {
         secondDepartment,
         answers: payloadAnswers,
       });
-      const draftKey = getDraftStorageKey(form?.formId);
-      if (draftKey) window.localStorage.removeItem(draftKey);
       alert('지원서가 제출됐어요.');
     } catch {
       alert('지원서 제출에 실패했어요. 잠시 후 다시 시도해 주세요.');
@@ -1038,54 +910,14 @@ export default function ApplyPage() {
             <h1 className="mt-2 font-heading text-3xl leading-tight text-primary md:text-4xl">
               {form.title ?? '지원서 작성'}
             </h1>
+            <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold text-slate-400">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              자동저장을 지원하지 않아요. 새로고침하거나 창을 닫으면 작성 중인
+              내용이 사라지니 한 번에 작성해주세요.
+            </p>
           </div>
         </div>
       </Reveal>
-
-      {pendingDraft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-950/35 backdrop-blur-[1px]" />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="apply-draft-title"
-            className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl"
-          >
-            <p className="text-xs font-black text-primary">임시저장</p>
-            <h2
-              id="apply-draft-title"
-              className="mt-2 font-heading text-2xl text-slate-950"
-            >
-              작성 중이던 지원서가 있어요
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">
-              이전에 작성하던 내용을 불러오거나, 저장된 내용을 지우고
-              새로 작성할 수 있어요.
-            </p>
-            {formatDraftSavedAt(pendingDraft.savedAt) && (
-              <p className="mt-3 text-xs font-semibold text-slate-400">
-                마지막 저장 {formatDraftSavedAt(pendingDraft.savedAt)}
-              </p>
-            )}
-            <div className="mt-6 grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={handleStartFresh}
-                className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-              >
-                새로 작성
-              </button>
-              <button
-                type="button"
-                onClick={handleLoadDraft}
-                className="rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:opacity-95"
-              >
-                불러오기
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {validationError && (
         <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600">
