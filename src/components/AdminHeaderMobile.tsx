@@ -2,8 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { adminApi } from '../api/admin';
+import { clearAuth } from '../utils/auth';
 
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
 const SWIPE_CLOSE_THRESHOLD = 60;
 
 const LEADING_NAV_ITEMS = [
@@ -187,7 +187,7 @@ export default function AdminHeaderMobile({
             try {
               await adminApi.logout();
             } finally {
-              localStorage.removeItem(TOKEN_KEY);
+              clearAuth();
               navigate('/');
             }
           }}

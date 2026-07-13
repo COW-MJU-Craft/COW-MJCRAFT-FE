@@ -1,8 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { adminApi } from '../api/admin';
-
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
+import { clearAuth } from '../utils/auth';
 
 const LEADING_NAV_ITEMS = [
   { key: 'edit', label: '회원정보', href: '/admin#edit' },
@@ -143,7 +142,7 @@ export default function AdminHeaderDesktop() {
             try {
               await adminApi.logout();
             } finally {
-              localStorage.removeItem(TOKEN_KEY);
+              clearAuth();
               navigate('/');
             }
           }}
