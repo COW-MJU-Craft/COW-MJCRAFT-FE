@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { AddressForm, ProfileForm } from './Types';
+import { loadDaumPostcodeScript } from '../../utils/daumPostcode';
 
 const REQUIRED = 'text-rose-500 ml-1';
 
@@ -27,26 +28,6 @@ const formatPhoneWithCursor = (value: string, cursor: number) => {
 
   return { formatted, nextCursor };
 };
-
-type DaumPostcodeResult = {
-  zonecode: string;
-  roadAddress?: string;
-  jibunAddress?: string;
-};
-
-type DaumPostcode = {
-  new (options: { oncomplete: (data: DaumPostcodeResult) => void }): {
-    open: (options?: { left?: number; top?: number }) => void;
-  };
-};
-
-declare global {
-  interface Window {
-    daum?: {
-      Postcode: DaumPostcode;
-    };
-  }
-}
 
 type Props = {
   form: ProfileForm;
@@ -79,7 +60,12 @@ export default function MyPageAddressSection({
     []
   );
 
-  const openPostcode = () => {
+  const openPostcode = async () => {
+    try {
+      await loadDaumPostcodeScript();
+    } catch {
+      return;
+    }
     if (!window.daum) return;
 
     const width = 500;

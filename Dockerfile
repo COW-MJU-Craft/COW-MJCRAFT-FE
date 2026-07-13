@@ -32,6 +32,7 @@ RUN echo "{\"sha\":\"${BUILD_SHA}\"}" > /app/dist/version.json
 FROM nginx:1.31-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
