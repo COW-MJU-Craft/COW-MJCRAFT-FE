@@ -303,7 +303,10 @@ export default function AdminProjectEditorPage() {
   const [error, setError] = useState<string | null>(null);
   const [thumbnailDeleting, setThumbnailDeleting] = useState(false);
   const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
-  const initialProjectRef = useRef<AdminProjectForm | null>(null);
+  // 렌더 중 isDirtyBySnapshot()에서 읽어야 하므로 ref 대신 state로 보관한다
+  // (react-hooks/refs: 렌더 중 ref.current 읽기 금지).
+  const [initialProjectSnapshot, setInitialProjectSnapshot] =
+    useState<AdminProjectForm | null>(null);
 
   const objectUrlsRef = useRef<string[]>([]);
 
@@ -342,7 +345,9 @@ export default function AdminProjectEditorPage() {
 
   useEffect(() => {
     let active = true;
-    initialProjectRef.current = null;
+    // 프로젝트 전환 시 기준 스냅샷 초기화: 외부 상태(projectId)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInitialProjectSnapshot(null);
 
     async function load() {
       setLoading(true);
@@ -353,9 +358,7 @@ export default function AdminProjectEditorPage() {
           if (active) {
             const empty = createEmptyProject();
             setProject(empty);
-            if (!initialProjectRef.current) {
-              initialProjectRef.current = { ...empty, images: [] };
-            }
+            setInitialProjectSnapshot((prev) => prev ?? { ...empty, images: [] });
           }
           return;
         }
@@ -369,12 +372,13 @@ export default function AdminProjectEditorPage() {
         }
         const mapped = mapProjectToForm(detail);
         setProject(mapped);
-        if (!initialProjectRef.current) {
-          initialProjectRef.current = {
-            ...mapped,
-            images: mapped.images.map((image) => ({ ...image })),
-          };
-        }
+        setInitialProjectSnapshot(
+          (prev) =>
+            prev ?? {
+              ...mapped,
+              images: mapped.images.map((image) => ({ ...image })),
+            },
+        );
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : '로드에 실패했어요');
@@ -430,11 +434,11 @@ export default function AdminProjectEditorPage() {
 
   const isDirtyBySnapshot = useCallback(
     (current: AdminProjectForm | null) => {
-      const initial = snapshotProject(initialProjectRef.current);
+      const initial = snapshotProject(initialProjectSnapshot);
       const now = snapshotProject(current);
       return JSON.stringify(initial) !== JSON.stringify(now);
     },
-    [snapshotProject]
+    [snapshotProject, initialProjectSnapshot]
   );
 
   const getValidation = useCallback(
@@ -515,10 +519,10 @@ export default function AdminProjectEditorPage() {
           revokePreviewUrl(prev.thumbnailPreviewUrl);
 
         const merged = mergeServerProject(prev, saved);
-        initialProjectRef.current = {
+        setInitialProjectSnapshot({
           ...merged,
           images: merged.images.map((image) => ({ ...image })),
-        };
+        });
         return merged;
       });
 
@@ -697,14 +701,10 @@ export default function AdminProjectEditorPage() {
     // TODO: 서버 삭제 API가 생기면 여기서 호출로 교체
     toast.success('삭제했어요. 저장하면 반영돼요');
     setThumbnailDeleting(false);
-  }, [
-    confirm,
-    project?.thumbnailPreviewUrl,
-    revokePreviewUrl,
-    thumbnailDeleting,
-    toast,
-    updateProject,
-  ]);
+    // React Compiler가 project?.thumbnailPreviewUrl 같은 optional chaining 경로를
+    // 안정적으로 추적하지 못해 메모이제이션을 보존할 수 없다는 경고가 발생한다.
+    // project 객체 자체를 의존성으로 사용해 컴파일러 추론과 일치시킨다.
+  }, [confirm, project, revokePreviewUrl, thumbnailDeleting, toast, updateProject]);
 
   const handleImageRemove = useCallback(
     async (id: string) => {

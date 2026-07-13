@@ -228,11 +228,15 @@ export default function AdminOrdersPage() {
   );
 
   useEffect(() => {
+    // 주문 목록 로드: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadOrders();
   }, [loadOrders]);
 
   useEffect(() => {
     if (!selectedOrderId) return;
+    // 선택된 주문 상세 로드: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadDetail(selectedOrderId);
   }, [selectedOrderId, loadDetail]);
 
@@ -442,13 +446,10 @@ export default function AdminOrdersPage() {
     }
 
     return rows;
-  }, [
-    detail?.order?.canceledAt,
-    detail?.order?.refundRequestedAt,
-    detail?.order?.refundedAt,
-    detail?.order?.cancelReason,
-    selectedStatus,
-  ]);
+    // React Compiler가 optional chaining 경로별 의존성을 안정적으로 추적하지 못해
+    // 메모이제이션을 보존할 수 없다는 경고가 발생한다. detail 객체 자체를 의존성으로 사용해
+    // 컴파일러 추론과 일치시킨다.
+  }, [detail, selectedStatus]);
 
   const summaryRows = useMemo<DetailInfoRow[]>(
     () => [

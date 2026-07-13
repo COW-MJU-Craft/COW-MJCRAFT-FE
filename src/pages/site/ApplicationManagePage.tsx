@@ -160,6 +160,8 @@ export default function ApplicationManagePage() {
   }, []);
 
   useEffect(() => {
+    // 모집 폼 오픈 여부 확인: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void checkOpenForm();
   }, [checkOpenForm]);
 

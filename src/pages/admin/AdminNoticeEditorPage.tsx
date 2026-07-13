@@ -199,7 +199,11 @@ export default function AdminNoticeEditorPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const initialRef = useRef<NoticeForm | null>(null);
+  // isDirty(useMemo)가 렌더 중에 읽어야 하므로 ref 대신 state로 보관한다
+  // (react-hooks/refs: 렌더 중 ref.current 읽기 금지).
+  const [initialSnapshot, setInitialSnapshot] = useState<NoticeForm | null>(
+    null,
+  );
   const objectUrlsRef = useRef<string[]>([]);
 
   const sensors = useSensors(
@@ -236,7 +240,7 @@ export default function AdminNoticeEditorPage() {
         if (!noticeId) {
           const empty = createEmpty();
           setForm(empty);
-          initialRef.current = { ...empty, images: [] };
+          setInitialSnapshot({ ...empty, images: [] });
           return;
         }
         const detail = await adminNoticesApi.getById(noticeId);
@@ -248,10 +252,10 @@ export default function AdminNoticeEditorPage() {
         }
         const mapped = toForm(detail);
         setForm(mapped);
-        initialRef.current = {
+        setInitialSnapshot({
           ...mapped,
           images: mapped.images.map((img) => ({ ...img })),
-        };
+        });
       } catch {
         if (!active) return;
         setError('공지사항을 불러오지 못했어요.');
@@ -273,11 +277,11 @@ export default function AdminNoticeEditorPage() {
   }, []);
 
   const isDirty = useMemo(() => {
-    if (!form || !initialRef.current) return false;
+    if (!form || !initialSnapshot) return false;
     const a = JSON.stringify({
-      title: initialRef.current.title.trim(),
-      content: initialRef.current.content.trim(),
-      images: initialRef.current.images.map((i) => i.key ?? null),
+      title: initialSnapshot.title.trim(),
+      content: initialSnapshot.content.trim(),
+      images: initialSnapshot.images.map((i) => i.key ?? null),
     });
     const b = JSON.stringify({
       title: form.title.trim(),
@@ -285,7 +289,7 @@ export default function AdminNoticeEditorPage() {
       images: form.images.map((i) => i.key ?? null),
     });
     return a !== b;
-  }, [form]);
+  }, [form, initialSnapshot]);
 
   const handleBack = useCallback(async () => {
     if (!isDirty) {

@@ -55,6 +55,8 @@ export default function AdminDashboardPage() {
   const [orderCompleteDirty, setOrderCompleteDirty] = useState(false);
 
   useEffect(() => {
+    // 섹션 전환 시 이전 저장 메시지 초기화: 외부 상태(선택된 섹션)와 동기화하는 표준 패턴이라 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSaveMsg(null);
     setSaveMsgTone(null);
   }, [section]);
@@ -132,6 +134,8 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (section === 'feedback') {
+      // 피드백 섹션 진입 시 목록 로드: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadFeedback();
     }
   }, [section, loadFeedback]);

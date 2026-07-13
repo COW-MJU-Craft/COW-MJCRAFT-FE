@@ -53,6 +53,8 @@ export default function OrderViewPage() {
 
   useEffect(() => {
     if (!token) {
+      // 토큰 없는 잘못된 접근: 외부 상태(URL 쿼리)와 동기화하는 표준 패턴이라 예외 처리한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
