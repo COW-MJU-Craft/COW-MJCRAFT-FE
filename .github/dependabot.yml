@@ -5,13 +5,25 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # 메이저 버전 업데이트는 호환성이 깨질 수 있어 자동 PR 대상에서 제외한다.
+    # 필요하면 직접 버전을 확인하고 개별적으로 업데이트한다.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
+    # Dockerfile base image(node, nginx)도 메이저 버전은 자동 반영 대상에서 제외.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
