@@ -193,6 +193,13 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 - 깡통 테스트 금지 — assertion 없는 테스트, 구현 복사 테스트는 작성하지 않는다
 - 참고 예시: `src/api/client.test.ts` (fetch mock, 토큰 부착·에러 처리), `src/utils/date.test.ts` (경계값)
 
+**E2E 스모크 테스트**: `e2e/` 디렉토리에 Playwright로 작성한다 (`npm run test:e2e`).
+Vitest 단위 테스트와 대상이 다르다 — 개별 로직이 아니라 "빌드된 실제 페이지가
+크래시 없이 렌더링되는지"만 확인한다. 특정 데이터 내용에 의존하는 어서션은
+피하고, API 응답과 무관하게 항상 렌더링되는 요소(레이아웃, 폼, 리다이렉트)만
+검증한다. `vitest.config.ts`의 `test.exclude`에 `e2e/**`가 포함돼 있어야
+vitest가 Playwright 스펙 파일을 잘못 주워가지 않는다.
+
 ---
 
 ## 핸드오프/상태 문서 컨벤션
