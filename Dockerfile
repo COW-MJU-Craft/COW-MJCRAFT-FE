@@ -23,6 +23,11 @@ ENV VITE_GA4_REPORT_URL=$VITE_GA4_REPORT_URL
 
 RUN npm run build
 
+# 배포된 이미지가 실제로 어떤 커밋인지 런타임에 확인할 수 있도록 버전 파일을 심는다.
+# (로컬 빌드 등 값이 없을 때는 "unknown"으로 남겨 스모크 체크가 실패로 감지하게 한다.)
+ARG BUILD_SHA=unknown
+RUN echo "{\"sha\":\"${BUILD_SHA}\"}" > /app/dist/version.json
+
 # ---------- serve stage ----------
 FROM nginx:1.31-alpine
 

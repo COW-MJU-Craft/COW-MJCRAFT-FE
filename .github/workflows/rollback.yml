@@ -1,0 +1,82 @@
+name: Rollback FE Deployment
+
+# 배포된 커밋에 문제가 있을 때, 이미 GHCR에 올라간 특정 커밋 SHA 이미지를
+# 다시 :latest로 재태깅해서 Coolify가 그 버전을 pull하도록 되돌린다.
+# 새로 빌드하지 않고 기존 이미지를 재사용하므로, 대상 SHA는 과거에
+# main으로 머지되어 deploy.yml이 실제로 push한 커밋이어야 한다.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "롤백할 커밋 SHA (전체 40자리, ghcr.io에 :SHA 태그로 이미 존재해야 함)"
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-fe-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE: ghcr.io/cow-mju-craft/cowmjucraft-fe
+
+    steps:
+      - name: 입력값 검증
+        run: |
+          sha="${{ inputs.sha }}"
+          if ! echo "$sha" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "::error::sha는 40자리 소문자 16진수 커밋 해시여야 합니다. 입력값: ${sha}"
+            exit 1
+          fi
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 대상 SHA 이미지를 :latest로 재태깅 후 push
+        run: |
+          docker pull "${{ env.IMAGE }}:${{ inputs.sha }}"
+          docker tag "${{ env.IMAGE }}:${{ inputs.sha }}" "${{ env.IMAGE }}:latest"
+          docker push "${{ env.IMAGE }}:latest"
+
+      - name: Trigger Coolify deploy
+        run: |
+          curl -fSs -X GET "${{ secrets.COOLIFY_FE_WEBHOOK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
+
+      - name: Verify rollback (smoke check)
+        env:
+          EXPECTED_SHA: ${{ inputs.sha }}
+        run: |
+          BASE_URL="${{ vars.FE_BASE_URL || 'https://mju-craft.shop' }}"
+          echo "smoke target: ${BASE_URL}"
+          echo "expected sha (rollback target): ${EXPECTED_SHA}"
+          ok=""
+          for i in $(seq 1 20); do
+            sleep 15
+            body=$(curl -s --max-time 10 "${BASE_URL}/" || echo "")
+            if ! echo "$body" | grep -q 'id="root"'; then
+              echo "attempt ${i}/20: SPA HTML 아직 아님"
+              continue
+            fi
+            deployed_sha=$(curl -s --max-time 10 "${BASE_URL}/version.json" | grep -o '"sha":"[^"]*"' | cut -d'"' -f4 || echo "")
+            if [ "$deployed_sha" = "$EXPECTED_SHA" ]; then
+              echo "attempt ${i}/20: OK (롤백 확인, sha=${deployed_sha})"
+              ok=1
+              break
+            fi
+            echo "attempt ${i}/20: SPA는 응답하나 sha 불일치 (배포됨=${deployed_sha:-없음}, 기대값=${EXPECTED_SHA})"
+          done
+          if [ -z "$ok" ]; then
+            echo "::error::롤백 후 smoke check 실패 — 5분 내 기대한 커밋(${EXPECTED_SHA})으로 확인 안 됨"
+            exit 1
+          fi
