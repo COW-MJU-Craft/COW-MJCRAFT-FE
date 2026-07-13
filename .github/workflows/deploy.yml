@@ -24,7 +24,7 @@ jobs:
       IMAGE: ghcr.io/cow-mju-craft/cowmjucraft-fe
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # CI가 검증한 바로 그 커밋을 빌드
           ref: ${{ github.event.workflow_run.head_sha }}
