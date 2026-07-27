@@ -9,6 +9,7 @@ type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 type AdminLoginResponse = {
   accessToken?: string;
+  refreshToken?: string;
   loginId?: string;
 };
 
@@ -90,7 +91,11 @@ export default function LoginPage() {
       }
 
       const name = (result.loginId ?? userId.trim()).trim() || 'USER';
-      setAuth({ accessToken: result.accessToken, userName: name });
+      setAuth({
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        userName: name,
+      });
 
       setStatus('success');
       navigate('/admin', { replace: true });
