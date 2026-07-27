@@ -1,4 +1,9 @@
-﻿import { clearAuth, getAccessToken } from "../utils/auth";
+﻿import {
+  clearAuth,
+  getAccessToken,
+  getRefreshToken,
+  updateTokens,
+} from "../utils/auth";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -35,9 +40,68 @@ type ApiEnvelope<T> = {
   data: T | null;
 };
 
+export const REFRESH_PATH = "/admin/refresh";
+
+// 동시에 여러 요청이 401을 받아도 재발급은 한 번만 수행하고,
+// 나머지는 그 결과를 함께 기다린다.
+let refreshPromise: Promise<boolean> | null = null;
+
+async function refreshAccessToken(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  // api()를 거치면 재발급 응답의 401이 다시 재발급을 부르므로 fetch를 직접 쓴다.
+  try {
+    const res = await fetch(withApiBase(REFRESH_PATH), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      credentials: "include",
+    });
+
+    if (!res.ok) return false;
+
+    const text = await res.text();
+    const parsed: unknown = text ? safeJsonParse(text) : null;
+    const payload = isApiEnvelope(parsed) ? parsed.data : parsed;
+
+    if (!payload || typeof payload !== "object") return false;
+
+    const record = payload as Record<string, unknown>;
+    const accessToken = record["accessToken"];
+    if (typeof accessToken !== "string" || !accessToken) return false;
+
+    const nextRefreshToken = record["refreshToken"];
+    updateTokens({
+      accessToken,
+      // 회전형이므로 새 refresh token이 함께 온다
+      refreshToken:
+        typeof nextRefreshToken === "string" ? nextRefreshToken : null,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function refreshOnce(): Promise<boolean> {
+  refreshPromise ??= refreshAccessToken().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+}
+
 export async function api<T>(
   path: string,
   opts: RequestOptions = {},
+): Promise<T> {
+  return request<T>(path, opts, true);
+}
+
+async function request<T>(
+  path: string,
+  opts: RequestOptions,
+  allowRefresh: boolean,
 ): Promise<T> {
   const method = opts.method ?? "GET";
 
@@ -65,6 +129,19 @@ export async function api<T>(
 
   if (!res.ok) {
     if (res.status === 401) {
+      // 인증이 걸린 요청만 재발급 대상이다. 비회원 조회 API의 401(비밀번호 불일치)은
+      // 재발급으로 해결되지 않으므로 Authorization 헤더가 있었는지로 구분한다.
+      const canRefresh =
+        allowRefresh &&
+        Boolean(token) &&
+        !path.endsWith(REFRESH_PATH) &&
+        Boolean(getRefreshToken());
+
+      if (canRefresh && (await refreshOnce())) {
+        // 재발급 성공 — 새 토큰으로 한 번만 재시도한다
+        return request<T>(path, opts, false);
+      }
+
       clearAuth();
     }
     let msg = extractErrorMessage(data);

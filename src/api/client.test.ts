@@ -4,10 +4,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 vi.mock('../utils/auth', () => ({
   clearAuth: vi.fn(),
   getAccessToken: vi.fn(() => null),
+  getRefreshToken: vi.fn(() => null),
+  updateTokens: vi.fn(),
 }));
 
 import { api, ApiError, withApiBase } from './client';
-import { clearAuth, getAccessToken } from '../utils/auth';
+import {
+  clearAuth,
+  getAccessToken,
+  getRefreshToken,
+  updateTokens,
+} from '../utils/auth';
 
 function mockFetch(status: number, body: unknown) {
   return vi.fn().mockResolvedValue(
@@ -21,6 +28,7 @@ function mockFetch(status: number, body: unknown) {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getAccessToken).mockReturnValue(null);
+  vi.mocked(getRefreshToken).mockReturnValue(null);
 });
 
 afterEach(() => {
@@ -66,7 +74,7 @@ describe('api', () => {
     expect((err as ApiError).message).toBe('없음');
   });
 
-  it('401이면 clearAuth를 호출한다', async () => {
+  it('401이고 refresh token이 없으면 clearAuth를 호출한다', async () => {
     vi.stubGlobal('fetch', mockFetch(401, { message: 'unauthorized' }));
 
     await expect(api('/x')).rejects.toBeInstanceOf(ApiError);
@@ -90,5 +98,122 @@ describe('api', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
 
     await expect(api('/x')).resolves.toBeUndefined();
+  });
+});
+
+describe('api 토큰 재발급', () => {
+  function jsonResponse(status: number, body: unknown) {
+    return new Response(body === undefined ? null : JSON.stringify(body), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  function envelope(data: unknown) {
+    return { resultType: 'SUCCESS', httpStatusCode: 200, message: 'ok', data };
+  }
+
+  function loggedInWithRefreshToken() {
+    vi.mocked(getAccessToken).mockReturnValue('expired-token');
+    vi.mocked(getRefreshToken).mockReturnValue('ref123');
+  }
+
+  it('401이면 재발급 후 원래 요청을 재시도한다', async () => {
+    loggedInWithRefreshToken();
+    const f = vi
+      .fn()
+      // 1) 원요청 401
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'expired' }))
+      // 2) 재발급 성공
+      .mockResolvedValueOnce(
+        jsonResponse(200, envelope({ accessToken: 'new-tok', refreshToken: 'new-ref' })),
+      )
+      // 3) 재시도 성공
+      .mockResolvedValueOnce(jsonResponse(200, envelope({ id: 1 })));
+    vi.stubGlobal('fetch', f);
+
+    await expect(api('/admin/orders')).resolves.toEqual({ id: 1 });
+
+    expect(f).toHaveBeenCalledTimes(3);
+    expect(updateTokens).toHaveBeenCalledWith({
+      accessToken: 'new-tok',
+      refreshToken: 'new-ref',
+    });
+    expect(clearAuth).not.toHaveBeenCalled();
+  });
+
+  it('재발급이 실패하면 clearAuth 후 원래 오류를 던진다', async () => {
+    loggedInWithRefreshToken();
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'expired' }))
+      // 재발급도 401
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'invalid refresh token' }));
+    vi.stubGlobal('fetch', f);
+
+    const err = await api('/admin/orders').catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(401);
+    expect(clearAuth).toHaveBeenCalledOnce();
+    expect(updateTokens).not.toHaveBeenCalled();
+  });
+
+  it('재시도도 401이면 더 재발급하지 않고 clearAuth한다', async () => {
+    loggedInWithRefreshToken();
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'expired' }))
+      .mockResolvedValueOnce(
+        jsonResponse(200, envelope({ accessToken: 'new-tok', refreshToken: 'new-ref' })),
+      )
+      // 재시도마저 401 — 무한 루프로 가면 안 된다
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'still unauthorized' }));
+    vi.stubGlobal('fetch', f);
+
+    await expect(api('/admin/orders')).rejects.toBeInstanceOf(ApiError);
+
+    expect(f).toHaveBeenCalledTimes(3);
+    expect(clearAuth).toHaveBeenCalledOnce();
+  });
+
+  it('동시에 401을 받아도 재발급은 한 번만 호출한다', async () => {
+    loggedInWithRefreshToken();
+    const f = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/admin/refresh')) {
+        return Promise.resolve(
+          jsonResponse(200, envelope({ accessToken: 'new-tok', refreshToken: 'new-ref' })),
+        );
+      }
+      // 첫 호출은 401, 재시도는 성공
+      return Promise.resolve(
+        f.mock.calls.filter((c) => !String(c[0]).endsWith('/admin/refresh')).length <= 3
+          ? jsonResponse(401, { message: 'expired' })
+          : jsonResponse(200, envelope({ ok: true })),
+      );
+    });
+    vi.stubGlobal('fetch', f);
+
+    await Promise.allSettled([api('/admin/a'), api('/admin/b'), api('/admin/c')]);
+
+    const refreshCalls = f.mock.calls.filter((c) =>
+      String(c[0]).endsWith('/admin/refresh'),
+    );
+    expect(refreshCalls).toHaveLength(1);
+  });
+
+  it('Authorization 헤더가 없던 요청의 401은 재발급하지 않는다', async () => {
+    // 비회원 주문 조회의 비밀번호 불일치 — 재발급으로 해결되지 않는다
+    vi.mocked(getAccessToken).mockReturnValue(null);
+    vi.mocked(getRefreshToken).mockReturnValue('ref123');
+    const f = vi.fn().mockResolvedValue(jsonResponse(401, { message: '비밀번호 불일치' }));
+    vi.stubGlobal('fetch', f);
+
+    await expect(api('/orders/lookup', { method: 'POST', body: {} })).rejects.toBeInstanceOf(
+      ApiError,
+    );
+
+    expect(f).toHaveBeenCalledOnce();
+    expect(updateTokens).not.toHaveBeenCalled();
   });
 });

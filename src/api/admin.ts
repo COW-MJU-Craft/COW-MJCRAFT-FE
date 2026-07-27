@@ -9,6 +9,9 @@ export type AdminLoginResponse = {
   loginId: string;
   email: string;
   accessToken: string;
+  accessTokenExpiresInSeconds: number;
+  refreshToken: string;
+  refreshTokenExpiresInSeconds: number;
 };
 
 export type UpdateAccountBody = {

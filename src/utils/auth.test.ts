@@ -3,9 +3,11 @@ import {
   AUTH_CHANGED_EVENT,
   clearAuth,
   getAccessToken,
+  getRefreshToken,
   getUserName,
   isLoggedIn,
   setAuth,
+  updateTokens,
 } from './auth';
 
 beforeEach(() => {
@@ -58,5 +60,39 @@ describe('auth', () => {
 
     expect(getAccessToken()).toBe('tok456');
     expect(getUserName()).toBeNull();
+  });
+
+  it('setAuth는 refreshToken도 sessionStorage에 저장한다', () => {
+    setAuth({ accessToken: 'tok123', refreshToken: 'ref123', userName: '홍길동' });
+
+    expect(getRefreshToken()).toBe('ref123');
+    expect(sessionStorage.getItem('refreshToken')).toBe('ref123');
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('clearAuth는 refreshToken도 지운다', () => {
+    setAuth({ accessToken: 'tok123', refreshToken: 'ref123' });
+    clearAuth();
+
+    expect(getRefreshToken()).toBeNull();
+  });
+
+  it('updateTokens는 토큰만 교체하고 userName은 유지한다', () => {
+    setAuth({ accessToken: 'tok123', refreshToken: 'ref123', userName: '홍길동' });
+
+    updateTokens({ accessToken: 'tok456', refreshToken: 'ref456' });
+
+    expect(getAccessToken()).toBe('tok456');
+    expect(getRefreshToken()).toBe('ref456');
+    expect(getUserName()).toBe('홍길동');
+  });
+
+  it('updateTokens에 refreshToken이 없으면 기존 값을 유지한다', () => {
+    setAuth({ accessToken: 'tok123', refreshToken: 'ref123' });
+
+    updateTokens({ accessToken: 'tok456' });
+
+    expect(getAccessToken()).toBe('tok456');
+    expect(getRefreshToken()).toBe('ref123');
   });
 });
