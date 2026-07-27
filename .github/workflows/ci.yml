@@ -66,8 +66,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 패치 경로가 없는 권고는 scripts/audit-gate.js의 ALLOWLIST에서 사유와 함께 관리한다.
       - name: npm audit (high 이상 취약점 gate)
-        run: npm audit --audit-level=high
+        run: node scripts/audit-gate.js
 
   test:
     runs-on: ubuntu-latest
