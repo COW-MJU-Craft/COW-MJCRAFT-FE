@@ -8,7 +8,7 @@ vi.mock('../utils/auth', () => ({
   updateTokens: vi.fn(),
 }));
 
-import { api, ApiError, withApiBase } from './client';
+import { api, ApiError } from './client';
 import {
   clearAuth,
   getAccessToken,
@@ -36,9 +36,29 @@ afterEach(() => {
 });
 
 describe('withApiBase', () => {
-  it('VITE_API_BASE_URL이 없으면 경로를 그대로 반환한다', () => {
-    // vitest 환경에서는 env 미설정 → API_BASE = ""
+  // API_BASE는 모듈 로드 시점에 import.meta.env로 확정되므로, 로컬 .env 값이
+  // 새어들어오면 결과가 달라진다. env를 명시적으로 stub한 뒤 모듈을 다시 로드해
+  // 실행 환경(.env 유무)과 무관하게 두 분기를 모두 검증한다.
+  async function loadWithApiBase(baseUrl: string) {
+    vi.resetModules();
+    vi.stubEnv('VITE_API_BASE_URL', baseUrl);
+    return (await import('./client')).withApiBase;
+  }
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('VITE_API_BASE_URL이 없으면 경로를 그대로 반환한다', async () => {
+    const withApiBase = await loadWithApiBase('');
+
     expect(withApiBase('/projects')).toBe('/projects');
+  });
+
+  it('VITE_API_BASE_URL이 있으면 앞에 붙이고 끝의 슬래시는 제거한다', async () => {
+    const withApiBase = await loadWithApiBase('https://api.example.com/api/');
+
+    expect(withApiBase('/projects')).toBe('https://api.example.com/api/projects');
   });
 });
 
