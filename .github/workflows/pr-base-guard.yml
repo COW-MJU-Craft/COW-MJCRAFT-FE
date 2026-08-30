@@ -1,0 +1,40 @@
+name: PR Base Guard
+
+on:
+  pull_request:
+    branches: ["main", "develop"]
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pr-base:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate pull request base branch
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [[ "$HEAD_REF" == "develop" ]]; then
+            EXPECTED_BASE="main"
+          elif [[ "$HEAD_REF" =~ ^hotfix/ ]]; then
+            EXPECTED_BASE="main"
+          elif [[ "$HEAD_REF" =~ ^(feat|fix|refactor|docs|chore)/ ]]; then
+            EXPECTED_BASE="develop"
+          elif [[ "$HEAD_REF" =~ ^dependabot/ ]]; then
+            EXPECTED_BASE="develop"
+          else
+            echo "::error::Unsupported branch name '$HEAD_REF'. Use feat/*, fix/*, refactor/*, docs/*, chore/*, hotfix/*, or dependabot/*."
+            exit 1
+          fi
+
+          if [[ "$BASE_REF" != "$EXPECTED_BASE" ]]; then
+            echo "::error::Invalid PR base. '$HEAD_REF' must target '$EXPECTED_BASE', but this PR targets '$BASE_REF'."
+            exit 1
+          fi
+
+          echo "PR base is valid: $HEAD_REF -> $BASE_REF"
