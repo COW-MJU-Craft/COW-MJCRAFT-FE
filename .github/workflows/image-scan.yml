@@ -66,7 +66,7 @@ jobs:
       # CSP를 Report-Only로 먼저 켰던 것과 같은 이유.
       - name: Grype 취약점 스캔 (SARIF)
         # anchore/scan-action v7.4.0 (2026-03-20, GPG 서명 확인된 immutable release)
-        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
+        uses: anchore/scan-action@8964e60c6fabdb85fdbbbfd9834d8f19c97a3086
         continue-on-error: true
         with:
           image: cowmjucraft-fe:scan
