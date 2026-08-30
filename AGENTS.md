@@ -87,6 +87,10 @@ npm test
 ## Git 워크플로우
 
 - `main` 브랜치에 직접 커밋하지 않는다.
+- 일반 작업은 `feat/...`, `fix/...`, `refactor/...`, `docs/...`, `chore/...` 브랜치에서 진행하고 PR 대상은 `develop`으로 한다.
+- `develop`에서 통합 검증이 끝난 뒤 `develop` -> `main` PR로 배포 대상 변경을 모아 반영한다.
+- 배포 PR(`develop` -> `main`)은 전용 템플릿 URL을 사용한다: `https://github.com/COW-MJU-Craft/COW-MJCRAFT-FE/compare/main...develop?quick_pull=1&template=release.md`
+- 긴급 hotfix처럼 `main` 대상 PR이 필요한 경우에는 작업 사유와 검증 범위를 PR 본문에 명시한다.
 - 브랜치 이름은 변경 목적이 드러나게 작성한다.
   - `feat/...`
   - `fix/...`

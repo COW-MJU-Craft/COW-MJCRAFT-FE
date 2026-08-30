@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
@@ -40,6 +41,7 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
     ignore:
@@ -48,6 +50,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
     # Dockerfile base image(node, nginx)도 메이저 버전은 자동 반영 대상에서 제외.
