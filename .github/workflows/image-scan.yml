@@ -84,7 +84,7 @@ jobs:
 
       - name: SBOM 생성 (SPDX, Syft)
         # anchore/sbom-action v0.24.0 (2026-03-20, GPG 서명 확인된 immutable release)
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+        uses: anchore/sbom-action@aa80c8c5bd439a416a62804f2151ab38c671a638
         with:
           image: cowmjucraft-fe:scan
           format: spdx-json
