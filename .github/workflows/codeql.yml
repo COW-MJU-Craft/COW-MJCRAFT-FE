@@ -2,9 +2,9 @@ name: CodeQL
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "develop"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "develop"]
   schedule:
     # 매주 월요일 04:00 UTC(한국시간 13:00) — push/PR 없이도 새로 발견된
     # 취약 패턴(CodeQL 쿼리 업데이트)을 정기적으로 잡아내기 위함
