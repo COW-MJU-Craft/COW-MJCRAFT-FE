@@ -1,11 +1,11 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import {
   loadAdminContent,
   saveAdminContent,
   type AdminContent,
-} from '../../../utils/adminContent';
+} from '../../../utils/admin/content';
 import AdminFeedbackFormSection from '../sections/AdminFeedbackFormSection';
 import AdminFeedbackListSection from '../sections/AdminFeedbackListSection';
 import AdminLinksSection from '../sections/AdminLinksSection';
@@ -18,7 +18,7 @@ import AdminOrderCompletePageSection from '../sections/AdminOrderCompletePageSec
 import {
   adminFeedbackApi,
   type AdminFeedbackResponse,
-} from '../../../api/adminFeedback';
+} from '../../../api/admin/feedback';
 
 type SaveHandler = () => Promise<string | null>;
 

@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from 'react';
-import { getToastEventName, type ToastPayload } from '../../utils/toast';
+import { useEffect, useState } from 'react';
+import { getToastEventName, type ToastPayload } from '../../utils/common/toast';
 
 type ToastState = Required<Pick<ToastPayload, 'message'>> & {
   tone: 'success' | 'error' | 'info';

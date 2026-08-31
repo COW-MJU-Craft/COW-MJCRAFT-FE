@@ -1,15 +1,15 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../../components/ui/Reveal';
 import ProjectCard from '../../../components/project/ProjectCard';
 import PayoutReportCard from '../../../components/payout/PayoutReportCard';
 import { SkeletonProjectCard } from '../../../components/ui/Skeleton';
-import { projectsApi } from '../../../api/projects';
-import { payoutsApi } from '../../../api/payouts';
+import { projectsApi } from '../../../api/site/projects';
+import { payoutsApi } from '../../../api/site/payouts';
 import type { PayoutReport } from '../../../types/payouts';
-import type { Project } from '../../../api/projects';
-import { sortProjects } from '../../../utils/projectSort';
+import type { Project } from '../../../api/site/projects';
+import { sortProjects } from '../../../utils/project/sort';
 
 type TabValue = 'all' | 'OPEN' | 'PREPARING' | 'CLOSED' | 'PAYOUT';
 

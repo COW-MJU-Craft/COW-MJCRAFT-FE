@@ -1,4 +1,4 @@
-﻿import {
+import {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -35,9 +35,9 @@ import {
   adminProjectsApi,
   type AdminProjectOrderItem,
   type AdminProjectResponse,
-} from '../../../api/adminProjects';
-import { sortProjects } from '../../../utils/projectSort';
-import { formatYmd } from '../../../utils/date';
+} from '../../../api/admin/projects';
+import { sortProjects } from '../../../utils/project/sort';
+import { formatYmd } from '../../../utils/common/date';
 
 const STATUS_LABELS: Record<string, string> = {
   PREPARING: '준비중',

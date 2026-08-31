@@ -1,10 +1,10 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import HeaderDesktop from './HeaderDesktop';
 import HeaderMobile from './HeaderMobile';
 import { useAuth } from '../../hooks/useAuth';
-import { clearAuth } from '../../utils/auth';
-import { showLogoutToast } from '../../utils/LogoutToast';
+import { clearAuth } from '../../utils/auth/auth';
+import { showLogoutToast } from '../../utils/common/LogoutToast';
 
 export default function Header() {
   const { isLoggedIn } = useAuth();

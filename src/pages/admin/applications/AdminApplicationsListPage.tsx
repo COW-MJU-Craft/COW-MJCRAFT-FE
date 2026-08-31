@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import Reveal from '../../../components/ui/Reveal';
@@ -9,9 +9,9 @@ import {
   adminApplicationsApi,
   type AdminApplicationListItem,
   type AdminApplicationResultStatus,
-} from '../../../api/adminApplications';
-import { adminFormsApi, type AdminFormListItem } from '../../../api/adminForms';
-import { formatYmd, parseDateLike } from '../../../utils/date';
+} from '../../../api/admin/applications';
+import { adminFormsApi, type AdminFormListItem } from '../../../api/admin/forms';
+import { formatYmd, parseDateLike } from '../../../utils/common/date';
 import { getDepartmentLabel } from '../../../types/recruit';
 
 const RESULT_OPTIONS: Array<{

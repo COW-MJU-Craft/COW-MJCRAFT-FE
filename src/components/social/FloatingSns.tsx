@@ -1,6 +1,6 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { snsApi } from '../../api/sns';
+import { snsApi } from '../../api/site/sns';
 import instagramLogo from '../../assets/logos/instagram.png';
 import kakaoLogo from '../../assets/logos/kakao.png';
 

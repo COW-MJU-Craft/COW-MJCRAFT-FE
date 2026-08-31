@@ -1,4 +1,4 @@
-import type { CartItem } from '../../utils/cart';
+import type { CartItem } from '../../utils/cart/cart';
 
 export type OrderLocationState = {
   source?: 'cart' | 'direct';

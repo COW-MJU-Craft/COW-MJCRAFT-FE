@@ -1,6 +1,6 @@
-﻿import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { trackGA4PageView } from '../../utils/analytics';
+import { trackGA4PageView } from '../../utils/common/analytics';
 
 export default function GoogleAnalytics() {
   const location = useLocation();

@@ -1,12 +1,12 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import Reveal from '../../../components/ui/Reveal';
-import { noticesApi, type NoticeResponse } from '../../../api/notices';
-import { API_BASE } from '../../../api/client';
-import { formatYmd, parseDateLike } from '../../../utils/date';
+import { noticesApi, type NoticeResponse } from '../../../api/site/notices';
+import { API_BASE } from '../../../api/core/client';
+import { formatYmd, parseDateLike } from '../../../utils/common/date';
 
 const PUBLIC_ASSET_BASE = API_BASE.replace(/\/api\/?$/, '');
 

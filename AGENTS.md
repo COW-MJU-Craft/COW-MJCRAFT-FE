@@ -39,6 +39,9 @@ npm run preview  # 빌드 결과 미리보기
 ```text
 src/
 ├─ api/                 # API 요청 모듈
+│  ├─ core/             # 공통 API 클라이언트와 응답 유틸
+│  ├─ site/             # 사용자 영역 API
+│  └─ admin/            # 관리자 영역 API
 ├─ assets/              # 로고, 폰트 등 정적 자원
 ├─ components/          # 공용 컴포넌트
 │  ├─ analytics/        # Google Analytics 관련 컴포넌트
@@ -80,6 +83,12 @@ src/
 ├─ styles/              # 전역 스타일
 ├─ types/               # 타입 정의
 └─ utils/               # 유틸 함수
+   ├─ admin/            # 관리자 콘텐츠/정산 유틸
+   ├─ auth/             # 인증 토큰 유틸
+   ├─ cart/             # 장바구니 유틸
+   ├─ common/           # 날짜, 미디어, 토스트 등 공통 유틸
+   ├─ order/            # 주문 draft 유틸
+   └─ project/          # 프로젝트 정렬 유틸
 ```
 
 ## 작업 원칙
@@ -227,10 +236,10 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 **작성 의무**: 새 로직(유틸, api 모듈, 훅) 추가 또는 기존 로직 변경 시 해당 부분의 테스트를 함께 작성한다.
 
 - 도구: Vitest + React Testing Library (`npm test` / `npm run test:watch`)
-- 위치: 대상 파일 옆에 `*.test.ts(x)` (예: `src/utils/date.test.ts`)
+- 위치: 대상 파일 옆에 `*.test.ts(x)` (예: `src/utils/common/date.test.ts`)
 - 우선순위: 순수 함수·api 모듈 > 훅 > 컴포넌트. 스타일·마크업만 바뀌는 컴포넌트 테스트는 강제하지 않는다
 - 깡통 테스트 금지 — assertion 없는 테스트, 구현 복사 테스트는 작성하지 않는다
-- 참고 예시: `src/api/client.test.ts` (fetch mock, 토큰 부착·에러 처리), `src/utils/date.test.ts` (경계값)
+- 참고 예시: `src/api/core/client.test.ts` (fetch mock, 토큰 부착·에러 처리), `src/utils/common/date.test.ts` (경계값)
 
 **E2E 스모크 테스트**: `e2e/` 디렉토리에 Playwright로 작성한다 (`npm run test:e2e`).
 Vitest 단위 테스트와 대상이 다르다 — 개별 로직이 아니라 "빌드된 실제 페이지가

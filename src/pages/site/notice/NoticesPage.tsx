@@ -1,10 +1,10 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../../components/ui/Reveal';
-import { noticesApi, type NoticeResponse } from '../../../api/notices';
-import { API_BASE } from '../../../api/client';
-import { formatYmd } from '../../../utils/date';
+import { noticesApi, type NoticeResponse } from '../../../api/site/notices';
+import { API_BASE } from '../../../api/core/client';
+import { formatYmd } from '../../../utils/common/date';
 
 const FILTER_OPTIONS = [
   { value: 'all', label: '전체' },

@@ -1,7 +1,7 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { ordersApi } from '../../../api/orders';
+import { ordersApi } from '../../../api/site/orders';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
 import {
@@ -10,13 +10,13 @@ import {
   getCartTotal,
   loadCartItems,
   removeCartItem,
-} from '../../../utils/cart';
+} from '../../../utils/cart/cart';
 import {
   clearOrderDraft,
   loadOrderDraft,
   saveOrderDraft,
-} from '../../../utils/orderDraft';
-import { loadDaumPostcodeScript } from '../../../utils/daumPostcode';
+} from '../../../utils/order/orderDraft';
+import { loadDaumPostcodeScript } from '../../../utils/common/daumPostcode';
 import {
   AGREEMENT_ITEMS,
   BUYER_TYPE_LABELS,

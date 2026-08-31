@@ -1,4 +1,4 @@
-﻿import type { ProjectStatus } from '../../api/projects';
+import type { ProjectStatus } from '../../api/site/projects';
 
 const LABEL: Record<ProjectStatus, string> = {
   PREPARING: '준비중',

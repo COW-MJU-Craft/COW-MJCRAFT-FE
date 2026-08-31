@@ -1,4 +1,4 @@
-import type { ItemSaleType, ItemType } from '../api/items';
+import type { ItemSaleType, ItemType } from '../api/site/items';
 
 export const ITEM_SALE_TYPE_LABELS: Record<ItemSaleType, string> = {
   NORMAL: '바로 구매',

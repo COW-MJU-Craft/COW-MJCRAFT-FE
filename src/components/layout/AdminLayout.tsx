@@ -1,8 +1,8 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import AdminHeaderDesktop from './AdminHeaderDesktop';
 import AdminHeaderMobile from './AdminHeaderMobile';
-import { isLoggedIn } from '../../utils/auth';
+import { isLoggedIn } from '../../utils/auth/auth';
 
 export default function AdminLayout() {
   const location = useLocation();

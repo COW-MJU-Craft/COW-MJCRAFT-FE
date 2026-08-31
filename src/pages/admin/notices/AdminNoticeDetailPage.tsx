@@ -1,10 +1,10 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import BackArrowIcon from '../../../components/ui/BackArrowIcon';
-import { adminNoticesApi, type AdminNoticeResponse } from '../../../api/adminNotices';
-import { API_BASE } from '../../../api/client';
-import { formatYmd } from '../../../utils/date';
+import { adminNoticesApi, type AdminNoticeResponse } from '../../../api/admin/notices';
+import { API_BASE } from '../../../api/core/client';
+import { formatYmd } from '../../../utils/common/date';
 
 function toDateValue(value?: unknown) {
   if (!value) return null;

@@ -1,8 +1,8 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react';
 import Reveal from '../../../components/ui/Reveal';
-import { applicationsApi } from '../../../api/applications';
+import { applicationsApi } from '../../../api/site/applications';
 
 const ACTIONS = [
   { to: '/apply/new', title: '지원하기', hint: '모집 중인 지원서 양식 작성' },

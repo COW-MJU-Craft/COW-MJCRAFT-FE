@@ -1,7 +1,7 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ordersApi, type OrderDetailResponse } from '../../../api/orders';
-import { ApiError } from '../../../api/client';
+import { ordersApi, type OrderDetailResponse } from '../../../api/site/orders';
+import { ApiError } from '../../../api/core/client';
 import OrderDetailCard from '../../../components/order/OrderDetailCard';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';

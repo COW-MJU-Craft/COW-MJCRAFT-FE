@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   DndContext,
@@ -27,7 +27,7 @@ import {
   type AdminProjectResponse,
   type AdminProjectStatus,
   type PresignPutItem,
-} from '../../../api/adminProjects';
+} from '../../../api/admin/projects';
 
 type ValidationField =
   | 'title'

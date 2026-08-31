@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   DndContext,
@@ -20,8 +20,8 @@ import BackArrowIcon from '../../../components/ui/BackArrowIcon';
 import MarkdownEditor from '../../../components/ui/MarkdownEditor';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
-import { ApiError } from '../../../api/client';
-import { adminProjectsApi, type AdminProjectResponse, uploadToPresignedUrl } from '../../../api/adminProjects';
+import { ApiError } from '../../../api/core/client';
+import { adminProjectsApi, type AdminProjectResponse, uploadToPresignedUrl } from '../../../api/admin/projects';
 import {
   adminItemsApi,
   type AdminItemImage,
@@ -30,7 +30,7 @@ import {
   type AdminItemStatus,
   type AdminItemType,
   type PresignPutItem,
-} from '../../../api/adminItems';
+} from '../../../api/admin/items';
 
 type ValidationField = 'name' | 'description' | 'price' | 'targetQty' | 'journalFile';
 type ValidationResult = { field: ValidationField; message: string };

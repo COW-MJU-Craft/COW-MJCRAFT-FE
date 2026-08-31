@@ -1,8 +1,8 @@
-﻿import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { adminApi } from '../../api/admin';
-import { clearAuth } from '../../utils/auth';
+import { adminApi } from '../../api/admin/admin';
+import { clearAuth } from '../../utils/auth/auth';
 
 const SWIPE_CLOSE_THRESHOLD = 60;
 

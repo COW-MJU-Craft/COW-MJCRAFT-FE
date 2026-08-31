@@ -1,7 +1,7 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Reveal from '../../../components/ui/Reveal';
-import { ApiError } from '../../../api/client';
-import { adminIntroduceApi } from '../../../api/adminIntroduce';
+import { ApiError } from '../../../api/core/client';
+import { adminIntroduceApi } from '../../../api/admin/introduce';
 import MarkdownEditor from '../../../components/ui/MarkdownEditor';
 
 type HeroLogoItem = {

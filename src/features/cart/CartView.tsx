@@ -1,6 +1,6 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Reveal from '../../components/ui/Reveal';
-import { buildMediaUrlCandidates } from '../../utils/media';
+import { buildMediaUrlCandidates } from '../../utils/common/media';
 import type { useCart } from './useCart';
 
 type CartViewProps = ReturnType<typeof useCart>;

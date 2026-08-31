@@ -1,7 +1,7 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { loadAdminContent, type AdminContent } from '../../../utils/adminContent';
-import { introApi } from '../../../api/intro';
+import { loadAdminContent, type AdminContent } from '../../../utils/admin/content';
+import { introApi } from '../../../api/site/intro';
 import IntroduceDetailView from '../../../features/introduce/IntroduceDetailView';
 
 type FallbackDetail = {

@@ -1,6 +1,6 @@
-﻿import Reveal from '../../components/ui/Reveal';
-import { withApiBase } from '../../api/client';
-import type { IntroduceDetailPayload } from '../../api/intro';
+import Reveal from '../../components/ui/Reveal';
+import { withApiBase } from '../../api/core/client';
+import type { IntroduceDetailPayload } from '../../api/site/intro';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 

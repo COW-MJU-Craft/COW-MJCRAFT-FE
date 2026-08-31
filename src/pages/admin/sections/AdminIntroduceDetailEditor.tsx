@@ -1,12 +1,12 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Reveal from '../../../components/ui/Reveal';
 import MarkdownEditor from '../../../components/ui/MarkdownEditor';
-import { ApiError } from '../../../api/client';
+import { ApiError } from '../../../api/core/client';
 import {
   adminIntroduceApi,
   type AdminIntroduceDetailResponse,
   type AdminIntroduceDetailUpdateRequest,
-} from '../../../api/adminIntroduce';
+} from '../../../api/admin/introduce';
 
 type UploadTarget = 'current' | `history:${number}` | null;
 

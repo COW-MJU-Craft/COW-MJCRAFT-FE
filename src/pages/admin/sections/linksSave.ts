@@ -1,5 +1,5 @@
-import type { AdminContent } from '../../../utils/adminContent';
-import { snsAdminApi } from '../../../api/sns';
+import type { AdminContent } from '../../../utils/admin/content';
+import { snsAdminApi } from '../../../api/site/sns';
 
 export async function saveLinksToApi(content: AdminContent) {
   const instagramUrl = (content.links.instagramUrl ?? '').trim();

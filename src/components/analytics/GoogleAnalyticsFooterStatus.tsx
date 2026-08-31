@@ -1,10 +1,10 @@
-﻿import {
+import {
   GA4_DEBUG_MODE,
   GA4_MEASUREMENT_ID,
   GA4_REPORT_URL,
   SHOW_GA4_FOOTER_BADGE,
   isGA4Enabled,
-} from '../../utils/analytics';
+} from '../../utils/common/analytics';
 
 export default function GoogleAnalyticsFooterStatus() {
   if (!SHOW_GA4_FOOTER_BADGE) return null;

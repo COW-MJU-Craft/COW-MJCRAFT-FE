@@ -1,9 +1,9 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
-import { adminApi } from '../../../api/admin';
+import { adminApi } from '../../../api/admin/admin';
 import { useConfirm } from '../../../components/confirm/useConfirm';
-import { setAuth } from '../../../utils/auth';
+import { setAuth } from '../../../utils/auth/auth';
 
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 

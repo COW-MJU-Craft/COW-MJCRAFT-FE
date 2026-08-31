@@ -1,7 +1,7 @@
-﻿import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { adminApi } from '../../api/admin';
-import { clearAuth } from '../../utils/auth';
+import { adminApi } from '../../api/admin/admin';
+import { clearAuth } from '../../utils/auth/auth';
 
 const LEADING_NAV_ITEMS = [
   { key: 'edit', label: '회원정보', href: '/admin#edit' },
