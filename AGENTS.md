@@ -6,20 +6,21 @@
 
 **MJU-CRAFT 프론트엔드** - 명지대학교 중앙동아리 COW 1팀의 COW X MJU_CRAFT 프로젝트 FE 레포지토리입니다.
 
-| 항목 | 내용 |
-|---|---|
-| 프레임워크 | React 19 |
-| 언어 | TypeScript |
-| 빌드 도구 | Vite |
-| 스타일 | Tailwind CSS 4 |
-| 라우팅 | React Router DOM |
-| 서버 상태 | TanStack React Query |
-| 아이콘 | lucide-react |
-| 배포 | Coolify — GitHub Actions가 GHCR 이미지 빌드·push 후 웹훅 트리거 (deploy.yml) |
+| 항목       | 내용                                                                         |
+| ---------- | ---------------------------------------------------------------------------- |
+| 프레임워크 | React 19                                                                     |
+| 언어       | TypeScript                                                                   |
+| 빌드 도구  | Vite                                                                         |
+| 스타일     | Tailwind CSS 4                                                               |
+| 라우팅     | React Router DOM                                                             |
+| 서버 상태  | TanStack React Query                                                         |
+| 아이콘     | lucide-react                                                                 |
+| 배포       | Coolify — GitHub Actions가 GHCR 이미지 빌드·push 후 웹훅 트리거 (deploy.yml) |
 
 ## 주요 명령어
 
 **최초 셋업 (clone 후 1회)**
+
 ```bash
 bash scripts/setup-hooks.sh   # pre-commit 훅 활성화 (main 커밋 차단·시크릿 차단)
 ```
@@ -92,12 +93,16 @@ npm test
 - 배포 PR(`develop` -> `main`)은 전용 템플릿 URL을 사용한다: `https://github.com/COW-MJU-Craft/COW-MJCRAFT-FE/compare/main...develop?quick_pull=1&template=release.md`
 - 긴급 hotfix처럼 `main` 대상 PR이 필요한 경우에는 작업 사유와 검증 범위를 PR 본문에 명시한다.
 - PR base 검증 워크플로우(`pr-base-guard.yml`)가 일반 작업 브랜치는 `develop`, `develop`/`hotfix/*` 브랜치는 `main` 대상 PR만 허용한다.
+- 일반 작업 PR이 `develop`에 머지되면 `close #이슈번호`, `fixes #이슈번호`, `resolves #이슈번호` 키워드를 `close-linked-issues-on-develop.yml`이 감지해 이슈를 자동 종료한다.
 - 브랜치 이름은 변경 목적이 드러나게 작성한다.
   - `feat/...`
   - `fix/...`
   - `refactor/...`
   - `docs/...`
   - `chore/...`
+  - `style/...`
+  - `test/...`
+  - `hotfix/...`
 - 커밋 메시지는 Conventional Commits 형식을 따른다.
 
 예시:
@@ -141,15 +146,15 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 
 사용자가 아래 명령을 요청하거나 요청 내용에 해당 작업이 포함되면 `.agents/commands/<command>.md`를 먼저 읽고 해당 절차를 따른다.
 
-| 명령 | 용도 |
-|---|---|
+| 명령       | 용도                                                                  |
+| ---------- | --------------------------------------------------------------------- |
 | `/feature` | 새 화면, 주요 플로우, API 연동처럼 계획-구현-검증-PR이 필요한 큰 작업 |
-| `/plan` | 구현 전 계획 수립 |
-| `/impl` | 승인된 계획 기반 구현 |
-| `/review` | 변경사항 셀프 리뷰 |
-| `/commit` | 커밋 메시지 제안 및 승인 후 커밋 |
-| `/pr` | PR 설명 작성 및 승인 후 PR 생성 |
-| `/merge` | 승인 후 PR 병합 |
+| `/plan`    | 구현 전 계획 수립                                                     |
+| `/impl`    | 승인된 계획 기반 구현                                                 |
+| `/review`  | 변경사항 셀프 리뷰                                                    |
+| `/commit`  | 커밋 메시지 제안 및 승인 후 커밋                                      |
+| `/pr`      | PR 설명 작성 및 승인 후 PR 생성                                       |
+| `/merge`   | 승인 후 PR 병합                                                       |
 
 `/feature`는 작은 문구 수정, 단순 스타일 조정, 파일 하나짜리 버그 수정에는 과할 수 있다. 그런 경우 `/plan`, `/impl`, `/review`, `/commit`을 필요한 만큼만 사용한다.
 
