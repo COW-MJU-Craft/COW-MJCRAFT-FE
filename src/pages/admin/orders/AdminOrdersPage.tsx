@@ -1,14 +1,14 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import Reveal from '../../../components/ui/Reveal';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
-import { ApiError } from '../../../api/client';
+import { ApiError } from '../../../api/core/client';
 import {
   adminOrdersApi,
   type AdminOrderDetail,
   type AdminOrderListItem,
   type AdminOrderStatus,
-} from '../../../api/adminOrders';
+} from '../../../api/admin/orders';
 
 const STATUS_FILTERS: Array<{ key: 'ALL' | AdminOrderStatus; label: string }> =
   [

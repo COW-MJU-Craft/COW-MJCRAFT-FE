@@ -1,11 +1,11 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import BackArrowIcon from '../../../components/ui/BackArrowIcon';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
-import { adminProjectsApi, type AdminProjectResponse } from '../../../api/adminProjects';
-import { adminItemsApi, type AdminItemResponse } from '../../../api/adminItems';
+import { adminProjectsApi, type AdminProjectResponse } from '../../../api/admin/projects';
+import { adminItemsApi, type AdminItemResponse } from '../../../api/admin/items';
 
 const STATUS_LABELS: Record<string, string> = {
   PREPARING: '준비중',

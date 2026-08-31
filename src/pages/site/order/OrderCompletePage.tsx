@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Copy } from 'lucide-react';
@@ -9,7 +9,7 @@ import type {
 import {
   isOrderCompletePageNotFoundError,
   orderCompletePageApi,
-} from '../../../api/orderCompletePage';
+} from '../../../api/site/orderCompletePage';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
 

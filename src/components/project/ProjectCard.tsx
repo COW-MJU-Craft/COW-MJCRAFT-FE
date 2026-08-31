@@ -1,8 +1,8 @@
-﻿import { useState, type MouseEvent } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Pin, Receipt } from 'lucide-react';
 import StatusBadge from '../ui/StatusBadge';
-import type { Project } from '../../api/projects';
+import type { Project } from '../../api/site/projects';
 
 type ProjectCardProps = {
   project: Project;

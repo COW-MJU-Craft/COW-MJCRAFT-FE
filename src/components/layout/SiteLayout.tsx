@@ -1,10 +1,10 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Header from './Header';
 import GoogleAnalyticsFooterStatus from '../analytics/GoogleAnalyticsFooterStatus';
-import { noticesApi } from '../../api/notices';
-import { formatYmd, parseDateLike } from '../../utils/date';
+import { noticesApi } from '../../api/site/notices';
+import { formatYmd, parseDateLike } from '../../utils/common/date';
 
 export default function SiteLayout() {
   const [slideIndex, setSlideIndex] = useState(0);

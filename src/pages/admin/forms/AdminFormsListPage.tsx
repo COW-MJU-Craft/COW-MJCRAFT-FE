@@ -1,8 +1,8 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
-import { adminFormsApi, type AdminFormListItem } from '../../../api/adminForms';
-import { ApiError } from '../../../api/client';
+import { adminFormsApi, type AdminFormListItem } from '../../../api/admin/forms';
+import { ApiError } from '../../../api/core/client';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
 

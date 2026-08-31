@@ -1,5 +1,5 @@
-﻿import { useMemo, useState } from 'react';
-import type { Project } from '../../api/projects';
+import { useMemo, useState } from 'react';
+import type { Project } from '../../api/site/projects';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 

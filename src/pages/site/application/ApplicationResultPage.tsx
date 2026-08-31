@@ -1,8 +1,8 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import ApplicationCheckForm from '../../../components/application/ApplicationCredentialForm';
-import { applicationsApi } from '../../../api/applications';
+import { applicationsApi } from '../../../api/site/applications';
 
 type ResultTone = 'neutral' | 'success' | 'danger';
 

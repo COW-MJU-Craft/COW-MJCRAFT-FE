@@ -1,4 +1,4 @@
-﻿import {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -14,8 +14,8 @@ import {
   type ApplicationFormResponse,
   type ApplicationNotice,
   type ApplicationQuestion,
-} from '../../../api/applications';
-import { uploadToPresignedUrl } from '../../../api/adminProjects';
+} from '../../../api/site/applications';
+import { uploadToPresignedUrl } from '../../../api/admin/projects';
 import { DEPARTMENT_OPTIONS } from '../../../types/recruit';
 import type { DepartmentType } from '../../../types/recruit';
 

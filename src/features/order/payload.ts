@@ -1,4 +1,4 @@
-import type { OrderCreateRequest } from '../../api/orders';
+import type { OrderCreateRequest } from '../../api/site/orders';
 import type { OrderDraft } from './types';
 
 function toOrderItemsPayload(draft: OrderDraft): OrderCreateRequest['items'] {

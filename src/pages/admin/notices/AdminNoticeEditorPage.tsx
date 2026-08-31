@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   DndContext,
@@ -23,9 +23,9 @@ import { useToast } from '../../../components/toast/useToast';
 import {
   adminNoticesApi,
   type AdminNoticeResponse,
-} from '../../../api/adminNotices';
-import { uploadToPresignedUrl } from '../../../api/adminProjects';
-import { API_BASE } from '../../../api/client';
+} from '../../../api/admin/notices';
+import { uploadToPresignedUrl } from '../../../api/admin/projects';
+import { API_BASE } from '../../../api/core/client';
 
 type ImageItem = {
   id: string;

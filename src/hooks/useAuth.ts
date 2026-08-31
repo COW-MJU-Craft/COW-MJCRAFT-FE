@@ -3,7 +3,7 @@ import {
   AUTH_CHANGED_EVENT,
   getDisplayUserName,
   isLoggedIn,
-} from '../utils/auth';
+} from '../utils/auth/auth';
 
 export function useAuth() {
   const [loggedIn, setLoggedIn] = useState<boolean>(() => isLoggedIn());

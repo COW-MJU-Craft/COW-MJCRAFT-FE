@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../components/confirm/useConfirm';
 import { useToast } from '../../components/toast/useToast';
-import { itemsApi } from '../../api/items';
+import { itemsApi } from '../../api/site/items';
 import {
   CART_CHANGED_EVENT,
   clearCartItems,
@@ -14,7 +14,7 @@ import {
   setCartItemQuantity,
   type CartItem,
   updateCartItemMedia,
-} from '../../utils/cart';
+} from '../../utils/cart/cart';
 
 export function useCart() {
   const navigate = useNavigate();

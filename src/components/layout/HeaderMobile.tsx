@@ -1,9 +1,9 @@
-﻿import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { clearAuth } from '../../utils/auth';
-import { showLogoutToast } from '../../utils/LogoutToast';
+import { clearAuth } from '../../utils/auth/auth';
+import { showLogoutToast } from '../../utils/common/LogoutToast';
 
 const SWIPE_CLOSE_THRESHOLD = 60;
 

@@ -1,6 +1,6 @@
-﻿import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, ApiError, withApiBase } from '../../../api/client';
+import { api, ApiError, withApiBase } from '../../../api/core/client';
 import Reveal from '../../../components/ui/Reveal';
 
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';

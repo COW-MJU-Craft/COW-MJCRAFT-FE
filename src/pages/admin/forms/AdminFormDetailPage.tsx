@@ -1,10 +1,10 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import BackArrowIcon from '../../../components/ui/BackArrowIcon';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
-import { ApiError } from '../../../api/client';
+import { ApiError } from '../../../api/core/client';
 import {
   adminFormsApi,
   type AdminFormDetail,
@@ -13,7 +13,7 @@ import {
   type AdminFormNoticeItem,
   type AdminFormQuestionCreateRequest,
   type AdminFormNoticeCreateRequest,
-} from '../../../api/adminForms';
+} from '../../../api/admin/forms';
 import { DEPARTMENT_OPTIONS, getDepartmentLabel } from '../../../types/recruit';
 
 const ANSWER_TYPES = ['TEXT', 'SELECT', 'FILE'] as const;

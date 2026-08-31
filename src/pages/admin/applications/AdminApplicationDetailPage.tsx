@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import BackArrowIcon from '../../../components/ui/BackArrowIcon';
@@ -9,9 +9,9 @@ import {
   type AdminApplicationDetail,
   type AdminApplicationResultStatus,
   type AdminApplicationAnswerItem,
-} from '../../../api/adminApplications';
-import { adminFormsApi, type AdminFormQuestion } from '../../../api/adminForms';
-import { formatYmd, parseDateLike } from '../../../utils/date';
+} from '../../../api/admin/applications';
+import { adminFormsApi, type AdminFormQuestion } from '../../../api/admin/forms';
+import { formatYmd, parseDateLike } from '../../../utils/common/date';
 import { getDepartmentLabel } from '../../../types/recruit';
 
 const RESULT_OPTIONS: Array<{

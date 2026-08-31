@@ -1,4 +1,4 @@
-﻿import {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -9,10 +9,10 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import PayoutReportCard from '../../../components/payout/PayoutReportCard';
-import { ApiError } from '../../../api/client';
+import { ApiError } from '../../../api/core/client';
 import {
   payoutsApi,
-} from '../../../api/payouts';
+} from '../../../api/site/payouts';
 import type { PayoutReport } from '../../../types/payouts';
 
 function TabButton({

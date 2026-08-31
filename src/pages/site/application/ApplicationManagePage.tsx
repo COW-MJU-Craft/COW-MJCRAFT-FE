@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import ApplicationCheckForm from '../../../components/application/ApplicationCredentialForm';
@@ -8,8 +8,8 @@ import {
   type ApplicationFormResponse,
   type ApplicationQuestion,
   type ApplicationReadResponse,
-} from '../../../api/applications';
-import { uploadToPresignedUrl } from '../../../api/adminProjects';
+} from '../../../api/site/applications';
+import { uploadToPresignedUrl } from '../../../api/admin/projects';
 import { DEPARTMENT_OPTIONS } from '../../../types/recruit';
 import type { DepartmentType } from '../../../types/recruit';
 

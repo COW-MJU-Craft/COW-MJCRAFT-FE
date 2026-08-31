@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { AddressForm, ProfileForm } from './Types';
-import { loadDaumPostcodeScript } from '../../utils/daumPostcode';
+import { loadDaumPostcodeScript } from '../../utils/common/daumPostcode';
 
 const REQUIRED = 'text-rose-500 ml-1';
 

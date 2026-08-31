@@ -6,7 +6,7 @@ import './index.css';
 import App from './App';
 import ToastProvider from './components/toast/ToastProvider';
 import ConfirmProvider from './components/confirm/ConfirmProvider';
-import { AUTH_CHANGED_EVENT } from './utils/auth';
+import { AUTH_CHANGED_EVENT } from './utils/auth/auth';
 
 const queryClient = new QueryClient({
   defaultOptions: {

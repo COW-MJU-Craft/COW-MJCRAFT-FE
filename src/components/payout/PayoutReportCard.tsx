@@ -1,4 +1,4 @@
-﻿import { calcReport, getItemTotal, sumItems } from '../../api/payouts';
+import { calcReport, getItemTotal, sumItems } from '../../api/site/payouts';
 import type { PayoutReport } from '../../types/payouts';
 
 function money(n: number) {

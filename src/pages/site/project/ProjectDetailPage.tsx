@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Receipt } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -9,10 +9,10 @@ import Reveal from '../../../components/ui/Reveal';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import { SkeletonProjectDetail } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../components/toast/useToast';
-import { projectsApi } from '../../../api/projects';
-import { itemsApi } from '../../../api/items';
-import type { ItemResponse } from '../../../api/items';
-import { addCartItem } from '../../../utils/cart';
+import { projectsApi } from '../../../api/site/projects';
+import { itemsApi } from '../../../api/site/items';
+import type { ItemResponse } from '../../../api/site/items';
+import { addCartItem } from '../../../utils/cart/cart';
 import { getItemSaleTypeLabel, getItemTypeLabel } from '../../../constants/itemLabels';
 
 type NormalStockTag = {

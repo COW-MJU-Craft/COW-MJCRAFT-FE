@@ -1,4 +1,4 @@
-import type { OrderDetailResponse } from '../../api/orders';
+import type { OrderDetailResponse } from '../../api/site/orders';
 import { Copy } from 'lucide-react';
 import { useToast } from '../toast/useToast';
 

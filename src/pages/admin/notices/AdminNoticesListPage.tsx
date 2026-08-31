@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../../../components/ui/Reveal';
 import { useConfirm } from '../../../components/confirm/useConfirm';
@@ -6,8 +6,8 @@ import { useToast } from '../../../components/toast/useToast';
 import {
   adminNoticesApi,
   type AdminNoticeResponse,
-} from '../../../api/adminNotices';
-import { formatYmd } from '../../../utils/date';
+} from '../../../api/admin/notices';
+import { formatYmd } from '../../../utils/common/date';
 
 function toSnippet(text?: string | null, max = 120) {
   const trimmed = (text ?? '').trim().replace(/\s+/g, ' ');
