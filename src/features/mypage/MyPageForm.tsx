@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import Reveal from '../../components/Reveal';
+﻿import { useMemo } from 'react';
+import Reveal from '../../components/ui/Reveal';
 import type { AddressForm, ProfileForm } from './Types';
 import MyPageProfileSection from './MyPageProfileSection';
 import MyPageAddressSection from './MyPageAddressSection';

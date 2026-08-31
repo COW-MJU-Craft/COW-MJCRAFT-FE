@@ -41,13 +41,42 @@ src/
 ├─ api/                 # API 요청 모듈
 ├─ assets/              # 로고, 폰트 등 정적 자원
 ├─ components/          # 공용 컴포넌트
+│  ├─ analytics/        # Google Analytics 관련 컴포넌트
+│  ├─ application/      # 지원/신청 공용 컴포넌트
+│  ├─ confirm/          # 전역 Confirm 모달
+│  ├─ layout/           # 사이트/관리자 레이아웃과 헤더
+│  ├─ order/            # 주문 표시 컴포넌트
+│  ├─ payout/           # 정산 표시 컴포넌트
+│  ├─ project/          # 프로젝트 카드 컴포넌트
+│  ├─ social/           # SNS 플로팅 컴포넌트
+│  ├─ toast/            # 전역 Toast
+│  └─ ui/               # 범용 UI 컴포넌트
 ├─ constants/           # 상수
 ├─ data/                # 정적 데이터
 ├─ features/            # 도메인별 기능
 ├─ hooks/               # 커스텀 훅
 ├─ pages/               # 라우트 단위 페이지
-│  ├─ site/             # 사용자 영역
-│  └─ admin/            # 관리자 영역
+│  ├─ site/             # 사용자 영역 도메인별 페이지
+│  │  ├─ about/
+│  │  ├─ application/
+│  │  ├─ auth/
+│  │  ├─ cart/
+│  │  ├─ feedback/
+│  │  ├─ home/
+│  │  ├─ mypage/
+│  │  ├─ notice/
+│  │  ├─ order/
+│  │  ├─ payout/
+│  │  └─ project/
+│  └─ admin/            # 관리자 영역 도메인별 페이지
+│     ├─ applications/
+│     ├─ dashboard/
+│     ├─ forms/
+│     ├─ items/
+│     ├─ notices/
+│     ├─ orders/
+│     ├─ projects/
+│     └─ sections/
 ├─ styles/              # 전역 스타일
 ├─ types/               # 타입 정의
 └─ utils/               # 유틸 함수

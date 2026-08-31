@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import Reveal from '../../../components/Reveal';
+﻿import { useMemo, useRef, useState } from 'react';
+import Reveal from '../../../components/ui/Reveal';
 import {
   adminFeedbackApi,
   type AdminFeedbackResponse,

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Reveal from '../../../components/Reveal';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Reveal from '../../../components/ui/Reveal';
 import { projectsApi } from '../../../api/projects';
 import {
   adminProjectsApi,

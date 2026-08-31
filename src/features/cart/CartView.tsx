@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import Reveal from '../../components/Reveal';
+﻿import { Link } from 'react-router-dom';
+import Reveal from '../../components/ui/Reveal';
 import { buildMediaUrlCandidates } from '../../utils/media';
 import type { useCart } from './useCart';
 
