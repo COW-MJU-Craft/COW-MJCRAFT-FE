@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Reveal from '../../../components/Reveal';
+import Reveal from '../../../components/ui/Reveal';
 import { adminApi } from '../../../api/admin';
 import { ApiError } from '../../../api/client';
 

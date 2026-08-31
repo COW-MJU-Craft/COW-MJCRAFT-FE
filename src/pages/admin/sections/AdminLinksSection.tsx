@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import Reveal from '../../../components/Reveal';
-import BrandIcon from '../../../components/BrandIcon';
+﻿import { useEffect, useRef } from 'react';
+import Reveal from '../../../components/ui/Reveal';
+import BrandIcon from '../../../components/ui/BrandIcon';
 import { snsApi } from '../../../api/sns';
 import type { AdminContent } from '../../../utils/adminContent';
 

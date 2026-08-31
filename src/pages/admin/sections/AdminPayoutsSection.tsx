@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import Reveal from '../../../components/Reveal';
+﻿import { useEffect, useMemo, useState } from 'react';
+import Reveal from '../../../components/ui/Reveal';
 import { payoutsAdminApi, type PayoutReport } from '../../../api/payouts';
 import type { ExpenseGroup, MoneyItem } from '../../../types/payouts';
 import {

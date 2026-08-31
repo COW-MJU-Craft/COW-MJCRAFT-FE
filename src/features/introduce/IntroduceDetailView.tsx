@@ -1,4 +1,4 @@
-import Reveal from '../../components/Reveal';
+﻿import Reveal from '../../components/ui/Reveal';
 import { withApiBase } from '../../api/client';
 import type { IntroduceDetailPayload } from '../../api/intro';
 import ReactMarkdown from 'react-markdown';

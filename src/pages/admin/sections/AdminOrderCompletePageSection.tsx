@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import Reveal from '../../../components/Reveal';
+﻿import { useEffect, useMemo, useState } from 'react';
+import Reveal from '../../../components/ui/Reveal';
 import { ApiError } from '../../../api/client';
 import {
   adminOrderCompletePageApi,

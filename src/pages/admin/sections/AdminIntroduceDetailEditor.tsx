@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import Reveal from '../../../components/Reveal';
-import MarkdownEditor from '../../../components/MarkdownEditor';
+﻿import { useEffect, useRef, useState } from 'react';
+import Reveal from '../../../components/ui/Reveal';
+import MarkdownEditor from '../../../components/ui/MarkdownEditor';
 import { ApiError } from '../../../api/client';
 import {
   adminIntroduceApi,

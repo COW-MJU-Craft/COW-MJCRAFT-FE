@@ -1,4 +1,4 @@
-import Reveal from '../../../components/Reveal';
+﻿import Reveal from '../../../components/ui/Reveal';
 import type { AdminContent } from '../../../utils/adminContent';
 import { toLines, toText } from './textUtils';
 

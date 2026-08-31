@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
-import ConfirmModal from '../ConfirmModal';
+import ConfirmModal from '../ui/ConfirmModal';
 import { ConfirmContext, type ConfirmOptions } from './ConfirmContext';
 
 type ConfirmState = {
