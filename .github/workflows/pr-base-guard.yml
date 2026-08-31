@@ -23,12 +23,12 @@ jobs:
             EXPECTED_BASE="main"
           elif [[ "$HEAD_REF" =~ ^hotfix/ ]]; then
             EXPECTED_BASE="main"
-          elif [[ "$HEAD_REF" =~ ^(feat|fix|refactor|docs|chore)/ ]]; then
+          elif [[ "$HEAD_REF" =~ ^(feat|fix|refactor|docs|chore|style|test)/ ]]; then
             EXPECTED_BASE="develop"
           elif [[ "$HEAD_REF" =~ ^dependabot/ ]]; then
             EXPECTED_BASE="develop"
           else
-            echo "::error::Unsupported branch name '$HEAD_REF'. Use feat/*, fix/*, refactor/*, docs/*, chore/*, hotfix/*, or dependabot/*."
+            echo "::error::Unsupported branch name '$HEAD_REF'. Use feat/*, fix/*, refactor/*, docs/*, chore/*, style/*, test/*, hotfix/*, or dependabot/*."
             exit 1
           fi
 
