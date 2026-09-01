@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { ordersApi } from '../../../api/site/orders';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
+import OrderAgreementsStep from '../../../features/order/components/OrderAgreementsStep';
+import OrderItemsStep from '../../../features/order/components/OrderItemsStep';
+import OrderStepActions from '../../../features/order/components/OrderStepActions';
+import OrderStepHeader from '../../../features/order/components/OrderStepHeader';
 import {
   clearCartItems,
   getCartCount,
@@ -18,7 +22,6 @@ import {
 } from '../../../utils/order/orderDraft';
 import { loadDaumPostcodeScript } from '../../../utils/common/daumPostcode';
 import {
-  AGREEMENT_ITEMS,
   BUYER_TYPE_LABELS,
   CAMPUS_LABELS,
   DEFAULT_AGREEMENTS,
@@ -29,9 +32,9 @@ import {
   FULFILLMENT_METHOD_LABELS,
   INPUT_CLASS,
   SELECT_CLASS,
-  STEP_ITEMS,
   TEXTAREA_CLASS,
 } from '../../../features/order/constants';
+import { formatMoney } from '../../../features/order/format';
 import { buildOrderCreatePayload } from '../../../features/order/payload';
 import type {
   AgreementState,
@@ -51,10 +54,6 @@ import {
   validateFinalStep,
   validateFulfillmentStep,
 } from '../../../features/order/validation';
-
-function formatMoney(value: number) {
-  return value.toLocaleString();
-}
 
 export default function OrderPage() {
   const location = useLocation();
@@ -432,143 +431,28 @@ export default function OrderPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
-      <Reveal>
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="font-heading text-3xl text-slate-900">주문서</h1>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {STEP_ITEMS.map((item) => (
-              <span
-                key={`step-${item.step}`}
-                onClick={() => moveToStep(item.step)}
-                className={[
-                  'cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold transition hover:border-primary/30 hover:text-primary',
-                  item.step === draft.step
-                    ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-slate-200 text-slate-400',
-                ].join(' ')}
-              >
-                {item.step}. {item.title}
-              </span>
-            ))}
-          </div>
-          <p className="mt-2 text-sm text-slate-600">
-            총 {totalCount}개 상품, 합계 {formatMoney(totalPrice)}원
-          </p>
-        </section>
-      </Reveal>
+      <OrderStepHeader
+        currentStep={draft.step}
+        totalCount={totalCount}
+        totalPrice={totalPrice}
+        onStepClick={moveToStep}
+      />
 
       <Reveal className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         {draft.step === 0 && (
-          <>
-            {items.length === 0 ? (
-              <div className="text-center">
-                <p className="text-sm font-semibold text-slate-500">
-                  주문할 상품이 없어요.
-                </p>
-                <Link
-                  to="/projects"
-                  className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white hover:opacity-95"
-                >
-                  상품 보러 가기
-                </Link>
-              </div>
-            ) : (
-              <>
-                <ul className="space-y-3">
-                  {items.map((item) => (
-                    <li
-                      key={`${item.projectId}-${item.itemId}`}
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {item.name}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveItem(item.itemId)}
-                          className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-50"
-                        >
-                          삭제
-                        </button>
-                      </div>
-                      <p className="mt-1 text-sm text-slate-700">
-                        {item.quantity}개 ·{' '}
-                        {formatMoney(item.price * item.quantity)}원
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-700">
-                    총 결제 예상 금액
-                  </p>
-                  <p className="text-base font-bold text-slate-900">
-                    {formatMoney(totalPrice)}원
-                  </p>
-                </div>
-              </>
-            )}
-          </>
+          <OrderItemsStep
+            items={items}
+            totalPrice={totalPrice}
+            onRemoveItem={handleRemoveItem}
+          />
         )}
 
         {draft.step === 1 && (
-          <>
-            <h2 className="font-heading text-xl text-slate-900">
-              구매 전 필수 동의
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              아래 항목은 모두 필수 동의입니다.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              {AGREEMENT_ITEMS.map((agreement) => (
-                <label
-                  key={agreement.key}
-                  className="block rounded-2xl border-2 border-slate-200 p-4 hover:bg-slate-50"
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={draft.agreements[agreement.key]}
-                      onChange={(event) =>
-                        updateAgreement(agreement.key, event.target.checked)
-                      }
-                      className="mt-1 h-5 w-5 rounded-sm border-2 border-slate-300 text-primary focus:ring-2 focus:ring-primary/20"
-                    />
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">
-                        {agreement.title}{' '}
-                        <span className="text-slate-700">[필수]</span>{' '}
-                        <span className="text-rose-600">*</span>
-                      </p>
-                      <p className="mt-3 text-xs font-bold text-slate-800">
-                        {agreement.noticeTitle}
-                      </p>
-                      {agreement.paragraphs.map((paragraph, idx) => (
-                        <p
-                          key={`${agreement.key}-p-${idx}`}
-                          className="mt-2 text-xs leading-relaxed text-slate-600"
-                        >
-                          {paragraph}
-                        </p>
-                      ))}
-                      <p className="mt-3 text-xs font-semibold text-rose-600">
-                        {agreement.question}
-                      </p>
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-
-            {!allRequiredAgreed && (
-              <p className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
-                필수 동의 항목에 체크하지 않으면 구매를 진행할 수 없어요.
-              </p>
-            )}
-          </>
+          <OrderAgreementsStep
+            agreements={draft.agreements}
+            allRequiredAgreed={allRequiredAgreed}
+            onAgreementChange={updateAgreement}
+          />
         )}
 
         {draft.step === 2 && (
@@ -1208,35 +1092,13 @@ export default function OrderPage() {
           </>
         )}
 
-        <div className="mt-8 flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={goPrevStep}
-            disabled={draft.step === 0}
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            이전
-          </button>
-
-          {draft.step < 4 ? (
-            <button
-              type="button"
-              onClick={goNextStep}
-              className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white hover:opacity-95"
-            >
-              다음
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void handleSubmit()}
-              disabled={isSubmitting}
-              className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? '제출 중...' : '구매 제출'}
-            </button>
-          )}
-        </div>
+        <OrderStepActions
+          step={draft.step}
+          isSubmitting={isSubmitting}
+          onPrev={goPrevStep}
+          onNext={goNextStep}
+          onSubmit={() => void handleSubmit()}
+        />
       </Reveal>
     </div>
   );
