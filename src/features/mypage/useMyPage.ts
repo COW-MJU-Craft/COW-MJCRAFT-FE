@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { mypageApi } from '../../api/mypage';
-import type { MyPageProfile } from '../../api/mypage';
-import { ApiError } from '../../api/client';
-import { getAccessToken, setAuth } from '../../utils/auth';
+import { mypageApi } from '../../api/site/mypage';
+import type { MyPageProfile } from '../../api/site/mypage';
+import { ApiError } from '../../api/core/client';
+import { getAccessToken, setAuth } from '../../utils/auth/auth';
 import type { ProfileForm } from './Types';
 import { DEFAULT_FORM } from './Types';
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { formsApi } from '../api/forms';
-import type { ActiveFormResponse } from '../api/forms';
+import { formsApi } from '../api/site/forms';
+import type { ActiveFormResponse } from '../api/site/forms';
 
 export function useActiveForm() {
   const [data, setData] = useState<ActiveFormResponse | null>(null);

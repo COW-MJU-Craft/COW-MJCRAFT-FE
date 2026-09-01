@@ -6,20 +6,21 @@
 
 **MJU-CRAFT 프론트엔드** - 명지대학교 중앙동아리 COW 1팀의 COW X MJU_CRAFT 프로젝트 FE 레포지토리입니다.
 
-| 항목 | 내용 |
-|---|---|
-| 프레임워크 | React 19 |
-| 언어 | TypeScript |
-| 빌드 도구 | Vite |
-| 스타일 | Tailwind CSS 4 |
-| 라우팅 | React Router DOM |
-| 서버 상태 | TanStack React Query |
-| 아이콘 | lucide-react |
-| 배포 | Coolify — GitHub Actions가 GHCR 이미지 빌드·push 후 웹훅 트리거 (deploy.yml) |
+| 항목       | 내용                                                                         |
+| ---------- | ---------------------------------------------------------------------------- |
+| 프레임워크 | React 19                                                                     |
+| 언어       | TypeScript                                                                   |
+| 빌드 도구  | Vite                                                                         |
+| 스타일     | Tailwind CSS 4                                                               |
+| 라우팅     | React Router DOM                                                             |
+| 서버 상태  | TanStack React Query                                                         |
+| 아이콘     | lucide-react                                                                 |
+| 배포       | Coolify — GitHub Actions가 GHCR 이미지 빌드·push 후 웹훅 트리거 (deploy.yml) |
 
 ## 주요 명령어
 
 **최초 셋업 (clone 후 1회)**
+
 ```bash
 bash scripts/setup-hooks.sh   # pre-commit 훅 활성화 (main 커밋 차단·시크릿 차단)
 ```
@@ -38,18 +39,56 @@ npm run preview  # 빌드 결과 미리보기
 ```text
 src/
 ├─ api/                 # API 요청 모듈
+│  ├─ core/             # 공통 API 클라이언트와 응답 유틸
+│  ├─ site/             # 사용자 영역 API
+│  └─ admin/            # 관리자 영역 API
 ├─ assets/              # 로고, 폰트 등 정적 자원
 ├─ components/          # 공용 컴포넌트
+│  ├─ analytics/        # Google Analytics 관련 컴포넌트
+│  ├─ application/      # 지원/신청 공용 컴포넌트
+│  ├─ confirm/          # 전역 Confirm 모달
+│  ├─ layout/           # 사이트/관리자 레이아웃과 헤더
+│  ├─ order/            # 주문 표시 컴포넌트
+│  ├─ payout/           # 정산 표시 컴포넌트
+│  ├─ project/          # 프로젝트 카드 컴포넌트
+│  ├─ social/           # SNS 플로팅 컴포넌트
+│  ├─ toast/            # 전역 Toast
+│  └─ ui/               # 범용 UI 컴포넌트
 ├─ constants/           # 상수
 ├─ data/                # 정적 데이터
 ├─ features/            # 도메인별 기능
 ├─ hooks/               # 커스텀 훅
 ├─ pages/               # 라우트 단위 페이지
-│  ├─ site/             # 사용자 영역
-│  └─ admin/            # 관리자 영역
+│  ├─ site/             # 사용자 영역 도메인별 페이지
+│  │  ├─ about/
+│  │  ├─ application/
+│  │  ├─ auth/
+│  │  ├─ cart/
+│  │  ├─ feedback/
+│  │  ├─ home/
+│  │  ├─ mypage/
+│  │  ├─ notice/
+│  │  ├─ order/
+│  │  ├─ payout/
+│  │  └─ project/
+│  └─ admin/            # 관리자 영역 도메인별 페이지
+│     ├─ applications/
+│     ├─ dashboard/
+│     ├─ forms/
+│     ├─ items/
+│     ├─ notices/
+│     ├─ orders/
+│     ├─ projects/
+│     └─ sections/
 ├─ styles/              # 전역 스타일
 ├─ types/               # 타입 정의
 └─ utils/               # 유틸 함수
+   ├─ admin/            # 관리자 콘텐츠/정산 유틸
+   ├─ auth/             # 인증 토큰 유틸
+   ├─ cart/             # 장바구니 유틸
+   ├─ common/           # 날짜, 미디어, 토스트 등 공통 유틸
+   ├─ order/            # 주문 draft 유틸
+   └─ project/          # 프로젝트 정렬 유틸
 ```
 
 ## 작업 원칙
@@ -92,12 +131,16 @@ npm test
 - 배포 PR(`develop` -> `main`)은 전용 템플릿 URL을 사용한다: `https://github.com/COW-MJU-Craft/COW-MJCRAFT-FE/compare/main...develop?quick_pull=1&template=release.md`
 - 긴급 hotfix처럼 `main` 대상 PR이 필요한 경우에는 작업 사유와 검증 범위를 PR 본문에 명시한다.
 - PR base 검증 워크플로우(`pr-base-guard.yml`)가 일반 작업 브랜치는 `develop`, `develop`/`hotfix/*` 브랜치는 `main` 대상 PR만 허용한다.
+- 일반 작업 PR이 `develop`에 머지되면 `close #이슈번호`, `fixes #이슈번호`, `resolves #이슈번호` 키워드를 `close-linked-issues-on-develop.yml`이 감지해 이슈를 자동 종료한다.
 - 브랜치 이름은 변경 목적이 드러나게 작성한다.
   - `feat/...`
   - `fix/...`
   - `refactor/...`
   - `docs/...`
   - `chore/...`
+  - `style/...`
+  - `test/...`
+  - `hotfix/...`
 - 커밋 메시지는 Conventional Commits 형식을 따른다.
 
 예시:
@@ -141,15 +184,15 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 
 사용자가 아래 명령을 요청하거나 요청 내용에 해당 작업이 포함되면 `.agents/commands/<command>.md`를 먼저 읽고 해당 절차를 따른다.
 
-| 명령 | 용도 |
-|---|---|
+| 명령       | 용도                                                                  |
+| ---------- | --------------------------------------------------------------------- |
 | `/feature` | 새 화면, 주요 플로우, API 연동처럼 계획-구현-검증-PR이 필요한 큰 작업 |
-| `/plan` | 구현 전 계획 수립 |
-| `/impl` | 승인된 계획 기반 구현 |
-| `/review` | 변경사항 셀프 리뷰 |
-| `/commit` | 커밋 메시지 제안 및 승인 후 커밋 |
-| `/pr` | PR 설명 작성 및 승인 후 PR 생성 |
-| `/merge` | 승인 후 PR 병합 |
+| `/plan`    | 구현 전 계획 수립                                                     |
+| `/impl`    | 승인된 계획 기반 구현                                                 |
+| `/review`  | 변경사항 셀프 리뷰                                                    |
+| `/commit`  | 커밋 메시지 제안 및 승인 후 커밋                                      |
+| `/pr`      | PR 설명 작성 및 승인 후 PR 생성                                       |
+| `/merge`   | 승인 후 PR 병합                                                       |
 
 `/feature`는 작은 문구 수정, 단순 스타일 조정, 파일 하나짜리 버그 수정에는 과할 수 있다. 그런 경우 `/plan`, `/impl`, `/review`, `/commit`을 필요한 만큼만 사용한다.
 
@@ -193,10 +236,10 @@ AI는 아래 작업을 사용자 승인 없이 실행하지 않는다.
 **작성 의무**: 새 로직(유틸, api 모듈, 훅) 추가 또는 기존 로직 변경 시 해당 부분의 테스트를 함께 작성한다.
 
 - 도구: Vitest + React Testing Library (`npm test` / `npm run test:watch`)
-- 위치: 대상 파일 옆에 `*.test.ts(x)` (예: `src/utils/date.test.ts`)
+- 위치: 대상 파일 옆에 `*.test.ts(x)` (예: `src/utils/common/date.test.ts`)
 - 우선순위: 순수 함수·api 모듈 > 훅 > 컴포넌트. 스타일·마크업만 바뀌는 컴포넌트 테스트는 강제하지 않는다
 - 깡통 테스트 금지 — assertion 없는 테스트, 구현 복사 테스트는 작성하지 않는다
-- 참고 예시: `src/api/client.test.ts` (fetch mock, 토큰 부착·에러 처리), `src/utils/date.test.ts` (경계값)
+- 참고 예시: `src/api/core/client.test.ts` (fetch mock, 토큰 부착·에러 처리), `src/utils/common/date.test.ts` (경계값)
 
 **E2E 스모크 테스트**: `e2e/` 디렉토리에 Playwright로 작성한다 (`npm run test:e2e`).
 Vitest 단위 테스트와 대상이 다르다 — 개별 로직이 아니라 "빌드된 실제 페이지가

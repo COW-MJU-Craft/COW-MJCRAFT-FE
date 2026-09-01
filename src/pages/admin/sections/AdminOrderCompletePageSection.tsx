@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import Reveal from '../../../components/Reveal';
-import { ApiError } from '../../../api/client';
+import Reveal from '../../../components/ui/Reveal';
+import { ApiError } from '../../../api/core/client';
 import {
   adminOrderCompletePageApi,
   type AdminOrderCompletePageUpdateInput,
-} from '../../../api/orderCompletePage';
+} from '../../../api/site/orderCompletePage';
 import type { OrderCompletePageResponse } from '../../../types/order';
 
 type Props = {

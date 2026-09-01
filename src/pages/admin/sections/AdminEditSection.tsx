@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Reveal from '../../../components/Reveal';
-import { adminApi } from '../../../api/admin';
-import { ApiError } from '../../../api/client';
+import Reveal from '../../../components/ui/Reveal';
+import { adminApi } from '../../../api/admin/admin';
+import { ApiError } from '../../../api/core/client';
 
 type AdminEditSectionProps = {
   initialUsername?: string | null;

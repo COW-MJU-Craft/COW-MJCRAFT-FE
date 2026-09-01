@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Reveal from '../../../components/Reveal';
-import { projectsApi } from '../../../api/projects';
+import Reveal from '../../../components/ui/Reveal';
+import { projectsApi } from '../../../api/site/projects';
 import {
   adminProjectsApi,
   uploadToPresignedUrl,
-} from '../../../api/adminProjects';
-import type { Project } from '../../../api/projects';
+} from '../../../api/admin/projects';
+import type { Project } from '../../../api/site/projects';
 import type {
   AdminProjectCategory,
   AdminProjectResponse,
   AdminProjectStatus,
   PresignPutItem,
-} from '../../../api/adminProjects';
+} from '../../../api/admin/projects';
 
 type Props = {
   registerSave?: (handler: () => Promise<string | null>) => void;

@@ -1,10 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
-import Reveal from '../../../components/Reveal';
+import Reveal from '../../../components/ui/Reveal';
 import {
   adminFeedbackApi,
   type AdminFeedbackResponse,
   type AdminFeedbackStatus,
-} from '../../../api/adminFeedback';
+} from '../../../api/admin/feedback';
 
 type Props = {
   entries: AdminFeedbackResponse[];

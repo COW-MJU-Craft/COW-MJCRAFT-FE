@@ -1,4 +1,4 @@
-﻿# MJU-CRAFT-FE
+# MJU-CRAFT-FE
 
 명지대학교 중앙동아리 COW 1팀에서 개발한 COW X MJU_CRAFT 프로젝트 프론트엔드 레포지토리입니다.
 
@@ -12,7 +12,7 @@
 - @dnd-kit (drag & drop)
 - react-markdown + remark-gfm/remark-breaks
 - lucide-react (icons)
-- Fetch API 기반 커스텀 클라이언트 (`src/api/client.ts`)
+- Fetch API 기반 커스텀 클라이언트 (`src/api/core/client.ts`)
 - ESLint 9 (flat config, react-hooks/refresh 포함)
 - Docker + nginx 배포 (Coolify — GitHub Actions가 GHCR 이미지 빌드·push 후 웹훅 트리거)
 
@@ -21,22 +21,37 @@
 ```text
 src/
 ├─ api/                 # API 요청 모듈
+│  ├─ core/              # 공통 API 클라이언트와 응답 유틸
+│  ├─ site/              # 사용자 영역 API
+│  └─ admin/             # 관리자 영역 API
 ├─ assets/              # 정적 자원 (로고, 폰트 등)
 ├─ components/          # 공용 컴포넌트
+│  ├─ analytics/         # Google Analytics 관련 컴포넌트
+│  ├─ application/       # 지원/신청 공용 컴포넌트
 │  ├─ confirm/           # 전역 Confirm 모달
+│  ├─ layout/            # 사이트/관리자 레이아웃과 헤더
+│  ├─ order/             # 주문 표시 컴포넌트
+│  ├─ payout/            # 정산 표시 컴포넌트
+│  ├─ project/           # 프로젝트 카드 컴포넌트
+│  ├─ social/            # SNS 플로팅 컴포넌트
 │  ├─ toast/             # 전역 Toast
-│  └─ order/             # 주문 관련 컴포넌트
+│  └─ ui/                # 범용 UI 컴포넌트
 ├─ constants/           # 상수 정의
 ├─ data/                # 정적 데이터
 ├─ features/            # 도메인별 기능
 ├─ hooks/               # 커스텀 훅
 ├─ pages/               # 라우트 단위 페이지
-│  ├─ site/              # 사용자 영역
-│  └─ admin/             # 관리자 영역
-│     └─ sections/        # 관리자 하위 섹션
+│  ├─ site/              # 사용자 영역 도메인별 페이지
+│  └─ admin/             # 관리자 영역 도메인별 페이지
 ├─ styles/              # 전역 스타일
 ├─ types/               # 타입 정의
 └─ utils/               # 유틸 함수
+   ├─ admin/             # 관리자 콘텐츠/정산 유틸
+   ├─ auth/              # 인증 토큰 유틸
+   ├─ cart/              # 장바구니 유틸
+   ├─ common/            # 날짜, 미디어, 토스트 등 공통 유틸
+   ├─ order/             # 주문 draft 유틸
+   └─ project/           # 프로젝트 정렬 유틸
 ```
 
 ## 환경 변수
@@ -69,14 +84,14 @@ npm run lint     # ESLint 실행
 
 ## API 통신
 
-- `src/api/client.ts`의 Fetch 기반 클라이언트 사용
+- `src/api/core/client.ts`의 Fetch 기반 클라이언트 사용
 - 토큰은 `localStorage`의 `VITE_TOKEN_KEY`로 관리
 - 필요 시 `Authorization: Bearer <token>` 자동 부착
 
 ## 인증/소셜 로그인
 
 - 카카오/네이버 OAuth 콜백 라우트 사용
-- 관련 API 모듈: `src/api/oauth.ts`
+- 관련 API 모듈은 `src/api/site/`, `src/api/admin/` 하위에서 관리
 
 ## UI 공통 요소
 

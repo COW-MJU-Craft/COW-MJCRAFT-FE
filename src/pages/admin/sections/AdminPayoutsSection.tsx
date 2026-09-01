@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import Reveal from '../../../components/Reveal';
-import { payoutsAdminApi, type PayoutReport } from '../../../api/payouts';
+import Reveal from '../../../components/ui/Reveal';
+import { payoutsAdminApi, type PayoutReport } from '../../../api/site/payouts';
 import type { ExpenseGroup, MoneyItem } from '../../../types/payouts';
 import {
   adminProjectsApi,
   type AdminProjectResponse,
-} from '../../../api/adminProjects';
+} from '../../../api/admin/projects';
 
 type SectionKey = 'sales' | 'expense';
 type InputMode = 'select' | 'manual';

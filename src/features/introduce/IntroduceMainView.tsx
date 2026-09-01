@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
-import Reveal from '../../components/Reveal';
-import type { IntroduceMainSummary } from '../../api/intro';
+import Reveal from '../../components/ui/Reveal';
+import type { IntroduceMainSummary } from '../../api/site/intro';
 
 type Props = {
   data: IntroduceMainSummary | null;
