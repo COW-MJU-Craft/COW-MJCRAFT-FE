@@ -1,25 +1,35 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { ordersApi, type OrderDetailResponse } from '../../../api/site/orders';
-import { ApiError } from '../../../api/core/client';
 import OrderDetailCard from '../../../components/order/OrderDetailCard';
 import Reveal from '../../../components/ui/Reveal';
-import { useToast } from '../../../components/toast/useToast';
+import {
+  getOrderLookupErrorState,
+  type OrderLookupErrorState,
+} from '../../../features/order/lookupError';
 
 const INPUT_CLASS =
-  'mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10';
+  'mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 aria-[invalid=true]:border-rose-400 aria-[invalid=true]:focus:ring-rose-100';
 
 export default function OrderLookupPage() {
-  const toast = useToast();
   const [lookupId, setLookupId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetailResponse | null>(null);
-  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupError, setLookupError] =
+    useState<OrderLookupErrorState | null>(null);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    setOrder(null);
     if (!lookupId.trim() || !password.trim()) {
-      toast.error('조회 아이디와 비밀번호를 입력해주세요.');
+      setLookupError({
+        title: '입력 정보를 확인해주세요',
+        description: '조회 아이디와 비밀번호를 모두 입력해주세요.',
+        fieldRelated: true,
+        retryable: false,
+      });
       return;
     }
 
@@ -33,18 +43,7 @@ export default function OrderLookupPage() {
       setOrder(result);
     } catch (error) {
       setOrder(null);
-      if (error instanceof ApiError && error.status === 401) {
-        setLookupError(
-          '조회 아이디 또는 비밀번호가 일치하지 않아요. 입력한 정보를 다시 확인해주세요.',
-        );
-      } else {
-        const message =
-          error instanceof Error ? error.message : '주문 조회에 실패했어요.';
-        setLookupError(
-          '주문 정보를 불러오지 못했어요. 잠시 후 다시 시도하거나 조회 아이디와 비밀번호를 다시 확인해주세요.',
-        );
-        toast.error(message);
-      }
+      setLookupError(getOrderLookupErrorState(error));
     } finally {
       setLoading(false);
     }
@@ -80,14 +79,22 @@ export default function OrderLookupPage() {
       </Reveal>
 
       <Reveal delayMs={100} className="mx-auto mt-6 max-w-4xl">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form
+          onSubmit={(event) => void handleSubmit(event)}
+          className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="text-sm font-semibold text-slate-700">
               조회 아이디
               <input
                 value={lookupId}
+                disabled={loading}
+                autoComplete="username"
+                aria-invalid={lookupError?.fieldRelated || undefined}
+                aria-describedby={lookupError ? 'order-lookup-error' : undefined}
                 onChange={(event) => {
                   setLookupId(event.target.value);
+                  if (order) setOrder(null);
                   if (lookupError) setLookupError(null);
                 }}
                 className={INPUT_CLASS}
@@ -99,8 +106,13 @@ export default function OrderLookupPage() {
               <input
                 type="password"
                 value={password}
+                disabled={loading}
+                autoComplete="current-password"
+                aria-invalid={lookupError?.fieldRelated || undefined}
+                aria-describedby={lookupError ? 'order-lookup-error' : undefined}
                 onChange={(event) => {
                   setPassword(event.target.value);
+                  if (order) setOrder(null);
                   if (lookupError) setLookupError(null);
                 }}
                 className={INPUT_CLASS}
@@ -111,8 +123,7 @@ export default function OrderLookupPage() {
 
           <div className="mt-6 flex items-center gap-2">
             <button
-              type="button"
-              onClick={() => void handleSubmit()}
+              type="submit"
               disabled={loading}
               className="inline-flex h-11 flex-1 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
             >
@@ -128,11 +139,35 @@ export default function OrderLookupPage() {
           </div>
 
           {lookupError && (
-            <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-relaxed text-rose-700">
-              {lookupError}
+            <div
+              id="order-lookup-error"
+              role="alert"
+              className="mt-4 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"
+            >
+              <AlertCircle
+                className="mt-0.5 h-5 w-5 shrink-0"
+                aria-hidden="true"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold">{lookupError.title}</p>
+                <p className="mt-1 text-sm leading-relaxed">
+                  {lookupError.description}
+                </p>
+                {lookupError.retryable && (
+                  <button
+                    type="button"
+                    onClick={() => void handleSubmit()}
+                    disabled={loading}
+                    className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-rose-300 bg-white px-3 text-xs font-semibold hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                    다시 시도
+                  </button>
+                )}
+              </div>
             </div>
           )}
-        </section>
+        </form>
       </Reveal>
 
       {order && (
