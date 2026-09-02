@@ -10,20 +10,7 @@ import { spawnSync } from 'node:child_process';
 
 const FAIL_LEVELS = new Set(['high', 'critical']);
 
-const ALLOWLIST = new Map([
-  [
-    'GHSA-qwww-vcr4-c8h2',
-    'react-router RSC Mode CSRF — 이 앱은 BrowserRouter 기반 Vite SPA라 RSC 라우트가 없어 해당 없음. ' +
-      'react-router-dom이 react-router를 정확한 버전으로 고정하고 8.x가 없어 패치 경로가 막혀 있다. ' +
-      '7.x 백포트가 나오면 제거할 것.',
-  ],
-  [
-    'GHSA-mh99-v99m-4gvg',
-    'brace-expansion DoS — eslint > minimatch@3 경유 개발 의존성이라 런타임 번들에 포함되지 않는다. ' +
-      'minimatch@3이 ^1.1.7을 요구하는데 1.x에는 패치 릴리스가 없다. ' +
-      'eslint가 minimatch를 올리면 제거할 것.',
-  ],
-]);
+const ALLOWLIST = new Map();
 
 const result = spawnSync('npm', ['audit', '--json'], {
   encoding: 'utf8',
