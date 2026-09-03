@@ -416,14 +416,7 @@ export default function ProjectDetailPage() {
                   className="px-4 py-2 text-sm"
                 />
 
-                {deadlineText && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                    <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-                    마감일 {deadlineText}
-                  </span>
-                )}
-
-                {project.status === 'CLOSED' ? (
+                {project.status === 'CLOSED' && (
                   <button
                     type="button"
                     onClick={() => navigate(`/payouts?projectId=${project.id}`)}
@@ -433,20 +426,6 @@ export default function ProjectDetailPage() {
                     <Receipt className="h-4 w-4" />
                     정산
                   </button>
-                ) : (
-                  dDayLabel && (
-                    <span
-                      className={[
-                        'inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700',
-                        typeof project.dDay === 'number' && project.dDay <= 7
-                          ? 'font-bold text-rose-600'
-                          : '',
-                      ].join(' ')}
-                    >
-                      <Clock className="h-4 w-4 shrink-0 text-slate-500" />
-                      {dDayLabel}
-                    </span>
-                  )
                 )}
               </div>
 
@@ -529,6 +508,33 @@ export default function ProjectDetailPage() {
                 <p className="mt-3 text-sm font-semibold text-slate-400">
                   등록된 상세 설명이 없어요
                 </p>
+              )}
+
+              {(deadlineText || (project.status !== 'CLOSED' && dDayLabel)) && (
+                <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-sm font-semibold text-slate-600">
+                  {deadlineText && (
+                    <span className="inline-flex items-center gap-2">
+                      <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
+                      <span className="text-slate-500">마감일</span>
+                      <time dateTime={deadlineText} className="text-slate-700">
+                        {deadlineText}
+                      </time>
+                    </span>
+                  )}
+                  {project.status !== 'CLOSED' && dDayLabel && (
+                    <span
+                      className={[
+                        'inline-flex items-center gap-2',
+                        typeof project.dDay === 'number' && project.dDay <= 7
+                          ? 'font-bold text-rose-600'
+                          : '',
+                      ].join(' ')}
+                    >
+                      <Clock className="h-4 w-4 shrink-0 text-slate-400" />
+                      {dDayLabel}
+                    </span>
+                  )}
+                </div>
               )}
 
             </div>
@@ -710,7 +716,7 @@ export default function ProjectDetailPage() {
                                 loading="lazy"
                                 decoding="async"
                                 className={[
-                                  'h-full w-full object-cover transition',
+                                  'h-full w-full object-contain transition',
                                   soldOut ? 'grayscale-[0.8] brightness-95' : '',
                                 ].join(' ')}
                               />
@@ -891,7 +897,7 @@ export default function ProjectDetailPage() {
                                       alt={item.name}
                                       loading="lazy"
                                       decoding="async"
-                                      className="h-full w-full object-cover"
+                                      className="h-full w-full object-contain"
                                     />
                                   ) : (
                                     <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold text-slate-400">
