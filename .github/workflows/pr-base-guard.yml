@@ -2,7 +2,7 @@ name: PR Base Guard
 
 on:
   pull_request:
-    branches: ["main", "develop"]
+    branches: ['main', 'develop']
     types: [opened, reopened, synchronize, edited, ready_for_review]
 
 permissions:
@@ -23,12 +23,12 @@ jobs:
             EXPECTED_BASE="main"
           elif [[ "$HEAD_REF" =~ ^hotfix/ ]]; then
             EXPECTED_BASE="main"
-          elif [[ "$HEAD_REF" =~ ^(feat|fix|refactor|docs|chore|style|test)/ ]]; then
+          elif [[ "$HEAD_REF" =~ ^iss/[0-9]+$ ]]; then
             EXPECTED_BASE="develop"
           elif [[ "$HEAD_REF" =~ ^dependabot/ ]]; then
             EXPECTED_BASE="develop"
           else
-            echo "::error::Unsupported branch name '$HEAD_REF'. Use feat/*, fix/*, refactor/*, docs/*, chore/*, style/*, test/*, hotfix/*, or dependabot/*."
+            echo "::error::Unsupported branch name '$HEAD_REF'. Use iss/{issue-number}, hotfix/*, or dependabot/*."
             exit 1
           fi
 
