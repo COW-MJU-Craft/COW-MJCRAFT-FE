@@ -11,7 +11,10 @@ import {
   type AdminApplicationResultStatus,
   type AdminApplicationAnswerItem,
 } from '../../../api/admin/applications';
-import { adminFormsApi, type AdminFormQuestion } from '../../../api/admin/forms';
+import {
+  adminFormsApi,
+  type AdminFormQuestion,
+} from '../../../api/admin/forms';
 import { formatYmd, parseDateLike } from '../../../utils/common/date';
 import { getDepartmentLabel } from '../../../types/recruit';
 import AdminApplicationPrintDocument from './AdminApplicationPrintDocument';
@@ -282,165 +285,168 @@ export default function AdminApplicationDetailPage() {
 
   return (
     <>
-    <div className="print-screen-hidden mx-auto max-w-6xl px-4 py-12">
-      <Reveal>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <button
-              type="button"
-              onClick={() => navigate(`/admin/applications?formId=${formId}`)}
-              className="print-hidden inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-700"
-            >
-              <BackArrowIcon className="h-5 w-5" />
-              지원서 목록
-            </button>
-            <h1 className="mt-2 font-heading text-3xl text-primary">
-              지원서 상세
-            </h1>
-            <p className="mt-2 text-sm text-slate-600">
-              지원서 정보 확인 및 결과 입력
-            </p>
-          </div>
-
-          <div className="print-hidden flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-            >
-              <Printer className="h-4 w-4" />
-              PDF 출력
-            </button>
-
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50"
-            >
-              삭제
-            </button>
-          </div>
-        </div>
-      </Reveal>
-
-      <Reveal
-        delayMs={120}
-        className="application-print mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-lg font-bold text-slate-900">
-              {detail.applicantName?.trim() || '이름 없음'}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              학번 {detail.studentId} · 접수일 {dateLabel}
-            </p>
-          </div>
-
-          <div className="print-hidden flex items-center gap-2">
-            {RESULT_OPTIONS.map((opt) => (
+      <div className="print-screen-hidden mx-auto max-w-6xl px-4 py-12">
+        <Reveal>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
               <button
-                key={opt.value}
                 type="button"
-                disabled={saving}
-                onClick={() => void handleResultUpdate(opt.value)}
-                className={[
-                  'rounded-full px-3 py-1 text-xs font-bold transition',
-                  detail.resultStatus === opt.value
-                    ? 'bg-primary text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
-                ].join(' ')}
+                onClick={() => navigate(`/admin/applications?formId=${formId}`)}
+                className="print-hidden inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-700"
               >
-                {opt.label}
+                <BackArrowIcon className="h-5 w-5" />
+                지원서 목록
               </button>
-            ))}
+              <h1 className="mt-2 font-heading text-3xl text-primary">
+                지원서 상세
+              </h1>
+              <p className="mt-2 text-sm text-slate-600">
+                지원서 정보 확인 및 결과 입력
+              </p>
+            </div>
+
+            <div className="print-hidden flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              >
+                <Printer className="h-4 w-4" />
+                PDF 출력
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50"
+              >
+                삭제
+              </button>
+            </div>
           </div>
-        </div>
+        </Reveal>
 
-        <div className="mt-4 text-sm text-slate-600">
-          1지망 {getDepartmentLabel(detail.firstDepartment)} / 2지망{' '}
-          {getDepartmentLabel(detail.secondDepartment)}
-        </div>
-      </Reveal>
-
-      <Reveal
-        delayMs={180}
-        className="application-print mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <div className="space-y-6">
-          <section>
-            <h2 className="text-sm font-bold text-slate-700">기본 정보</h2>
-            <div className="mt-2 space-y-2 text-sm text-slate-600">
-              {(detail.basicAnswers ?? []).length === 0 ? (
-                <p>추가 기본 정보가 없습니다.</p>
-              ) : (
-                (detail.basicAnswers ?? []).map((ans) => (
-                  <AnswerCard
-                    key={`basic-${ans.formQuestionId}`}
-                    answer={ans}
-                    questionMap={questionMap}
-                  />
-                ))
-              )}
+        <Reveal
+          delayMs={120}
+          className="application-print mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-bold text-slate-900">
+                {detail.applicantName?.trim() || '이름 없음'}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                학번 {detail.studentId} · 접수일 {dateLabel}
+              </p>
             </div>
-          </section>
 
-          <section>
-            <h2 className="text-sm font-bold text-slate-700">공통 질문</h2>
-            <div className="mt-2 space-y-2 text-sm text-slate-600">
-              {(detail.commonAnswers ?? []).length === 0 ? (
-                <p>응답이 없습니다.</p>
-              ) : (
-                (detail.commonAnswers ?? []).map((ans) => (
-                  <AnswerCard
-                    key={`common-${ans.formQuestionId}`}
-                    answer={ans}
-                    questionMap={questionMap}
-                  />
-                ))
-              )}
+            <div className="print-hidden flex items-center gap-2">
+              {RESULT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void handleResultUpdate(opt.value)}
+                  className={[
+                    'rounded-full px-3 py-1 text-xs font-bold transition',
+                    detail.resultStatus === opt.value
+                      ? 'bg-primary text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                  ].join(' ')}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          </section>
+          </div>
 
-          <section>
-            <h2 className="text-sm font-bold text-slate-700">1지망 질문</h2>
-            <div className="mt-2 space-y-2 text-sm text-slate-600">
-              {(detail.firstDepartmentAnswers ?? []).length === 0 ? (
-                <p>응답이 없습니다.</p>
-              ) : (
-                (detail.firstDepartmentAnswers ?? []).map((ans) => (
-                  <AnswerCard
-                    key={`first-${ans.formQuestionId}`}
-                    answer={ans}
-                    questionMap={questionMap}
-                  />
-                ))
-              )}
-            </div>
-          </section>
+          <div className="mt-4 text-sm text-slate-600">
+            1지망 {getDepartmentLabel(detail.firstDepartment)} / 2지망{' '}
+            {getDepartmentLabel(detail.secondDepartment)}
+          </div>
+        </Reveal>
 
-          <section>
-            <h2 className="text-sm font-bold text-slate-700">2지망 질문</h2>
-            <div className="mt-2 space-y-2 text-sm text-slate-600">
-              {(detail.secondDepartmentAnswers ?? []).length === 0 ? (
-                <p>응답이 없습니다.</p>
-              ) : (
-                (detail.secondDepartmentAnswers ?? []).map((ans) => (
-                  <AnswerCard
-                    key={`second-${ans.formQuestionId}`}
-                    answer={ans}
-                    questionMap={questionMap}
-                  />
-                ))
-              )}
-            </div>
-          </section>
-        </div>
-      </Reveal>
-    </div>
-    <div className="print-only">
-      <AdminApplicationPrintDocument detail={detail} questionMap={questionMap} />
-    </div>
+        <Reveal
+          delayMs={180}
+          className="application-print mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <div className="space-y-6">
+            <section>
+              <h2 className="text-sm font-bold text-slate-700">기본 정보</h2>
+              <div className="mt-2 space-y-2 text-sm text-slate-600">
+                {(detail.basicAnswers ?? []).length === 0 ? (
+                  <p>추가 기본 정보가 없습니다.</p>
+                ) : (
+                  (detail.basicAnswers ?? []).map((ans) => (
+                    <AnswerCard
+                      key={`basic-${ans.formQuestionId}`}
+                      answer={ans}
+                      questionMap={questionMap}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-bold text-slate-700">공통 질문</h2>
+              <div className="mt-2 space-y-2 text-sm text-slate-600">
+                {(detail.commonAnswers ?? []).length === 0 ? (
+                  <p>응답이 없습니다.</p>
+                ) : (
+                  (detail.commonAnswers ?? []).map((ans) => (
+                    <AnswerCard
+                      key={`common-${ans.formQuestionId}`}
+                      answer={ans}
+                      questionMap={questionMap}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-bold text-slate-700">1지망 질문</h2>
+              <div className="mt-2 space-y-2 text-sm text-slate-600">
+                {(detail.firstDepartmentAnswers ?? []).length === 0 ? (
+                  <p>응답이 없습니다.</p>
+                ) : (
+                  (detail.firstDepartmentAnswers ?? []).map((ans) => (
+                    <AnswerCard
+                      key={`first-${ans.formQuestionId}`}
+                      answer={ans}
+                      questionMap={questionMap}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-bold text-slate-700">2지망 질문</h2>
+              <div className="mt-2 space-y-2 text-sm text-slate-600">
+                {(detail.secondDepartmentAnswers ?? []).length === 0 ? (
+                  <p>응답이 없습니다.</p>
+                ) : (
+                  (detail.secondDepartmentAnswers ?? []).map((ans) => (
+                    <AnswerCard
+                      key={`second-${ans.formQuestionId}`}
+                      answer={ans}
+                      questionMap={questionMap}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+        </Reveal>
+      </div>
+      <div className="print-only">
+        <AdminApplicationPrintDocument
+          detail={detail}
+          questionMap={questionMap}
+        />
+      </div>
     </>
   );
 }
