@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @import './styles/font.css';
-@import './styles/pdf-print.css';
+@import './styles/application-pdf-print.css';
 
 @theme {
   --color-primary: #022964;
