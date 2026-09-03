@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Printer } from 'lucide-react';
 import Reveal from '../../../components/ui/Reveal';
 import BackArrowIcon from '../../../components/ui/BackArrowIcon';
 import { useConfirm } from '../../../components/confirm/useConfirm';
@@ -13,6 +14,7 @@ import {
 import { adminFormsApi, type AdminFormQuestion } from '../../../api/admin/forms';
 import { formatYmd, parseDateLike } from '../../../utils/common/date';
 import { getDepartmentLabel } from '../../../types/recruit';
+import AdminApplicationPrintDocument from './AdminApplicationPrintDocument';
 
 const RESULT_OPTIONS: Array<{
   value: AdminApplicationResultStatus;
@@ -113,7 +115,7 @@ function AnswerCard({
             {displayFileName}
           </p>
 
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="print-hidden mt-2 flex flex-wrap gap-2">
             {hasPreviewUrl && (
               <a
                 href={previewUrl}
@@ -156,7 +158,7 @@ function AnswerCard({
           </div>
 
           {!hasPreviewUrl && !hasDownloadUrl && !isLikelyUrl(value) && (
-            <p className="mt-2 text-[11px] text-amber-600">
+            <p className="print-hidden mt-2 text-[11px] text-amber-600">
               파일 링크가 없어 파일 키만 복사할 수 있어요.
             </p>
           )}
@@ -237,6 +239,10 @@ export default function AdminApplicationDetailPage() {
     [detail, load, toast],
   );
 
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   const handleDelete = useCallback(async () => {
     if (!detail) return;
 
@@ -275,14 +281,15 @@ export default function AdminApplicationDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <>
+    <div className="print-screen-hidden mx-auto max-w-6xl px-4 py-12">
       <Reveal>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <button
               type="button"
               onClick={() => navigate(`/admin/applications?formId=${formId}`)}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-700"
+              className="print-hidden inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-700"
             >
               <BackArrowIcon className="h-5 w-5" />
               지원서 목록
@@ -295,19 +302,30 @@ export default function AdminApplicationDetailPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50"
-          >
-            삭제
-          </button>
+          <div className="print-hidden flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+            >
+              <Printer className="h-4 w-4" />
+              PDF 출력
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50"
+            >
+              삭제
+            </button>
+          </div>
         </div>
       </Reveal>
 
       <Reveal
         delayMs={120}
-        className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="application-print mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -319,7 +337,7 @@ export default function AdminApplicationDetailPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="print-hidden flex items-center gap-2">
             {RESULT_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -347,7 +365,7 @@ export default function AdminApplicationDetailPage() {
 
       <Reveal
         delayMs={180}
-        className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="application-print mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div className="space-y-6">
           <section>
@@ -420,5 +438,9 @@ export default function AdminApplicationDetailPage() {
         </div>
       </Reveal>
     </div>
+    <div className="print-only">
+      <AdminApplicationPrintDocument detail={detail} questionMap={questionMap} />
+    </div>
+    </>
   );
 }

@@ -1,18 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Printer, Search, X } from 'lucide-react';
 import Reveal from '../../../components/ui/Reveal';
 import BackArrowIcon from '../../../components/ui/BackArrowIcon';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
 import {
   adminApplicationsApi,
+  type AdminApplicationDetail,
   type AdminApplicationListItem,
   type AdminApplicationResultStatus,
 } from '../../../api/admin/applications';
-import { adminFormsApi, type AdminFormListItem } from '../../../api/admin/forms';
+import {
+  adminFormsApi,
+  type AdminFormListItem,
+  type AdminFormQuestion,
+} from '../../../api/admin/forms';
 import { formatYmd, parseDateLike } from '../../../utils/common/date';
 import { getDepartmentLabel } from '../../../types/recruit';
+import AdminApplicationPrintDocument from './AdminApplicationPrintDocument';
 
 const RESULT_OPTIONS: Array<{
   value: AdminApplicationResultStatus | 'all';
@@ -59,6 +65,14 @@ export default function AdminApplicationsListPage() {
     'all' | AdminApplicationResultStatus
   >('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [printing, setPrinting] = useState(false);
+  const [printRequested, setPrintRequested] = useState(false);
+  const [printDetails, setPrintDetails] = useState<AdminApplicationDetail[]>(
+    [],
+  );
+  const [printQuestionMap, setPrintQuestionMap] = useState<
+    Record<number, AdminFormQuestion>
+  >({});
   const selectedFormId = params.get('formId') ?? '';
   const selectedForm = forms.find(
     (form) => String(form.formId) === selectedFormId,
@@ -145,6 +159,63 @@ export default function AdminApplicationsListPage() {
     void load(next);
   }, [formId, load, setParams]);
 
+  useEffect(() => {
+    if (!printRequested || printDetails.length === 0) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      window.print();
+      setPrintRequested(false);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [printDetails.length, printRequested]);
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      setPrintDetails([]);
+      setPrintQuestionMap({});
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => window.removeEventListener('afterprint', handleAfterPrint);
+  }, []);
+
+  const handlePrint = useCallback(async () => {
+    if (!selectedFormId || filtered.length === 0 || printing) return;
+
+    setPrinting(true);
+    try {
+      const [questionData, detailData] = await Promise.all([
+        adminFormsApi.getQuestions(selectedFormId).catch(() => []),
+        Promise.all(
+          filtered.map((item) =>
+            adminApplicationsApi.getById(
+              selectedFormId,
+              String(item.applicationId),
+            ),
+          ),
+        ),
+      ]);
+
+      const map = (questionData ?? []).reduce<Record<number, AdminFormQuestion>>(
+        (acc, question) => {
+          acc[question.formQuestionId] = question;
+          return acc;
+        },
+        {},
+      );
+
+      setPrintQuestionMap(map);
+      setPrintDetails(detailData.filter(Boolean));
+      setPrintRequested(true);
+    } catch (err) {
+      console.error(err);
+      toast.error('PDF 출력용 지원서 정보를 불러오지 못했어요.');
+    } finally {
+      setPrinting(false);
+    }
+  }, [filtered, printing, selectedFormId, toast]);
+
   const handleDelete = useCallback(
     async (item: AdminApplicationListItem) => {
       const ok = await confirm.open({
@@ -168,7 +239,8 @@ export default function AdminApplicationsListPage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <>
+    <div className="print-screen-hidden mx-auto max-w-6xl px-4 py-12">
       <Reveal>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -188,6 +260,15 @@ export default function AdminApplicationsListPage() {
                 : '지원서를 선택하면 지원자가 제출한 내용을 확인할 수 있어요'}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={handlePrint}
+            disabled={!selectedFormId || filtered.length === 0 || printing}
+            className="print-hidden inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Printer className="h-4 w-4" />
+            {printing ? '불러오는 중...' : '전체 PDF 출력'}
+          </button>
         </div>
       </Reveal>
 
@@ -212,7 +293,7 @@ export default function AdminApplicationsListPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-end">
+          <div className="print-hidden flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-end">
           {!selectedFormId && (
             <>
               {formsLoading ? (
@@ -299,7 +380,7 @@ export default function AdminApplicationsListPage() {
 
       <Reveal
         delayMs={180}
-        className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="application-print mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         {loading && <p className="text-sm text-slate-500">불러오는 중...</p>}
         {error && (
@@ -333,7 +414,7 @@ export default function AdminApplicationsListPage() {
                 <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
                   {getResultStatusLabel(item.resultStatus)}
                 </span>
-                <div className="flex gap-2">
+                <div className="print-hidden flex gap-2">
                   <Link
                     to={`/admin/applications/${params.get('formId')}/${item.applicationId}`}
                     className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
@@ -354,5 +435,18 @@ export default function AdminApplicationsListPage() {
         </div>
       </Reveal>
     </div>
+    <div className="print-only">
+      {printDetails.map((detail, index) => (
+        <AdminApplicationPrintDocument
+          key={detail.applicationId}
+          detail={detail}
+          questionMap={printQuestionMap}
+          formTitle={selectedFormTitle}
+          index={index}
+          total={printDetails.length}
+        />
+      ))}
+    </div>
+    </>
   );
 }

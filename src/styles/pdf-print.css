@@ -1,0 +1,208 @@
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+  }
+
+  .print-only {
+    background: #ffffff !important;
+    display: block !important;
+    left: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    width: 100% !important;
+  }
+
+  .print-screen-hidden,
+  .print-hidden,
+  .tsqd-parent-container,
+  .tsqd-parent-container * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .application-print {
+    display: none !important;
+  }
+
+  a {
+    color: #0f172a !important;
+    text-decoration: none !important;
+  }
+
+  .application-print-doc {
+    background: #ffffff;
+    border: 1px solid #d8e0ee;
+    border-radius: 18px;
+    box-sizing: border-box;
+    color: #0f172a;
+    break-after: page;
+    font-size: 12px;
+    line-height: 1.65;
+    overflow: hidden;
+    padding: 18px;
+  }
+
+  .application-print-doc:last-child {
+    break-after: auto;
+  }
+
+  .application-print-header {
+    align-items: flex-start;
+    background: #f6f8fc;
+    border: 1px solid #e5eaf3;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 14px 16px;
+  }
+
+  .application-print-eyebrow {
+    color: #475569 !important;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin: 0 0 4px;
+  }
+
+  .application-print-header h1 {
+    color: #0f172a !important;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin: 0;
+  }
+
+  .application-print-count {
+    background: #ffffff;
+    border: 1px solid #d8e0ee;
+    border-radius: 999px;
+    color: #022964 !important;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 9px;
+  }
+
+  .application-print-meta {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0 0 12px;
+  }
+
+  .application-print-meta div {
+    background: #ffffff;
+    border: 1px solid #e5eaf3;
+    border-radius: 12px;
+    min-width: 0;
+    padding: 7px 9px;
+  }
+
+  .application-print-meta dt {
+    color: #64748b !important;
+    font-size: 9.5px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .application-print-meta dd {
+    color: #0f172a !important;
+    font-size: 12px;
+    font-weight: 700;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .application-print-section {
+    break-inside: auto;
+    margin-top: 12px;
+    page-break-inside: auto;
+  }
+
+  .application-print-section h2 {
+    align-items: center;
+    background: #022964;
+    border-radius: 999px;
+    color: #0f172a !important;
+    display: inline-flex;
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0 0 7px;
+    padding: 5px 12px;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .application-print-answer-list {
+    display: grid;
+    gap: 7px;
+  }
+
+  .application-print-answer {
+    background: #f8fafc;
+    border: 1px solid #e5eaf3;
+    border-radius: 12px;
+    break-inside: auto;
+    page-break-inside: auto;
+    padding: 9px 11px;
+  }
+
+  .application-print-question {
+    color: #475569 !important;
+    font-size: 11px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .application-print-value {
+    color: #0f172a !important;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .application-print-file {
+    display: grid;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .application-print-file-url {
+    color: #64748b !important;
+    font-size: 9px;
+    font-weight: 500;
+  }
+
+  .application-print-empty {
+    background: #f8fafc;
+    border: 1px solid #e5eaf3;
+    border-radius: 12px;
+    color: #64748b !important;
+    font-size: 11px;
+    margin: 0;
+    padding: 8px 10px;
+  }
+}
