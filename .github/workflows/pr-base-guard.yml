@@ -2,7 +2,7 @@ name: PR Base Guard
 
 on:
   pull_request:
-    branches: ["main", "develop"]
+    branches: ['main', 'develop']
     types: [opened, reopened, synchronize, edited, ready_for_review]
 
 permissions:
@@ -24,8 +24,6 @@ jobs:
           elif [[ "$HEAD_REF" =~ ^hotfix/ ]]; then
             EXPECTED_BASE="main"
           elif [[ "$HEAD_REF" =~ ^iss/[0-9]+$ ]]; then
-            EXPECTED_BASE="develop"
-          elif [[ "$HEAD_REF" == "chore/iss257" ]]; then
             EXPECTED_BASE="develop"
           elif [[ "$HEAD_REF" =~ ^dependabot/ ]]; then
             EXPECTED_BASE="develop"
