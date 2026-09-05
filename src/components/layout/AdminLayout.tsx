@@ -75,7 +75,7 @@ export default function AdminLayout() {
     <div className="min-h-screen overflow-x-hidden bg-app-bg text-slate-900">
       <header
         className={[
-          'fixed inset-x-0 top-0 z-50 overflow-visible border-b border-slate-800 bg-slate-950/90 backdrop-blur transition-transform duration-200',
+          'print-hidden fixed inset-x-0 top-0 z-50 overflow-visible border-b border-slate-800 bg-slate-950/90 backdrop-blur transition-transform duration-200',
           mobileHeaderVisible ? 'translate-y-0' : '-translate-y-full',
           'md:sticky md:translate-y-0',
         ].join(' ')}
