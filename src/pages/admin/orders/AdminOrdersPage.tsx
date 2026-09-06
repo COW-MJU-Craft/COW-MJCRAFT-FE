@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import Reveal from '../../../components/ui/Reveal';
+import { canAdvanceTogether, nextOrderStatus } from '../../../features/order/advanceStatus';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
 import { ApiError } from '../../../api/core/client';
@@ -15,6 +16,9 @@ const STATUS_FILTERS: Array<{ key: 'ALL' | AdminOrderStatus; label: string }> =
     { key: 'ALL', label: '전체' },
     { key: 'PENDING_DEPOSIT', label: '입금 확인 필요' },
     { key: 'PAID', label: '입금 확인 완료' },
+    { key: 'IN_PRODUCTION', label: '제작 중' },
+    { key: 'READY_TO_SHIP', label: '배송 준비 완료' },
+    { key: 'DELIVERED', label: '배송 완료' },
     { key: 'CANCELED', label: '취소' },
     { key: 'REFUND_REQUESTED', label: '환불 요청' },
     { key: 'REFUNDED', label: '환불 완료' },
@@ -23,6 +27,9 @@ const STATUS_FILTERS: Array<{ key: 'ALL' | AdminOrderStatus; label: string }> =
 const STATUS_LABELS: Record<string, string> = {
   PENDING_DEPOSIT: '입금 확인 필요',
   PAID: '입금 확인 완료',
+  IN_PRODUCTION: '제작 중',
+  READY_TO_SHIP: '배송 준비 완료',
+  DELIVERED: '배송 완료',
   CANCELED: '취소',
   REFUND_REQUESTED: '환불 요청',
   REFUNDED: '환불 완료',
@@ -168,7 +175,10 @@ function CompactInfoList({
   );
 }
 
-export default function AdminOrdersPage() {
+export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
+  projectId?: number;
+  onOrdersChanged?: () => void;
+}) {
   const toast = useToast();
   const confirm = useConfirm();
   const ordersSectionRef = useRef<HTMLElement | null>(null);
@@ -181,14 +191,22 @@ export default function AdminOrdersPage() {
   const [detail, setDetail] = useState<AdminOrderDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [checkedIds, setCheckedIds] = useState<number[]>([]);
+  const actionLock = useRef(false);
+  const listRequest = useRef(0);
+  const detailRequest = useRef(0);
 
   const loadOrders = useCallback(async () => {
+    const request = ++listRequest.current;
+    setCheckedIds([]);
     setLoading(true);
     setError(null);
     try {
-      const list = await adminOrdersApi.list(
-        filter === 'ALL' ? undefined : filter,
-      );
+      const status = filter === 'ALL' ? undefined : filter;
+      const list = projectId === undefined
+        ? await adminOrdersApi.list(status)
+        : await adminOrdersApi.listByProject(projectId, status);
+      if (request !== listRequest.current) return;
       setOrders(list);
       if (list.length === 0) {
         setSelectedOrderId(null);
@@ -200,28 +218,32 @@ export default function AdminOrdersPage() {
         return list[0].orderId;
       });
     } catch (err) {
+      if (request !== listRequest.current) return;
       console.error(err);
       setError(toErrorMessage(err, '주문 목록을 불러오지 못했어요.'));
       setOrders([]);
       setSelectedOrderId(null);
       setDetail(null);
     } finally {
-      setLoading(false);
+      if (request === listRequest.current) setLoading(false);
     }
-  }, [filter]);
+  }, [filter, projectId]);
 
   const loadDetail = useCallback(
     async (orderId: number) => {
+      const request = ++detailRequest.current;
       setDetailLoading(true);
       try {
         const data = await adminOrdersApi.getById(orderId);
+        if (request !== detailRequest.current) return;
         setDetail(data);
       } catch (err) {
+        if (request !== detailRequest.current) return;
         console.error(err);
         toast.error(toErrorMessage(err, '주문 상세를 불러오지 못했어요.'));
         setDetail(null);
       } finally {
-        setDetailLoading(false);
+        if (request === detailRequest.current) setDetailLoading(false);
       }
     },
     [toast],
@@ -231,6 +253,9 @@ export default function AdminOrdersPage() {
     // 주문 목록 로드: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadOrders();
+    // Invalidate all outstanding requests, including manual refreshes after this effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { listRequest.current++; };
   }, [loadOrders]);
 
   useEffect(() => {
@@ -238,6 +263,8 @@ export default function AdminOrdersPage() {
     // 선택된 주문 상세 로드: 외부 데이터(서버)와 동기화하는 표준 패턴이라 예외 처리한다.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadDetail(selectedOrderId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { detailRequest.current++; };
   }, [selectedOrderId, loadDetail]);
 
   const selectedOrder = useMemo(
@@ -245,6 +272,48 @@ export default function AdminOrdersPage() {
     [orders, selectedOrderId],
   );
   const selectedStatus = detail?.order?.status ?? selectedOrder?.status;
+  const checkedOrders = orders.filter((order) => checkedIds.includes(order.orderId));
+  const selectionAllowed = (item: AdminOrderListItem) => checkedIds.includes(item.orderId) ||
+    canAdvanceTogether([...checkedOrders.map((order) => order.status), item.status]);
+  const toggleChecked = (item: AdminOrderListItem) => {
+    if (actionLoading || loading || !selectionAllowed(item)) return;
+    setCheckedIds((ids) => ids.includes(item.orderId) ? ids.filter((id) => id !== item.orderId) : [...ids, item.orderId]);
+  };
+
+  const handleAdvance = async (bulk: boolean) => {
+    if (projectId === undefined || actionLock.current || actionLoading || loading || detailLoading) return;
+    const ids = bulk ? checkedIds : selectedOrderId ? [selectedOrderId] : [];
+    const statuses = bulk ? checkedOrders.map((order) => order.status) : selectedStatus ? [selectedStatus] : [];
+    if (!canAdvanceTogether(statuses) || ids.length !== statuses.length) return;
+    actionLock.current = true;
+    setActionLoading(true);
+    try {
+      const ok = await confirm.open({
+        title: `${ids.length}건 주문 상태 진행`,
+        description: `${getStatusLabel(statuses[0])} → ${getStatusLabel(nextOrderStatus(statuses[0]))}\n다른 프로젝트 상품이 포함된 경우 해당 주문 전체의 상태가 함께 변경됩니다. 일괄 처리는 한 건이라도 실패하면 전체 취소됩니다.`,
+        confirmText: '상태 변경', cancelText: '닫기',
+      });
+      if (!ok) return;
+      try {
+        if (bulk) await adminOrdersApi.advanceStatuses(projectId, ids);
+        else await adminOrdersApi.advanceStatus(projectId, ids[0]);
+        toast.success(`${ids.length}건의 주문 상태를 변경했습니다.`);
+      } catch (err) {
+        toast.error(err instanceof ApiError && err.status === 409
+          ? '주문 상태 충돌 또는 재고 부족으로 처리하지 못했습니다. 최신 상태를 확인해주세요.'
+          : '처리 결과를 확인하지 못했습니다. 최신 주문 상태를 확인한 후 다시 시도해주세요.');
+      }
+      setCheckedIds([]);
+      setDetail(null);
+      setSelectedOrderId(null);
+      detailRequest.current++;
+      onOrdersChanged?.();
+      await loadOrders();
+    } finally {
+      actionLock.current = false;
+      setActionLoading(false);
+    }
+  };
   const selectedOrderIndex = useMemo(
     () => orders.findIndex((item) => item.orderId === selectedOrderId),
     [orders, selectedOrderId],
@@ -277,6 +346,7 @@ export default function AdminOrdersPage() {
     setActionLoading(true);
     try {
       await adminOrdersApi.confirmPaid(selectedOrderId);
+      onOrdersChanged?.();
       toast.success('입금 확인 완료 처리했습니다.');
       await loadOrders();
       await loadDetail(selectedOrderId);
@@ -314,6 +384,7 @@ export default function AdminOrdersPage() {
         selectedOrderId,
         reason?.trim() || undefined,
       );
+      onOrdersChanged?.();
       toast.success('요청을 처리했습니다.');
       await loadOrders();
       await loadDetail(selectedOrderId);
@@ -343,6 +414,7 @@ export default function AdminOrdersPage() {
     setActionLoading(true);
     try {
       await adminOrdersApi.confirmRefund(selectedOrderId);
+      onOrdersChanged?.();
       toast.success('환불 완료 처리했습니다.');
       await loadOrders();
       await loadDetail(selectedOrderId);
@@ -512,6 +584,8 @@ export default function AdminOrdersPage() {
   };
 
   const handleOrderSelect = (orderId: number) => {
+    if (actionLoading) return;
+    setDetail(null);
     setSelectedOrderId(orderId);
     if (window.matchMedia('(max-width: 1023px)').matches) {
       scrollToElement(detailSectionRef);
@@ -519,6 +593,7 @@ export default function AdminOrdersPage() {
   };
 
   const handleListPageChange = (page: number) => {
+    if (actionLoading) return;
     const nextPage = Math.min(Math.max(page, 1), totalListPages);
     const targetOrder = orders[(nextPage - 1) * ORDERS_PER_PAGE];
     if (!targetOrder) return;
@@ -535,7 +610,7 @@ export default function AdminOrdersPage() {
               주문 관리
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              상태 필터, 상세 조회, 입금 확인/취소/환불 상태 변경
+              {projectId ? '금액은 다른 프로젝트 상품과 배송비를 포함한 주문 전체 기준입니다.' : '전체 프로젝트 주문'}
             </p>
           </div>
         </div>
@@ -552,6 +627,7 @@ export default function AdminOrdersPage() {
                   key={item.key}
                   type="button"
                   onClick={() => setFilter(item.key)}
+                  disabled={actionLoading}
                   className={[
                     'shrink-0 rounded-xl border px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm',
                     active
@@ -575,6 +651,15 @@ export default function AdminOrdersPage() {
             className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:scroll-mt-28 sm:p-5"
           >
             <h2 className="text-lg font-bold text-slate-900">주문 목록</h2>
+            {projectId !== undefined && <div className="mt-3 flex flex-wrap items-center gap-3 border-b border-slate-200 pb-3 text-sm">
+              <span>{checkedIds.length}/200건 선택</span>
+              <button type="button" onClick={() => setCheckedIds([])} disabled={actionLoading || checkedIds.length === 0} className="underline disabled:opacity-40">선택 해제</button>
+              <button type="button" onClick={() => void handleAdvance(true)}
+                disabled={actionLoading || loading || detailLoading || !canAdvanceTogether(checkedOrders.map((order) => order.status))}
+                className="rounded-lg bg-primary px-3 py-2 font-semibold text-white disabled:opacity-40">
+                {actionLoading ? '처리 중...' : `선택 주문 ${getStatusLabel(nextOrderStatus(checkedOrders[0]?.status))} 처리`}
+              </button>
+            </div>}
             {loading ? (
               <p className="py-10 text-center text-sm text-slate-500">
                 목록을 불러오는 중...
@@ -593,8 +678,12 @@ export default function AdminOrdersPage() {
                   {paginatedOrders.map((item) => {
                     const selected = selectedOrderId === item.orderId;
                     return (
+                      <div key={item.orderId}>
+                      {projectId !== undefined && <label className="mb-2 flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={checkedIds.includes(item.orderId)} disabled={actionLoading || loading || !selectionAllowed(item)} onChange={() => toggleChecked(item)} />
+                        {item.orderNo ?? `#${item.orderId}`} 선택
+                      </label>}
                       <button
-                        key={item.orderId}
                         type="button"
                         onClick={() => handleOrderSelect(item.orderId)}
                         className={[
@@ -645,6 +734,7 @@ export default function AdminOrdersPage() {
                           </div>
                         </dl>
                       </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -653,6 +743,7 @@ export default function AdminOrdersPage() {
                   <table className="min-w-[720px] w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs font-semibold text-slate-500">
+                        {projectId !== undefined && <th className="px-3 py-2">선택</th>}
                         <th className="px-3 py-2">주문번호</th>
                         <th className="px-3 py-2">상태</th>
                         <th className="px-3 py-2">구매자</th>
@@ -672,6 +763,9 @@ export default function AdminOrdersPage() {
                               selected ? 'bg-primary/5' : 'hover:bg-slate-50',
                             ].join(' ')}
                           >
+                            {projectId !== undefined && <td className="px-3 py-3" onClick={(event) => event.stopPropagation()}>
+                              <input type="checkbox" aria-label={`${item.orderNo ?? item.orderId} 선택`} checked={checkedIds.includes(item.orderId)} disabled={actionLoading || loading || !selectionAllowed(item)} onChange={() => toggleChecked(item)} />
+                            </td>}
                             <td className="px-3 py-3 font-semibold text-slate-800">
                               <span className="break-all">
                                 {item.orderNo ?? `#${item.orderId}`}
@@ -809,11 +903,17 @@ export default function AdminOrdersPage() {
                 )}
 
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                  {projectId !== undefined && selectedStatus !== 'PENDING_DEPOSIT' && nextOrderStatus(selectedStatus) && (
+                    <button type="button" onClick={() => void handleAdvance(false)} disabled={actionLoading || loading || detailLoading}
+                      className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white disabled:opacity-40">
+                      {getStatusLabel(nextOrderStatus(selectedStatus))} 처리
+                    </button>
+                  )}
                   {selectedStatus === 'PENDING_DEPOSIT' && (
                     <>
                       <button
                         type="button"
-                        onClick={() => void handleConfirmPaid()}
+                        onClick={() => void (projectId === undefined ? handleConfirmPaid() : handleAdvance(false))}
                         disabled={actionLoading}
                         className="w-full rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60 sm:w-auto"
                       >

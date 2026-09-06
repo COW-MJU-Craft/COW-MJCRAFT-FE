@@ -27,7 +27,7 @@ import AdminProjectEditorPage from './pages/admin/projects/AdminProjectEditorPag
 import AdminProjectItemsListPage from './pages/admin/projects/AdminProjectItemsListPage';
 import AdminProjectItemCreatePage from './pages/admin/projects/AdminProjectItemCreatePage';
 import AdminItemDetailPage from './pages/admin/items/AdminItemDetailPage';
-import AdminOrdersPage from './pages/admin/orders/AdminOrdersPage';
+import AdminOrdersPage from './pages/admin/orders/AdminProjectOrdersPage';
 import AdminNoticesListPage from './pages/admin/notices/AdminNoticesListPage';
 import AdminNoticeEditorPage from './pages/admin/notices/AdminNoticeEditorPage';
 import AdminNoticeDetailPage from './pages/admin/notices/AdminNoticeDetailPage';
