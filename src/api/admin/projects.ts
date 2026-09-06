@@ -97,9 +97,9 @@ export async function uploadToPresignedUrl(
 }
 
 export const adminProjectsApi = {
-  list() {
+  list(status?: AdminProjectStatus) {
     return api<AdminProjectResponse[]>(
-      withApiBase('/admin/projects'),
+      withApiBase(`/admin/projects${status ? `?status=${encodeURIComponent(status)}` : ''}`),
     );
   },
 

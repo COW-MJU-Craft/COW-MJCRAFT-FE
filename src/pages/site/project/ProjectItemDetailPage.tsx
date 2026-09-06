@@ -87,7 +87,7 @@ function ProductGallery({
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="aspect-5/6 w-full">
+        <div className="aspect-square w-full">
           {activeImage ? (
             <button
               type="button"
@@ -100,7 +100,7 @@ function ProductGallery({
                 alt={name}
                 loading="eager"
                 decoding="async"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </button>
           ) : (
@@ -119,7 +119,7 @@ function ProductGallery({
                 key={`${url}-${idx}`}
                 type="button"
                 onClick={() => onSelect(idx)}
-                className={`shrink-0 overflow-hidden rounded-2xl border transition ${
+                className={`shrink-0 overflow-hidden rounded-2xl border bg-slate-100 transition ${
                   idx === activeIndex
                     ? 'border-primary/70'
                     : 'border-slate-200 hover:border-primary/40'
@@ -131,7 +131,7 @@ function ProductGallery({
                   alt={`${name} 썸네일 ${idx + 1}`}
                   loading="lazy"
                   decoding="async"
-                  className="h-20 w-20 object-cover"
+                  className="h-20 w-20 object-contain"
                 />
               </button>
             ))}
@@ -319,7 +319,7 @@ function DetailImagesViewer({
   return (
     <div className="mt-5 space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-        <div className="aspect-5/6 w-full">
+        <div className="aspect-square w-full">
           {preview && (
             <button
               type="button"
@@ -332,7 +332,7 @@ function DetailImagesViewer({
                 alt={`${name} 상세 이미지 ${activeIndex + 1}`}
                 loading="eager"
                 decoding="async"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </button>
           )}
@@ -345,7 +345,7 @@ function DetailImagesViewer({
             key={`${url}-${idx}`}
             type="button"
             onClick={() => onSelect(idx)}
-            className={`shrink-0 overflow-hidden rounded-2xl border transition ${
+            className={`shrink-0 overflow-hidden rounded-2xl border bg-slate-100 transition ${
               idx === activeIndex
                 ? 'border-primary/70'
                 : 'border-slate-200 hover:border-primary/40'
@@ -357,7 +357,7 @@ function DetailImagesViewer({
               alt={`${name} 상세 썸네일 ${idx + 1}`}
               loading="lazy"
               decoding="async"
-              className="h-20 w-20 object-cover"
+              className="h-20 w-20 object-contain"
             />
           </button>
         ))}
