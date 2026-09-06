@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { adminProjectsApi, type AdminProjectStatus } from '../../../api/admin/projects';
-import { adminOrdersApi } from '../../../api/admin/orders';
+import { adminOrdersApi, type AdminOrderStatus } from '../../../api/admin/orders';
+import AdminOrderExportForm from '../../../components/order/AdminOrderExportForm';
 import AdminOrdersPage from './AdminOrdersPage';
 
 export default function AdminProjectOrdersPage() {
   const [status, setStatus] = useState<AdminProjectStatus | 'ALL'>('OPEN');
   const [projectId, setProjectId] = useState<number | null>(null);
   const [allOrders, setAllOrders] = useState(false);
+  const [orderStatus, setOrderStatus] = useState<AdminOrderStatus | undefined>();
   const queryClient = useQueryClient();
   const projects = useQuery({
     queryKey: ['admin-order-projects', status],
@@ -29,7 +31,7 @@ export default function AdminProjectOrdersPage() {
           <label className="grid gap-2 text-sm font-semibold">
             프로젝트 상태
             <select className="h-11 rounded-lg border border-slate-300 bg-white px-3" value={status}
-              onChange={(e) => { setStatus(e.target.value as typeof status); setProjectId(null); setAllOrders(false); }}>
+              onChange={(e) => { setStatus(e.target.value as typeof status); setProjectId(null); setAllOrders(false); setOrderStatus(undefined); }}>
               <option value="OPEN">진행 중</option><option value="PREPARING">준비 중</option>
               <option value="CLOSED">마감</option><option value="ALL">전체</option>
             </select>
@@ -38,7 +40,7 @@ export default function AdminProjectOrdersPage() {
             프로젝트
             <select className="h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3"
               disabled={projects.isPending || projects.isError} value={allOrders ? '' : projectId ?? ''}
-              onChange={(e) => { setProjectId(e.target.value ? Number(e.target.value) : null); setAllOrders(false); }}>
+              onChange={(e) => { setProjectId(e.target.value ? Number(e.target.value) : null); setAllOrders(false); setOrderStatus(undefined); }}>
               <option value="">프로젝트 선택</option>
               {projects.data?.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
             </select>
@@ -46,7 +48,7 @@ export default function AdminProjectOrdersPage() {
           <button type="button" title="프로젝트 새로고침" aria-label="프로젝트 새로고침"
             disabled={projects.isFetching} onClick={() => void projects.refetch()}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-50"><RefreshCw size={18} /></button>
-          <button type="button" onClick={() => { setAllOrders(true); setProjectId(null); }}
+          <button type="button" onClick={() => { setAllOrders(true); setProjectId(null); setOrderStatus(undefined); }}
             className="h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold">전체 주문</button>
         </div>
         {projects.isPending && <p className="py-5 text-sm text-slate-500">프로젝트를 불러오는 중...</p>}
@@ -63,9 +65,16 @@ export default function AdminProjectOrdersPage() {
             </dl>}
           <p className="mt-3 text-xs text-slate-500">통계는 상태 필터와 무관합니다. 입금 대기·취소·환불 완료는 제외되며 환불 요청은 포함됩니다.</p>
         </div>}
+        {(allOrders || project) && (
+          <AdminOrderExportForm
+            projectId={allOrders ? undefined : projectId!}
+            status={orderStatus}
+          />
+        )}
       </section>
       {(allOrders || project) && <AdminOrdersPage key={allOrders ? 'all' : projectId}
         projectId={allOrders ? undefined : projectId!}
+        onFilterChanged={setOrderStatus}
         onOrdersChanged={() => { void queryClient.invalidateQueries({ queryKey: ['admin-project-order-statistics'] }); }} />}
     </>
   );
