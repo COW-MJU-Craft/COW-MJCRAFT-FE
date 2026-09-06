@@ -4,6 +4,9 @@ import type { DateTimeArray } from '../../types/order';
 export type AdminOrderStatus =
   | 'PENDING_DEPOSIT'
   | 'PAID'
+  | 'IN_PRODUCTION'
+  | 'READY_TO_SHIP'
+  | 'DELIVERED'
   | 'CANCELED'
   | 'REFUND_REQUESTED'
   | 'REFUNDED';
@@ -319,6 +322,33 @@ function toDetail(raw: unknown): AdminOrderDetail {
 }
 
 export const adminOrdersApi = {
+  advanceStatus(projectId: number, orderId: number) {
+    return api<{ orderId: number; status: AdminOrderStatus }>(
+      withApiBase(`/admin/projects/${projectId}/orders/${orderId}/advance-status`),
+      { method: 'POST' },
+    );
+  },
+
+  advanceStatuses(projectId: number, orderIds: number[]) {
+    return api<{ previousStatus: AdminOrderStatus; newStatus: AdminOrderStatus; updatedOrderIds: number[] }>(
+      withApiBase(`/admin/projects/${projectId}/orders/advance-status`),
+      { method: 'POST', body: { orderIds } },
+    );
+  },
+
+  async listByProject(projectId: number, status?: AdminOrderStatus) {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    const data = await api<unknown>(withApiBase(`/admin/projects/${projectId}/orders${query}`));
+    if (!Array.isArray(data)) throw new Error('주문 목록 응답 형식을 확인해주세요.');
+    return data.map(toListItem).filter((item): item is AdminOrderListItem => item !== null);
+  },
+
+  statistics(projectId: number) {
+    return api<{ orderCount: number; totalOrderAmount: number }>(
+      withApiBase(`/admin/projects/${projectId}/orders/statistics`),
+    );
+  },
+
   async list(status?: AdminOrderStatus) {
     const query = status ? `?status=${encodeURIComponent(status)}` : '';
     const parsed = await api<unknown>(
