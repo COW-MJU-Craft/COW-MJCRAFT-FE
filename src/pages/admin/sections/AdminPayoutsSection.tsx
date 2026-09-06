@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Printer } from 'lucide-react';
 import Reveal from '../../../components/ui/Reveal';
 import { payoutsAdminApi, type PayoutReport } from '../../../api/site/payouts';
 import type { ExpenseGroup, MoneyItem } from '../../../types/payouts';
@@ -6,6 +7,7 @@ import {
   adminProjectsApi,
   type AdminProjectResponse,
 } from '../../../api/admin/projects';
+import AdminPayoutPrintDocument from './AdminPayoutPrintDocument';
 
 type SectionKey = 'sales' | 'expense';
 type InputMode = 'select' | 'manual';
@@ -125,6 +127,8 @@ export default function AdminPayoutsSection() {
   const [closedProjects, setClosedProjects] = useState<AdminProjectResponse[]>(
     [],
   );
+  const [printReports, setPrintReports] = useState<PayoutReport[]>([]);
+  const [printRequested, setPrintRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -152,6 +156,32 @@ export default function AdminPayoutsSection() {
     openSections[key]?.[section] ?? true;
 
   const getMode = (key: string): InputMode => inputModes[key] ?? 'select';
+
+  useEffect(() => {
+    if (!printRequested || printReports.length === 0) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      window.print();
+      setPrintRequested(false);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [printReports.length, printRequested]);
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      setPrintReports([]);
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => window.removeEventListener('afterprint', handleAfterPrint);
+  }, []);
+
+  const handlePrint = useCallback((targets: PayoutReport[]) => {
+    if (targets.length === 0) return;
+    setPrintReports(targets);
+    setPrintRequested(true);
+  }, []);
 
   const toggleSection = (key: string, section: SectionKey) => {
     setOpenSections((prev) => {
@@ -457,17 +487,33 @@ export default function AdminPayoutsSection() {
   }, [reports]);
 
   return (
-    <Reveal id="payouts" delayMs={120} className="mt-10">
+    <>
+    <Reveal
+      id="payouts"
+      delayMs={120}
+      className="print-screen-hidden mt-10"
+    >
       <div className="rounded-2xl border border-slate-200 bg-white p-4 md:rounded-3xl md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-heading text-xl text-slate-900">정산 관리</h2>
-          <button
-            type="button"
-            onClick={addReport}
-            className="h-10 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50"
-          >
-            정산서 추가
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handlePrint(reports)}
+              disabled={loading || reports.length === 0}
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Printer className="h-4 w-4" />
+              전체 PDF 출력
+            </button>
+            <button
+              type="button"
+              onClick={addReport}
+              className="h-10 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50"
+            >
+              정산서 추가
+            </button>
+          </div>
         </div>
 
         {projectsLoading && (
@@ -561,8 +607,18 @@ export default function AdminPayoutsSection() {
                   {isOpen && (
                     <div className="border-t border-slate-200 p-3 md:p-5">
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 md:p-4">
-                        <div className="text-xs font-semibold text-slate-500">
-                          프로젝트 연결 방식
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="text-xs font-semibold text-slate-500">
+                            프로젝트 연결 방식
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handlePrint([report])}
+                            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                          >
+                            <Printer className="h-4 w-4" />
+                            PDF 출력
+                          </button>
                         </div>
                         <div className="mt-2 inline-flex rounded-xl border border-slate-200 bg-white p-1">
                           <button
@@ -977,5 +1033,16 @@ export default function AdminPayoutsSection() {
         )}
       </div>
     </Reveal>
+    <div className="print-only">
+      {printReports.map((report, index) => (
+        <AdminPayoutPrintDocument
+          key={reportKey(report.id)}
+          report={report}
+          index={index}
+          total={printReports.length}
+        />
+      ))}
+    </div>
+    </>
   );
 }
