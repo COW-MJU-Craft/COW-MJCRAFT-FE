@@ -175,9 +175,10 @@ function CompactInfoList({
   );
 }
 
-export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
+export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterChanged }: {
   projectId?: number;
   onOrdersChanged?: () => void;
+  onFilterChanged?: (status: AdminOrderStatus | undefined) => void;
 }) {
   const toast = useToast();
   const confirm = useConfirm();
@@ -626,7 +627,10 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => setFilter(item.key)}
+                  onClick={() => {
+                    setFilter(item.key);
+                    onFilterChanged?.(item.key === 'ALL' ? undefined : item.key);
+                  }}
                   disabled={actionLoading}
                   className={[
                     'shrink-0 rounded-xl border px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm',
