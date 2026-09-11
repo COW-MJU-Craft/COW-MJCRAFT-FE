@@ -62,6 +62,25 @@ export type OrderCreateResponse = {
   raw: unknown;
 };
 
+export type OrderQuoteRequest = {
+  items: OrderCreateRequest['items'];
+  fulfillmentMethod: OrderCreateRequest['fulfillment']['method'];
+};
+
+export type OrderQuoteResponse = {
+  items: Array<{
+    projectItemId: number;
+    projectId: number;
+    itemName: string;
+    quantity: number;
+    unitPrice: number;
+    lineAmount: number;
+  }>;
+  totalAmount: number;
+  shippingFee: number;
+  finalAmount: number;
+};
+
 export type OrderLookupRequest = {
   lookupId: string;
   password: string;
@@ -713,6 +732,13 @@ export const ordersApi = {
       },
     );
     return toOrderCreateResponse(data);
+  },
+
+  async quoteOrder(payload: OrderQuoteRequest) {
+    return api<OrderQuoteResponse>(withApiBase('/orders/quote'), {
+      method: 'POST',
+      body: payload,
+    });
   },
 
   async lookupOrder(payload: OrderLookupRequest) {

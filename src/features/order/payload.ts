@@ -1,8 +1,10 @@
 import type { OrderCreateRequest } from '../../api/site/orders';
 import type { OrderDraft } from './types';
 
-function toOrderItemsPayload(draft: OrderDraft): OrderCreateRequest['items'] {
-  const aggregatedItems = draft.items.reduce<Record<number, number>>(
+export function buildOrderItemsPayload(
+  items: OrderDraft['items'],
+): OrderCreateRequest['items'] {
+  const aggregatedItems = items.reduce<Record<number, number>>(
     (acc, item) => {
       const projectItemId = Number(item.itemId);
       if (!Number.isFinite(projectItemId)) return acc;
@@ -24,7 +26,7 @@ function toOrderItemsPayload(draft: OrderDraft): OrderCreateRequest['items'] {
 export function buildOrderCreatePayload(
   draft: OrderDraft,
 ): OrderCreateRequest | null {
-  const items = toOrderItemsPayload(draft);
+  const items = buildOrderItemsPayload(draft.items);
   if (items.length === 0) return null;
 
   return {
