@@ -67,6 +67,22 @@ it('preserves the draft on failure', async () => {
   expect(screen.getByLabelText('변경할 기본 배송비')).toHaveValue('4000');
 });
 
+it('allows another save when the post-save refresh fails with cached policy data', async () => {
+  confirm.mockResolvedValue(true);
+  vi.mocked(adminOrderPolicyApi.get)
+    .mockResolvedValueOnce({ id: 1, defaultShippingFee: 3500 })
+    .mockRejectedValueOnce(new Error('refresh failed'));
+  vi.mocked(adminOrderPolicyApi.update).mockResolvedValue({ id: 1, defaultShippingFee: 4000 });
+  setup();
+  const input = await screen.findByLabelText('변경할 기본 배송비');
+  fireEvent.change(input, { target: { value: '4000' } });
+  fireEvent.click(screen.getByRole('button', { name: '저장' }));
+  await screen.findByText('저장은 완료됐지만 최신 정책 재조회에 실패했습니다. 새로고침해주세요.');
+
+  fireEvent.change(input, { target: { value: '4500' } });
+  expect(screen.getByRole('button', { name: '저장' })).toBeEnabled();
+});
+
 it('does not invent a default when the policy is missing', async () => {
   vi.mocked(adminOrderPolicyApi.get).mockRejectedValue(new ApiError(404, null));
   setup();

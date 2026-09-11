@@ -99,7 +99,7 @@ export default function AdminOrderPolicyPage() {
             <span className="text-sm">원</span>
           </div>
           <p id="shipping-fee-error" className="mt-2 min-h-5 text-sm text-rose-700">{draft !== null ? validation : ''}</p>
-          <button type="submit" disabled={pending || policy.isFetching || policy.isError || amount === null || amount === policy.data.defaultShippingFee}
+          <button type="submit" disabled={pending || policy.isFetching || amount === null || amount === policy.data.defaultShippingFee}
             className="mt-4 inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-white disabled:opacity-40"><Save size={16} />{pending ? '저장 중...' : '저장'}</button>
         </form>
       )}
