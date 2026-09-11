@@ -61,6 +61,7 @@ export type AdminOrderDetail = {
     addressLine1?: string;
     addressLine2?: string;
     deliveryMemo?: string;
+    trackingInformation?: string | null;
   };
   items: Array<{
     projectItemId?: number;
@@ -314,6 +315,7 @@ function toDetail(raw: unknown): AdminOrderDetail {
             'deliveryMemo',
             'delivery_memo',
           ),
+          trackingInformation: pickString(fulfillmentRecord, 'trackingInformation') ?? null,
         }
       : undefined,
     items,
@@ -322,6 +324,17 @@ function toDetail(raw: unknown): AdminOrderDetail {
 }
 
 export const adminOrdersApi = {
+  updateTrackingInformation(projectId: number, orderId: number, value: string | null) {
+    const trackingInformation = value?.trim() || null;
+    if (trackingInformation && trackingInformation.length > 500) {
+      throw new Error('운송장 정보는 500자 이내로 입력해주세요.');
+    }
+    return api<{ orderId: number; trackingInformation: string | null }>(
+      withApiBase(`/admin/projects/${projectId}/orders/${orderId}/tracking-information`),
+      { method: 'PUT', body: { trackingInformation } },
+    );
+  },
+
   advanceStatus(projectId: number, orderId: number) {
     return api<{ orderId: number; status: AdminOrderStatus }>(
       withApiBase(`/admin/projects/${projectId}/orders/${orderId}/advance-status`),
