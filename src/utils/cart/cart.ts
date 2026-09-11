@@ -12,13 +12,19 @@ export type CartItem = {
   thumbnailKey?: string | null;
   status?: ItemResponse['status'];
   saleType?: ItemResponse['saleType'];
+  maxQuantity?: number;
   quantity: number;
   mergedByDuplicateAdd?: boolean;
 };
 
-function normalizeQuantity(value: number) {
-  if (!Number.isFinite(value)) return 1;
+function normalizeMaxQuantity(value?: number | null) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
   return Math.min(99, Math.max(1, Math.trunc(value)));
+}
+
+function normalizeQuantity(value: number, maxQuantity?: number) {
+  if (!Number.isFinite(value)) return 1;
+  return Math.min(maxQuantity ?? 99, Math.max(1, Math.trunc(value)));
 }
 
 function parseStored(raw: string | null): CartItem[] {
@@ -34,6 +40,8 @@ function parseStored(raw: string | null): CartItem[] {
       if (typeof item.price !== 'number' || !Number.isFinite(item.price))
         return acc;
 
+      const maxQuantity = normalizeMaxQuantity(item.maxQuantity);
+
       acc.push({
         itemId: String(item.itemId),
         projectId: String(item.projectId),
@@ -43,7 +51,8 @@ function parseStored(raw: string | null): CartItem[] {
         thumbnailKey: item.thumbnailKey ?? null,
         status: item.status,
         saleType: item.saleType,
-        quantity: normalizeQuantity(item.quantity ?? 1),
+        maxQuantity,
+        quantity: normalizeQuantity(item.quantity ?? 1, maxQuantity),
         mergedByDuplicateAdd: Boolean(item.mergedByDuplicateAdd),
       });
       return acc;
@@ -79,21 +88,25 @@ export function addCartItem(payload: {
   thumbnailKey?: string | null;
   status?: ItemResponse['status'];
   saleType?: ItemResponse['saleType'];
+  maxQuantity?: number | null;
   quantity?: number;
 }) {
   const itemId = String(payload.itemId);
   const projectId = String(payload.projectId);
-  const quantity = normalizeQuantity(payload.quantity ?? 1);
+  const maxQuantity = normalizeMaxQuantity(payload.maxQuantity);
+  const quantity = normalizeQuantity(payload.quantity ?? 1, maxQuantity);
   const items = loadCartItems();
   const targetIndex = items.findIndex((item) => item.itemId === itemId);
 
   if (targetIndex >= 0) {
     const current = items[targetIndex];
+    const nextMaxQuantity = maxQuantity ?? current.maxQuantity;
     items[targetIndex] = {
       ...current,
       thumbnailUrl: current.thumbnailUrl ?? payload.thumbnailUrl ?? null,
       thumbnailKey: current.thumbnailKey ?? payload.thumbnailKey ?? null,
-      quantity: normalizeQuantity(current.quantity + quantity),
+      maxQuantity: nextMaxQuantity,
+      quantity: normalizeQuantity(current.quantity + quantity, nextMaxQuantity),
       mergedByDuplicateAdd: true,
     };
   } else {
@@ -106,6 +119,7 @@ export function addCartItem(payload: {
       thumbnailKey: payload.thumbnailKey ?? null,
       status: payload.status,
       saleType: payload.saleType,
+      maxQuantity,
       quantity,
       mergedByDuplicateAdd: false,
     });
@@ -134,7 +148,7 @@ export function setCartItemQuantity(itemId: string | number, quantity: number) {
 
   items[index] = {
     ...items[index],
-    quantity: normalizeQuantity(quantity),
+    quantity: normalizeQuantity(quantity, items[index].maxQuantity),
   };
   saveCartItems(items);
 }
