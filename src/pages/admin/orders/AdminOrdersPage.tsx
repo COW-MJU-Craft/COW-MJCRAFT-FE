@@ -8,6 +8,7 @@ import { ApiError } from '../../../api/core/client';
 import {
   adminOrdersApi,
   type AdminOrderDetail,
+  type AdminOrderFulfillmentMethod,
   type AdminOrderListItem,
   type AdminOrderStatus,
 } from '../../../api/admin/orders';
@@ -24,6 +25,15 @@ const STATUS_FILTERS: Array<{ key: 'ALL' | AdminOrderStatus; label: string }> =
     { key: 'REFUND_REQUESTED', label: '환불 요청' },
     { key: 'REFUNDED', label: '환불 완료' },
   ];
+
+const METHOD_FILTERS: Array<{
+  key: 'ALL' | AdminOrderFulfillmentMethod;
+  label: string;
+}> = [
+  { key: 'ALL', label: '전체 수령방식' },
+  { key: 'PICKUP', label: '현장 수령' },
+  { key: 'DELIVERY', label: '택배 배송' },
+];
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING_DEPOSIT: '입금 확인 필요',
@@ -186,6 +196,9 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
   const ordersSectionRef = useRef<HTMLElement | null>(null);
   const detailSectionRef = useRef<HTMLElement | null>(null);
   const [filter, setFilter] = useState<'ALL' | AdminOrderStatus>('ALL');
+  const [methodFilter, setMethodFilter] = useState<
+    'ALL' | AdminOrderFulfillmentMethod
+  >('ALL');
   const [orders, setOrders] = useState<AdminOrderListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -206,9 +219,15 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
     setError(null);
     try {
       const status = filter === 'ALL' ? undefined : filter;
+      const fulfillmentMethod =
+        methodFilter === 'ALL' ? undefined : methodFilter;
       const list = projectId === undefined
-        ? await adminOrdersApi.list(status)
-        : await adminOrdersApi.listByProject(projectId, status);
+        ? await adminOrdersApi.list(status, fulfillmentMethod)
+        : await adminOrdersApi.listByProject(
+            projectId,
+            status,
+            fulfillmentMethod,
+          );
       if (request !== listRequest.current) return;
       setOrders(list);
       if (list.length === 0) {
@@ -232,7 +251,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
     } finally {
       if (request === listRequest.current) setLoading(false);
     }
-  }, [filter, projectId, setDetail]);
+  }, [filter, methodFilter, projectId, setDetail]);
 
   const loadDetail = useCallback(
     async (orderId: number) => {
@@ -629,6 +648,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
 
       <Reveal className="mt-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <p className="mb-2 text-xs font-semibold text-slate-500">주문 상태</p>
           <div className="no-scrollbar -mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
             <div className="flex min-w-max gap-2 sm:min-w-0 sm:flex-wrap">
             {STATUS_FILTERS.map((item) => {
@@ -653,6 +673,33 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
                 </button>
               );
             })}
+            </div>
+          </div>
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <p className="mb-2 text-xs font-semibold text-slate-500">
+              수령 방식
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {METHOD_FILTERS.map((item) => {
+                const active = methodFilter === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setMethodFilter(item.key)}
+                    disabled={actionLoading}
+                    aria-pressed={active}
+                    className={[
+                      'rounded-xl border px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm',
+                      active
+                        ? 'border-sky-700 bg-sky-50 text-sky-800'
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50',
+                    ].join(' ')}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -711,14 +758,22 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
                           <p className="min-w-0 flex-1 break-all text-sm font-bold text-slate-900">
                             {item.orderNo ?? `#${item.orderId}`}
                           </p>
-                          <span
-                            className={[
-                              'shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold',
-                              getStatusBadgeClass(item.status),
-                            ].join(' ')}
-                          >
-                            {getStatusLabel(item.status)}
-                          </span>
+                          <div className="flex shrink-0 flex-col items-end gap-1.5">
+                            <span
+                              className={[
+                                'rounded-full px-2 py-1 text-[11px] font-semibold',
+                                getStatusBadgeClass(item.status),
+                              ].join(' ')}
+                            >
+                              {getStatusLabel(item.status)}
+                            </span>
+                            {item.fulfillmentMethod && (
+                              <span className="rounded-full bg-sky-50 px-2 py-1 text-[11px] font-semibold text-sky-800 ring-1 ring-sky-200">
+                                {METHOD_LABELS[item.fulfillmentMethod] ??
+                                  item.fulfillmentMethod}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3">
@@ -760,6 +815,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
                         {projectId !== undefined && <th className="px-3 py-2">선택</th>}
                         <th className="px-3 py-2">주문번호</th>
                         <th className="px-3 py-2">상태</th>
+                        <th className="px-3 py-2">수령 방식</th>
                         <th className="px-3 py-2">구매자</th>
                         <th className="px-3 py-2">금액</th>
                         <th className="px-3 py-2">주문일</th>
@@ -787,6 +843,12 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
                             </td>
                             <td className="px-3 py-3">
                               {getStatusLabel(item.status)}
+                            </td>
+                            <td className="px-3 py-3 text-slate-700">
+                              {item.fulfillmentMethod
+                                ? (METHOD_LABELS[item.fulfillmentMethod] ??
+                                  item.fulfillmentMethod)
+                                : '-'}
                             </td>
                             <td className="px-3 py-3 text-slate-700">
                               {item.buyerName ?? '-'}
