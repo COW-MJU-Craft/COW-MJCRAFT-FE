@@ -442,6 +442,10 @@ export default function ProjectItemDetailPage() {
   const pushToCart = (target: ItemResponse) => {
     if (!projectId) return false;
 
+    const stockQty = parseCount(target.stockQty);
+    const remainingQty = parseCount(target.remainingQty);
+    const availableStock = remainingQty ?? stockQty;
+
     addCartItem({
       itemId: target.id,
       projectId,
@@ -451,6 +455,8 @@ export default function ProjectItemDetailPage() {
       thumbnailKey: target.thumbnailKey,
       status: target.status,
       saleType: target.saleType,
+      maxQuantity:
+        target.saleType === 'NORMAL' ? availableStock : undefined,
       quantity: 1,
     });
     return true;
