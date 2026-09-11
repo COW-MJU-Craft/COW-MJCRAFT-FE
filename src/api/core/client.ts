@@ -31,6 +31,11 @@ type RequestOptions = {
   headers?: Record<string, string>;
 };
 
+export type DownloadResult = {
+  blob: Blob;
+  fileName: string;
+};
+
 type ApiResultType = "SUCCESS" | "FAIL";
 
 type ApiEnvelope<T> = {
@@ -98,11 +103,65 @@ export async function api<T>(
   return request<T>(path, opts, true);
 }
 
+export async function download(
+  path: string,
+  fallbackFileName: string,
+): Promise<DownloadResult> {
+  const res = await requestResponse(path, {}, true);
+  const contentType = res.headers.get('content-type') ?? '';
+  if (
+    !contentType.includes(
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ) &&
+    !contentType.includes('application/octet-stream')
+  ) {
+    const data = await readResponseData(res);
+    throw new ApiError(
+      res.status,
+      data,
+      extractErrorMessage(data) ?? '다운로드 파일 형식을 확인하지 못했습니다.',
+    );
+  }
+
+  const blob = await res.blob();
+  if (blob.size === 0) {
+    throw new Error('다운로드할 주문 데이터가 없습니다.');
+  }
+  return {
+    blob,
+    fileName: fileNameFromHeader(
+      res.headers.get('content-disposition'),
+      fallbackFileName,
+    ),
+  };
+}
+
 async function request<T>(
   path: string,
   opts: RequestOptions,
   allowRefresh: boolean,
 ): Promise<T> {
+  const res = await requestResponse(path, opts, allowRefresh);
+  if (res.status === 204) return undefined as T;
+
+  const text = await res.text();
+  const data: unknown = text ? safeJsonParse(text) : null;
+
+  if (isApiEnvelope(data)) {
+    if (data.resultType === "FAIL") {
+      throw new ApiError(res.status, data, data.message || "Request failed");
+    }
+    return data.data as T;
+  }
+
+  return data as T;
+}
+
+async function requestResponse(
+  path: string,
+  opts: RequestOptions,
+  allowRefresh: boolean,
+): Promise<Response> {
   const method = opts.method ?? "GET";
 
   const headers: Record<string, string> = {
@@ -122,12 +181,8 @@ async function request<T>(
     credentials: "include",
   });
 
-  if (res.status === 204) return undefined as T;
-
-  const text = await res.text();
-  const data: unknown = text ? safeJsonParse(text) : null;
-
   if (!res.ok) {
+    const data = await readResponseData(res);
     if (res.status === 401) {
       // 인증이 걸린 요청만 재발급 대상이다. 비회원 조회 API의 401(비밀번호 불일치)은
       // 재발급으로 해결되지 않으므로 Authorization 헤더가 있었는지로 구분한다.
@@ -138,8 +193,7 @@ async function request<T>(
         Boolean(getRefreshToken());
 
       if (canRefresh && (await refreshOnce())) {
-        // 재발급 성공 — 새 토큰으로 한 번만 재시도한다
-        return request<T>(path, opts, false);
+        return requestResponse(path, opts, false);
       }
 
       clearAuth();
@@ -151,14 +205,25 @@ async function request<T>(
     throw new ApiError(res.status, data, msg);
   }
 
-  if (isApiEnvelope(data)) {
-    if (data.resultType === "FAIL") {
-      throw new ApiError(res.status, data, data.message || "Request failed");
-    }
-    return data.data as T;
-  }
+  return res;
+}
 
-  return data as T;
+async function readResponseData(res: Response): Promise<unknown> {
+  const text = await res.text();
+  return text ? safeJsonParse(text) : null;
+}
+
+function fileNameFromHeader(header: string | null, fallback: string) {
+  const encoded = header?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      return fallback;
+    }
+  }
+  const plain = header?.match(/filename="?([^";]+)"?/i)?.[1];
+  return plain?.trim() || fallback;
 }
 
 function safeJsonParse(text: string): unknown {

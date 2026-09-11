@@ -8,7 +8,7 @@ vi.mock('../../utils/auth/auth', () => ({
   updateTokens: vi.fn(),
 }));
 
-import { api, ApiError } from './client';
+import { api, ApiError, download } from './client';
 import {
   clearAuth,
   getAccessToken,
@@ -118,6 +118,37 @@ describe('api', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
 
     await expect(api('/x')).resolves.toBeUndefined();
+  });
+});
+
+describe('download', () => {
+  it('XLSX 응답과 Content-Disposition 파일명을 반환한다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('xlsx-bytes', {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': "attachment; filename*=UTF-8''orders%20export.xlsx",
+      },
+    })));
+
+    const result = await download('/export', 'fallback.xlsx');
+
+    expect(result.fileName).toBe('orders export.xlsx');
+    expect(result.blob.size).toBeGreaterThan(0);
+  });
+
+  it('성공 상태의 JSON 오류 본문을 파일로 저장하지 않는다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      message: '다운로드할 수 없습니다.',
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })));
+
+    await expect(download('/export', 'fallback.xlsx')).rejects.toMatchObject({
+      status: 200,
+      message: '다운로드할 수 없습니다.',
+    });
   });
 });
 

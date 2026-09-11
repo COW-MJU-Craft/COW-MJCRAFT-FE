@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import Reveal from '../../../components/ui/Reveal';
+import AdminTrackingEditor from '../../../components/order/AdminTrackingEditor';
 import { canAdvanceTogether, nextOrderStatus } from '../../../features/order/advanceStatus';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
@@ -175,9 +176,10 @@ function CompactInfoList({
   );
 }
 
-export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
+export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterChanged }: {
   projectId?: number;
   onOrdersChanged?: () => void;
+  onFilterChanged?: (status: AdminOrderStatus | undefined) => void;
 }) {
   const toast = useToast();
   const confirm = useConfirm();
@@ -189,6 +191,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
   const [error, setError] = useState<string | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [detail, setDetail] = useState<AdminOrderDetail | null>(null);
+  const [detailOrderId, setDetailOrderId] = useState<number | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [checkedIds, setCheckedIds] = useState<number[]>([]);
@@ -211,6 +214,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
       if (list.length === 0) {
         setSelectedOrderId(null);
         setDetail(null);
+        setDetailOrderId(null);
         return;
       }
       setSelectedOrderId((prev) => {
@@ -224,10 +228,11 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
       setOrders([]);
       setSelectedOrderId(null);
       setDetail(null);
+      setDetailOrderId(null);
     } finally {
       if (request === listRequest.current) setLoading(false);
     }
-  }, [filter, projectId]);
+  }, [filter, projectId, setDetail]);
 
   const loadDetail = useCallback(
     async (orderId: number) => {
@@ -237,6 +242,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
         const data = await adminOrdersApi.getById(orderId);
         if (request !== detailRequest.current) return;
         setDetail(data);
+        setDetailOrderId(orderId);
       } catch (err) {
         if (request !== detailRequest.current) return;
         console.error(err);
@@ -246,7 +252,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
         if (request === detailRequest.current) setDetailLoading(false);
       }
     },
-    [toast],
+    [toast, setDetail],
   );
 
   useEffect(() => {
@@ -479,6 +485,9 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
         { label: '기본 주소', value: detail?.fulfillment?.addressLine1 },
         { label: '상세 주소', value: detail?.fulfillment?.addressLine2 },
         { label: '배송 메모', value: detail?.fulfillment?.deliveryMemo },
+        ...(detail?.fulfillment?.method === 'DELIVERY'
+          ? [{ label: '운송장 정보', value: detail.fulfillment.trackingInformation || '미등록' }]
+          : []),
       ]),
     [detail],
   );
@@ -585,7 +594,9 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
 
   const handleOrderSelect = (orderId: number) => {
     if (actionLoading) return;
+    if (orderId === selectedOrderId) return;
     setDetail(null);
+    setDetailOrderId(null);
     setSelectedOrderId(orderId);
     if (window.matchMedia('(max-width: 1023px)').matches) {
       scrollToElement(detailSectionRef);
@@ -626,7 +637,10 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => setFilter(item.key)}
+                  onClick={() => {
+                    setFilter(item.key);
+                    onFilterChanged?.(item.key === 'ALL' ? undefined : item.key);
+                  }}
                   disabled={actionLoading}
                   className={[
                     'shrink-0 rounded-xl border px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm',
@@ -858,7 +872,7 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
               <p className="mt-4 text-sm text-slate-500">
                 상세를 불러오는 중...
               </p>
-            ) : !detail ? (
+            ) : !detail || detailOrderId !== selectedOrderId ? (
               <p className="mt-4 text-sm text-rose-600">
                 주문 상세를 불러오지 못했습니다.
               </p>
@@ -1023,6 +1037,15 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged }: {
                   <h3 className="text-sm font-bold text-slate-900">
                     수령 정보
                   </h3>
+                  {projectId !== undefined && selectedOrderId !== null && detail.fulfillment?.method === 'DELIVERY' && (
+                    <AdminTrackingEditor key={`${projectId}-${selectedOrderId}`}
+                      projectId={projectId} orderId={selectedOrderId}
+                      initialValue={detail.fulfillment.trackingInformation ?? null}
+                      disabled={actionLoading}
+                      onSaved={(trackingInformation) => setDetail((current) => current?.fulfillment
+                        ? { ...current, fulfillment: { ...current.fulfillment, trackingInformation } }
+                        : current)} />
+                  )}
                   {fulfillmentRows.length === 0 ? (
                     <p className="mt-2 text-sm text-slate-500">
                       수령 정보가 없습니다.

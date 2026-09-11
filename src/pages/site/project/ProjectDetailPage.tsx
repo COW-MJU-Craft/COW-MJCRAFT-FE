@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Receipt,
-} from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Package, Receipt } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -24,7 +18,7 @@ import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 type NormalStockTag = {
   label: string;
-  tone: 'info' | 'warning' | 'neutral';
+  tone: 'info' | 'warning' | 'neutral' | 'danger';
 };
 
 const LOW_STOCK_THRESHOLD = 5;
@@ -88,7 +82,7 @@ function getNormalStockTag(
     return { label: '재고 확인 중', tone: 'neutral' };
   }
   if (availableStock <= 0) {
-    return null;
+    return { label: '품절', tone: 'danger' };
   }
   if (availableStock <= LOW_STOCK_THRESHOLD) {
     return {
@@ -739,8 +733,8 @@ export default function ProjectDetailPage() {
                             : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md',
                         ].join(' ')}
                       >
-                        <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
-                          <div className="relative aspect-3/4 overflow-hidden rounded-2xl border border-slate-100 bg-white">
+                        <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-4 sm:grid-cols-[120px_minmax(0,1fr)]">
+                          <div className="relative aspect-3/4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
                             {item.thumbnailUrl ? (
                               <img
                                 src={item.thumbnailUrl}
@@ -770,14 +764,33 @@ export default function ProjectDetailPage() {
                           </div>
 
                           <div className="flex min-w-0 flex-col">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <StatusBadge
-                                status={item.status}
-                                className="px-2.5 py-0.5 text-xs"
-                              />
-                              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-                                {saleTypeLabel}
-                              </span>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <StatusBadge
+                                  status={item.status}
+                                  className="px-2.5 py-0.5 text-xs"
+                                />
+                                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+                                  {saleTypeLabel}
+                                </span>
+                              </div>
+                              {item.saleType === 'NORMAL' && normalStockTag && (
+                                <span
+                                  className={[
+                                    'inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none',
+                                    normalStockTag.tone === 'danger'
+                                      ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                      : normalStockTag.tone === 'warning'
+                                        ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                        : normalStockTag.tone === 'neutral'
+                                          ? 'border-slate-200 bg-slate-100 text-slate-500'
+                                          : 'border-sky-200 bg-sky-50 text-sky-700',
+                                  ].join(' ')}
+                                >
+                                  <Package className="h-3.5 w-3.5" aria-hidden="true" />
+                                  {normalStockTag.label}
+                                </span>
+                              )}
                             </div>
 
                             <h3
@@ -804,7 +817,7 @@ export default function ProjectDetailPage() {
                                 '구매/수령/유의사항은 상세 보기에서 확인해주세요.'}
                             </p>
 
-                            <div className="mt-2.5 flex flex-wrap items-baseline gap-2">
+                            <div className="mt-2.5 flex flex-wrap items-center gap-2">
                               <span
                                 className={[
                                   'text-xl font-bold',
@@ -813,32 +826,11 @@ export default function ProjectDetailPage() {
                               >
                                 {formatMoney(item.price)}원
                               </span>
-                              {item.saleType === 'NORMAL' && normalStockTag && (
-                                <span
-                                  className={[
-                                    'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none',
-                                    normalStockTag.tone === 'warning'
-                                      ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                      : normalStockTag.tone === 'neutral'
-                                        ? 'border-slate-200 bg-slate-100 text-slate-500'
-                                        : 'border-sky-200 bg-sky-50 text-sky-700',
-                                  ].join(' ')}
-                                >
-                                  {normalStockTag.tone === 'warning' && (
-                                    <span
-                                      className="h-1.5 w-1.5 rounded-full bg-amber-500"
-                                      aria-hidden="true"
-                                    />
-                                  )}
-                                  {normalStockTag.label}
+                              {item.saleType === 'GROUPBUY' && groupBuySummary && (
+                                <span className="text-xs font-semibold text-sky-500">
+                                  {groupBuySummary}
                                 </span>
                               )}
-                              {item.saleType === 'GROUPBUY' &&
-                                groupBuySummary && (
-                                  <span className="text-xs font-semibold text-sky-500">
-                                    {groupBuySummary}
-                                  </span>
-                                )}
                             </div>
 
                             <div className="mt-auto flex items-center justify-between gap-3 pt-4">
