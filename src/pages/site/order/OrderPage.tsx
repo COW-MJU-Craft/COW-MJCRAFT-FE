@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { ordersApi } from '../../../api/site/orders';
+import {
+  ordersApi,
+  type OrderQuoteResponse,
+} from '../../../api/site/orders';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
 import OrderAgreementsStep from '../../../features/order/components/OrderAgreementsStep';
@@ -36,6 +39,10 @@ import {
 } from '../../../features/order/constants';
 import { formatMoney } from '../../../features/order/format';
 import { buildOrderCreatePayload } from '../../../features/order/payload';
+import {
+  buildOrderQuotePayload,
+  isSameOrderQuote,
+} from '../../../features/order/quote';
 import type {
   AgreementState,
   BuyerForm,
@@ -103,10 +110,58 @@ export default function OrderPage() {
   const [showLookupPasswordConfirm, setShowLookupPasswordConfirm] =
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quote, setQuote] = useState<OrderQuoteResponse | null>(null);
+  const [quoteStatus, setQuoteStatus] = useState<
+    'idle' | 'loading' | 'ready' | 'error'
+  >('idle');
+  const [quoteError, setQuoteError] = useState('');
+  const [quoteRetryKey, setQuoteRetryKey] = useState(0);
 
   useEffect(() => {
     saveOrderDraft(draft);
   }, [draft]);
+
+  useEffect(() => {
+    if (draft.step !== 4) return;
+
+    let active = true;
+    const loadQuote = async () => {
+      const payload = buildOrderQuotePayload(
+        draft.items,
+        draft.fulfillment.method,
+      );
+      if (!payload) {
+        if (!active) return;
+        setQuote(null);
+        setQuoteStatus('error');
+        setQuoteError('주문 상품 정보가 올바르지 않아요.');
+        return;
+      }
+
+      setQuoteStatus('loading');
+      setQuoteError('');
+      try {
+        const result = await ordersApi.quoteOrder(payload);
+        if (!active) return;
+        setQuote(result);
+        setQuoteStatus('ready');
+      } catch (error) {
+        if (!active) return;
+        setQuote(null);
+        setQuoteStatus('error');
+        setQuoteError(
+          error instanceof Error
+            ? error.message
+            : '주문 금액을 확인하지 못했어요.',
+        );
+      }
+    };
+    void loadQuote();
+
+    return () => {
+      active = false;
+    };
+  }, [draft.step, draft.items, draft.fulfillment.method, quoteRetryKey]);
 
   const items = draft.items;
   const totalCount = getCartCount(items);
@@ -161,6 +216,7 @@ export default function OrderPage() {
       }
     }
 
+    if (targetStep === 4) setQuote(null);
     setStep(targetStep);
   };
 
@@ -199,6 +255,7 @@ export default function OrderPage() {
         toast.error(message);
         return;
       }
+      setQuote(null);
       setStep(4);
     }
   };
@@ -364,14 +421,27 @@ export default function OrderPage() {
     }
 
     const payload = buildOrderCreatePayload(draft);
+    const quotePayload = buildOrderQuotePayload(
+      draft.items,
+      draft.fulfillment.method,
+    );
 
-    if (!payload) {
+    if (!payload || !quotePayload) {
       toast.error('주문 상품 정보가 올바르지 않아 제출할 수 없어요.');
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const latestQuote = await ordersApi.quoteOrder(quotePayload);
+      if (!isSameOrderQuote(quote, latestQuote)) {
+        setQuote(latestQuote);
+        setQuoteStatus('ready');
+        toast.info(
+          '상품 가격 또는 주문 금액이 갱신됐어요. 내용을 확인한 뒤 다시 제출해주세요.',
+        );
+        return;
+      }
       const result = await ordersApi.createOrder(payload);
       clearOrderDraft();
       if (draft.source === 'cart') {
@@ -959,25 +1029,69 @@ export default function OrderPage() {
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-linear-to-b from-white to-slate-50/60 p-5">
-                <h3 className="text-sm font-bold text-slate-900">주문 상품</h3>
-                <div className="mt-2 space-y-2">
-                  {items.map((item) => (
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    주문 상품 및 결제 예정 금액
+                  </h3>
+                  {quoteStatus === 'ready' && (
+                    <span className="text-xs font-semibold text-emerald-700">
+                      서버 검증 완료
+                    </span>
+                  )}
+                </div>
+
+                {quoteStatus === 'loading' && (
+                  <p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-600">
+                    현재 가격과 재고, 배송비를 확인하고 있어요.
+                  </p>
+                )}
+
+                {quoteStatus === 'error' && (
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-3">
+                    <p className="text-sm font-medium text-rose-700">
+                      {quoteError}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setQuoteRetryKey((value) => value + 1)}
+                      className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                    >
+                      다시 확인
+                    </button>
+                  </div>
+                )}
+
+                {quote && quoteStatus === 'ready' && (
+                  <div className="mt-3 space-y-2">
+                    {quote.items.map((item) => (
                     <div
-                      key={`${item.projectId}-${item.itemId}`}
+                      key={`${item.projectId}-${item.projectItemId}`}
                       className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
                     >
                       <span className="text-slate-700">
-                        {item.name} x {item.quantity}
+                        {item.itemName} x {item.quantity}
                       </span>
                       <span className="font-semibold text-slate-900">
-                        {formatMoney(item.price * item.quantity)}원
+                        {formatMoney(item.lineAmount)}원
                       </span>
                     </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-right text-sm font-bold text-slate-900">
-                  합계 {formatMoney(totalPrice)}원
-                </p>
+                    ))}
+                    <dl className="mt-4 space-y-2 border-t border-slate-200 pt-4 text-sm">
+                      <div className="flex justify-between text-slate-600">
+                        <dt>상품 합계</dt>
+                        <dd>{formatMoney(quote.totalAmount)}원</dd>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <dt>배송비</dt>
+                        <dd>{formatMoney(quote.shippingFee)}원</dd>
+                      </div>
+                      <div className="flex justify-between text-base font-bold text-slate-900">
+                        <dt>최종 금액</dt>
+                        <dd>{formatMoney(quote.finalAmount)}원</dd>
+                      </div>
+                    </dl>
+                  </div>
+                )}
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
@@ -1095,6 +1209,7 @@ export default function OrderPage() {
         <OrderStepActions
           step={draft.step}
           isSubmitting={isSubmitting}
+          isSubmitDisabled={quoteStatus !== 'ready' || quote === null}
           onPrev={goPrevStep}
           onNext={goNextStep}
           onSubmit={() => void handleSubmit()}

@@ -3,6 +3,7 @@ import type { OrderStep } from '../types';
 type OrderStepActionsProps = {
   step: OrderStep;
   isSubmitting: boolean;
+  isSubmitDisabled?: boolean;
   onPrev: () => void;
   onNext: () => void;
   onSubmit: () => void;
@@ -11,6 +12,7 @@ type OrderStepActionsProps = {
 export default function OrderStepActions({
   step,
   isSubmitting,
+  isSubmitDisabled = false,
   onPrev,
   onNext,
   onSubmit,
@@ -38,7 +40,7 @@ export default function OrderStepActions({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isSubmitDisabled}
           className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? '제출 중...' : '구매 제출'}
