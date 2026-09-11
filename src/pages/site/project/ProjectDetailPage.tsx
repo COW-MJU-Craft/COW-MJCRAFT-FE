@@ -37,9 +37,18 @@ function parseCount(value: unknown): number | null {
   return null;
 }
 
-function normalizeSelectionQuantity(value: number) {
+function getSelectionQuantityLimit(item: ItemResponse) {
+  if (item.saleType !== 'NORMAL') return 99;
+
+  const availableStock = getAvailableStock(item);
+  if (availableStock === null) return 99;
+
+  return Math.min(99, Math.max(0, Math.trunc(availableStock)));
+}
+
+function normalizeSelectionQuantity(value: number, maxQuantity = 99) {
   if (!Number.isFinite(value)) return 0;
-  return Math.min(99, Math.max(0, Math.trunc(value)));
+  return Math.min(maxQuantity, Math.max(0, Math.trunc(value)));
 }
 
 function toInlinePreviewText(value?: string | null) {
@@ -174,6 +183,9 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     const existing = new Set(physicalItems.map((item) => String(item.id)));
+    const physicalItemById = new Map(
+      physicalItems.map((item) => [String(item.id), item]),
+    );
     const purchasable = new Set(
       physicalItems
         .filter((item) => isPurchasableItem(item))
@@ -189,7 +201,16 @@ export default function ProjectDetailPage() {
           changed = true;
           return;
         }
-        const normalized = normalizeSelectionQuantity(qty);
+        const item = physicalItemById.get(itemId);
+        if (!item) {
+          changed = true;
+          return;
+        }
+        const normalized = normalizeSelectionQuantity(
+          qty,
+          getSelectionQuantityLimit(item),
+        );
+        if (normalized !== qty) changed = true;
         if (normalized > 0) next[itemId] = normalized;
       });
       return changed ? next : prev;
@@ -253,7 +274,13 @@ export default function ProjectDetailPage() {
   const setSelectedQuantity = useCallback(
     (itemId: string | number, quantity: number) => {
       const key = String(itemId);
-      const normalized = normalizeSelectionQuantity(quantity);
+      const item = physicalItems.find(
+        (candidate) => String(candidate.id) === key,
+      );
+      const normalized = normalizeSelectionQuantity(
+        quantity,
+        item ? getSelectionQuantityLimit(item) : 99,
+      );
       setSelectedQuantities((prev) => {
         if (normalized <= 0) {
           if (!prev[key]) return prev;
@@ -264,7 +291,7 @@ export default function ProjectDetailPage() {
         return { ...prev, [key]: normalized };
       });
     },
-    [],
+    [physicalItems],
   );
 
   const incrementSelected = useCallback(
@@ -314,6 +341,8 @@ export default function ProjectDetailPage() {
         thumbnailKey: item.thumbnailKey,
         status: item.status,
         saleType: item.saleType,
+        maxQuantity:
+          item.saleType === 'NORMAL' ? getAvailableStock(item) : undefined,
         quantity,
       });
     });
@@ -707,6 +736,8 @@ export default function ProjectDetailPage() {
                         '',
                     );
                     const availableStock = getAvailableStock(item);
+                    const selectionLimit = getSelectionQuantityLimit(item);
+                    const isAtSelectionLimit = selectedQty >= selectionLimit;
                     const fundedQty = parseCount(item.fundedQty);
                     const targetQty = parseCount(item.targetQty);
                     const achievementRate = parseCount(item.achievementRate);
@@ -840,7 +871,14 @@ export default function ProjectDetailPage() {
                                     <button
                                       type="button"
                                       onClick={() => incrementSelected(item.id)}
-                                      className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 active:scale-95"
+                                      disabled={isAtSelectionLimit}
+                                      title={
+                                        isAtSelectionLimit &&
+                                        item.saleType === 'NORMAL'
+                                          ? '재고 수량을 초과할 수 없어요.'
+                                          : undefined
+                                      }
+                                      className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
                                     >
                                       담기
                                     </button>
@@ -870,7 +908,14 @@ export default function ProjectDetailPage() {
                                               selectedQty + 1,
                                             )
                                           }
-                                          className="h-full w-9 text-slate-600 hover:bg-slate-50"
+                                          disabled={isAtSelectionLimit}
+                                          title={
+                                            isAtSelectionLimit &&
+                                            item.saleType === 'NORMAL'
+                                              ? '재고 수량을 초과할 수 없어요.'
+                                              : undefined
+                                          }
+                                          className="h-full w-9 text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-white"
                                           aria-label={`${item.name} 수량 증가`}
                                         >
                                           +

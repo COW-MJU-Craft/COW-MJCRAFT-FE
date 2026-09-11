@@ -28,11 +28,39 @@ describe('project order queries', () => {
     expect(api).toHaveBeenLastCalledWith(withApiBase('/admin/projects?status=OPEN'));
   });
 
-  it('loads only the requested project and new order status', async () => {
-    vi.mocked(api).mockResolvedValue([{ orderId: 12, status: 'IN_PRODUCTION', finalAmount: 38500 }]);
-    const orders = await adminOrdersApi.listByProject(4, 'IN_PRODUCTION');
-    expect(api).toHaveBeenCalledWith('/admin/projects/4/orders?status=IN_PRODUCTION');
-    expect(orders[0]).toMatchObject({ orderId: 12, status: 'IN_PRODUCTION', finalAmount: 38500 });
+  it('loads a project with status and fulfillment filters', async () => {
+    vi.mocked(api).mockResolvedValue([
+      {
+        orderId: 12,
+        status: 'IN_PRODUCTION',
+        fulfillmentMethod: 'DELIVERY',
+        finalAmount: 38_500,
+      },
+    ]);
+    const orders = await adminOrdersApi.listByProject(
+      4,
+      'IN_PRODUCTION',
+      'DELIVERY',
+    );
+    expect(api).toHaveBeenCalledWith(
+      '/admin/projects/4/orders?status=IN_PRODUCTION&fulfillmentMethod=DELIVERY',
+    );
+    expect(orders[0]).toMatchObject({
+      orderId: 12,
+      status: 'IN_PRODUCTION',
+      fulfillmentMethod: 'DELIVERY',
+      finalAmount: 38_500,
+    });
+  });
+
+  it('supports fulfillment-only filtering for all orders', async () => {
+    vi.mocked(api).mockResolvedValue([]);
+
+    await adminOrdersApi.list(undefined, 'PICKUP');
+
+    expect(api).toHaveBeenCalledWith(
+      '/admin/orders?fulfillmentMethod=PICKUP',
+    );
   });
 
   it('does not silently turn invalid responses into an empty list', async () => {

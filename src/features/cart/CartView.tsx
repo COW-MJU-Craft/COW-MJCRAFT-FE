@@ -70,7 +70,12 @@ export default function CartView({
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
             <Reveal className="space-y-3">
-              {items.map((item) => (
+              {items.map((item) => {
+                const isAtQuantityLimit =
+                  item.maxQuantity !== undefined &&
+                  item.quantity >= item.maxQuantity;
+
+                return (
                 <article
                   key={item.itemId}
                   className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -167,7 +172,13 @@ export default function CartView({
                                 item.quantity + 1,
                               )
                             }
-                            className="h-9 w-9 text-slate-600 hover:bg-slate-50"
+                            disabled={isAtQuantityLimit}
+                            title={
+                              isAtQuantityLimit
+                                ? '현재 재고보다 많이 담을 수 없어요.'
+                                : undefined
+                            }
+                            className="h-9 w-9 text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-white"
                             aria-label="수량 증가"
                           >
                             +
@@ -192,7 +203,8 @@ export default function CartView({
                     </div>
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </Reveal>
 
             <Reveal>

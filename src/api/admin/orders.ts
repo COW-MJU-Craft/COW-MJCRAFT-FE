@@ -11,10 +11,13 @@ export type AdminOrderStatus =
   | 'REFUND_REQUESTED'
   | 'REFUNDED';
 
+export type AdminOrderFulfillmentMethod = 'PICKUP' | 'DELIVERY';
+
 export type AdminOrderListItem = {
   orderId: number;
   orderNo?: string;
   status: AdminOrderStatus;
+  fulfillmentMethod?: AdminOrderFulfillmentMethod;
   finalAmount?: number;
   depositorName?: string;
   buyerName?: string;
@@ -169,6 +172,11 @@ function toListItem(raw: unknown): AdminOrderListItem | null {
     orderId,
     orderNo: pickString(record, 'orderNo', 'order_no'),
     status: status as AdminOrderStatus,
+    fulfillmentMethod: pickString(
+      record,
+      'fulfillmentMethod',
+      'fulfillment_method',
+    ) as AdminOrderFulfillmentMethod | undefined,
     finalAmount: pickNumber(record, 'finalAmount', 'final_amount'),
     depositorName: pickString(record, 'depositorName', 'depositor_name'),
     buyerName: pickString(record, 'buyerName', 'buyer_name'),
@@ -323,6 +331,17 @@ function toDetail(raw: unknown): AdminOrderDetail {
   };
 }
 
+function buildOrderListQuery(
+  status?: AdminOrderStatus,
+  fulfillmentMethod?: AdminOrderFulfillmentMethod,
+) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (fulfillmentMethod) params.set('fulfillmentMethod', fulfillmentMethod);
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
 export const adminOrdersApi = {
   updateTrackingInformation(projectId: number, orderId: number, value: string | null) {
     const trackingInformation = value?.trim() || null;
@@ -349,8 +368,12 @@ export const adminOrdersApi = {
     );
   },
 
-  async listByProject(projectId: number, status?: AdminOrderStatus) {
-    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+  async listByProject(
+    projectId: number,
+    status?: AdminOrderStatus,
+    fulfillmentMethod?: AdminOrderFulfillmentMethod,
+  ) {
+    const query = buildOrderListQuery(status, fulfillmentMethod);
     const data = await api<unknown>(withApiBase(`/admin/projects/${projectId}/orders${query}`));
     if (!Array.isArray(data)) throw new Error('주문 목록 응답 형식을 확인해주세요.');
     return data.map(toListItem).filter((item): item is AdminOrderListItem => item !== null);
@@ -362,8 +385,11 @@ export const adminOrdersApi = {
     );
   },
 
-  async list(status?: AdminOrderStatus) {
-    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+  async list(
+    status?: AdminOrderStatus,
+    fulfillmentMethod?: AdminOrderFulfillmentMethod,
+  ) {
+    const query = buildOrderListQuery(status, fulfillmentMethod);
     const parsed = await api<unknown>(
       withApiBase(`/admin/orders${query}`),
     );
