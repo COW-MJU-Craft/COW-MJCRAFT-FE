@@ -28,6 +28,7 @@ import AdminProjectItemsListPage from './pages/admin/projects/AdminProjectItemsL
 import AdminProjectItemCreatePage from './pages/admin/projects/AdminProjectItemCreatePage';
 import AdminItemDetailPage from './pages/admin/items/AdminItemDetailPage';
 import AdminOrdersPage from './pages/admin/orders/AdminProjectOrdersPage';
+import AdminOrderPolicyPage from './pages/admin/orders/AdminOrderPolicyPage';
 import AdminNoticesListPage from './pages/admin/notices/AdminNoticesListPage';
 import AdminNoticeEditorPage from './pages/admin/notices/AdminNoticeEditorPage';
 import AdminNoticeDetailPage from './pages/admin/notices/AdminNoticeDetailPage';
@@ -100,6 +101,7 @@ export default function App() {
             element={<AdminItemDetailPage />}
           />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/admin/orders/policy" element={<AdminOrderPolicyPage />} />
           <Route path="/admin/notices" element={<AdminNoticesListPage />} />
           <Route
             path="/admin/notices/new"
