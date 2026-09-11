@@ -18,6 +18,7 @@ const TRAILING_NAV_ITEMS = [
 
 const ORDER_MENU_ITEMS = [
   { key: 'orders', label: '주문 관리', href: '/admin/orders' },
+  { key: 'order-policy', label: '배송비 설정', href: '/admin/orders/policy' },
   {
     key: 'order-complete-page',
     label: '주문 완료 설정',
