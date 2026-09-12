@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Reveal from "../../../components/ui/Reveal";
 import { SkeletonProjectCard } from "../../../components/ui/Skeleton";
@@ -12,6 +12,7 @@ import ProjectCard from "../../../components/project/ProjectCard";
 import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 const CAROUSEL_PEEK = false;
+const HOME_PROJECT_PREVIEW_LIMIT = 9;
 
 export default function MainPage() {
   const [isScrollable, setIsScrollable] = useState(false);
@@ -70,8 +71,13 @@ export default function MainPage() {
         if (aTimestamp !== bTimestamp) return bTimestamp - aTimestamp;
         return toNumericId(b.id) - toNumericId(a.id);
       })
-      .slice(0, 9);
+      .slice(0, HOME_PROJECT_PREVIEW_LIMIT);
   }, [projectsData]);
+  const totalProjectCount = projectsData?.length ?? 0;
+  const hiddenProjectCount = Math.max(
+    0,
+    totalProjectCount - orderedProjects.length,
+  );
 
   const scrollByCard = useCallback(
     (direction: 'left' | 'right') => {
@@ -157,7 +163,7 @@ export default function MainPage() {
               to="/projects"
               className="text-sm font-bold text-primary hover:underline"
             >
-              전체 보기 →
+              {totalProjectCount > 0 ? `전체 ${totalProjectCount}개 보기` : '전체 보기'}
             </Link>
           </div>
         </Reveal>
@@ -229,6 +235,25 @@ export default function MainPage() {
                 </>
               )}
             </div>
+          )}
+
+          {hiddenProjectCount > 0 && (
+            <Reveal className="mt-3">
+              <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <p className="text-sm text-slate-600">
+                  전체 {totalProjectCount}개 프로젝트 중 최신{' '}
+                  {orderedProjects.length}개를 보고 있어요. 남은{' '}
+                  {hiddenProjectCount}개 프로젝트도 컬렉션에서 확인하세요.
+                </p>
+                <Link
+                  to="/projects"
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary px-4 py-2.5 text-sm font-bold text-primary transition hover:bg-primary hover:text-white"
+                >
+                  전체 프로젝트 보기
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </div>
+            </Reveal>
           )}
         </div>
       </section>
