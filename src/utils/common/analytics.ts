@@ -1,3 +1,5 @@
+import type { GA4EcommerceItem } from './analyticsEcommerce';
+
 export const GA4_MEASUREMENT_ID = (
   import.meta.env.VITE_GA4_MEASUREMENT_ID ?? ''
 ).trim();
@@ -20,7 +22,7 @@ type GtagConfigParams = {
   send_page_view?: boolean;
 };
 
-type GtagEventParams = {
+type GtagEventParams = Record<string, unknown> & {
   debug_mode?: boolean;
   page_location?: string;
   page_path?: string;
@@ -86,5 +88,58 @@ export const trackGA4PageView = (path: string) => {
     page_location: window.location.href,
     page_title: document.title,
     ...getDebugParams(),
+  });
+};
+
+export const trackGA4Event = (eventName: string, params: GtagEventParams = {}) => {
+  if (!isGA4Enabled || typeof window === 'undefined') return;
+
+  try {
+    initializeGA4();
+    window.gtag?.('event', eventName, {
+      ...params,
+      ...getDebugParams(),
+    });
+  } catch {
+    // Analytics failures must never affect a user's purchase flow.
+  }
+};
+
+export const trackGA4EcommerceEvent = (
+  eventName: 'add_to_cart' | 'begin_checkout' | 'order_submit' | 'view_cart' | 'view_item',
+  {
+    items,
+    value,
+  }: {
+    items: GA4EcommerceItem[];
+    value: number;
+  },
+) => {
+  trackGA4Event(eventName, {
+    currency: 'KRW',
+    items,
+    value,
+  });
+};
+
+export const trackGA4ExternalLinkClick = ({
+  label,
+  url,
+}: {
+  label: string;
+  url: string;
+}) => {
+  let linkDomain = '';
+  try {
+    linkDomain = new URL(url).hostname;
+  } catch {
+    return;
+  }
+
+  trackGA4Event('external_link_click', {
+    link_domain: linkDomain,
+    link_text: label,
+    link_url: url,
+    outbound: true,
   });
 };

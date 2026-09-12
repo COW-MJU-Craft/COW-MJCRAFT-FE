@@ -15,6 +15,8 @@ import type { ItemResponse } from '../../../api/site/items';
 import { addCartItem } from '../../../utils/cart/cart';
 import { getItemSaleTypeLabel, getItemTypeLabel } from '../../../constants/itemLabels';
 import RouteMetadata from '../../../components/seo/RouteMetadata';
+import { trackGA4EcommerceEvent } from '../../../utils/common/analytics';
+import { toGA4ItemFromItem } from '../../../utils/common/analyticsEcommerce';
 
 type NormalStockTag = {
   label: string;
@@ -347,9 +349,16 @@ export default function ProjectDetailPage() {
       });
     });
 
+    trackGA4EcommerceEvent('add_to_cart', {
+      items: selectedEntries.map(({ item, quantity }) =>
+        toGA4ItemFromItem(item, projectId, quantity),
+      ),
+      value: selectedTotalPrice,
+    });
+
     toast.success('선택한 상품을 장바구니에 담았어요.');
     setSelectedQuantities({});
-  }, [projectId, selectedEntries, toast]);
+  }, [projectId, selectedEntries, selectedTotalPrice, toast]);
 
   const handleBuySelectedNow = useCallback(() => {
     if (!projectId) {
@@ -360,6 +369,13 @@ export default function ProjectDetailPage() {
       toast.info('먼저 상품을 선택해주세요.');
       return;
     }
+
+    trackGA4EcommerceEvent('begin_checkout', {
+      items: selectedEntries.map(({ item, quantity }) =>
+        toGA4ItemFromItem(item, projectId, quantity),
+      ),
+      value: selectedTotalPrice,
+    });
 
     navigate('/order', {
       state: {
@@ -376,7 +392,7 @@ export default function ProjectDetailPage() {
         })),
       },
     });
-  }, [navigate, projectId, selectedEntries, toast]);
+  }, [navigate, projectId, selectedEntries, selectedTotalPrice, toast]);
 
   const carouselImages = useMemo(() => {
     if (!project) return [];
