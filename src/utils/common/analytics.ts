@@ -1,3 +1,5 @@
+import { getCurrentSessionAttribution } from './analyticsAttribution';
+
 export const GA4_MEASUREMENT_ID = (
   import.meta.env.VITE_GA4_MEASUREMENT_ID ?? ''
 ).trim();
@@ -20,7 +22,7 @@ type GtagConfigParams = {
   send_page_view?: boolean;
 };
 
-type GtagEventParams = {
+type GtagEventParams = Record<string, boolean | number | string | undefined> & {
   debug_mode?: boolean;
   page_location?: string;
   page_path?: string;
@@ -85,6 +87,19 @@ export const trackGA4PageView = (path: string) => {
     page_path: path,
     page_location: window.location.href,
     page_title: document.title,
+    ...getCurrentSessionAttribution(),
+    ...getDebugParams(),
+  });
+};
+
+export const trackGA4Event = (eventName: string, params: GtagEventParams = {}) => {
+  if (!isGA4Enabled || typeof window === 'undefined') return;
+
+  initializeGA4();
+
+  window.gtag?.('event', eventName, {
+    ...params,
+    ...getCurrentSessionAttribution(),
     ...getDebugParams(),
   });
 };
