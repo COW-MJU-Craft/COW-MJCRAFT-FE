@@ -24,6 +24,8 @@ import {
   saveOrderDraft,
 } from '../../../utils/order/orderDraft';
 import { loadDaumPostcodeScript } from '../../../utils/common/daumPostcode';
+import { trackGA4EcommerceEvent } from '../../../utils/common/analytics';
+import { toGA4ItemsFromQuote } from '../../../utils/common/analyticsEcommerce';
 import {
   BUYER_TYPE_LABELS,
   CAMPUS_LABELS,
@@ -443,6 +445,10 @@ export default function OrderPage() {
         return;
       }
       const result = await ordersApi.createOrder(payload);
+      trackGA4EcommerceEvent('order_submit', {
+        items: toGA4ItemsFromQuote(latestQuote),
+        value: latestQuote.finalAmount,
+      });
       clearOrderDraft();
       if (draft.source === 'cart') {
         clearCartItems();
