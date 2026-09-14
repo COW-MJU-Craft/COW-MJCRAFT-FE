@@ -253,12 +253,12 @@ export default function AdminApplicationsListPage() {
                 </Link>
               </div>
               <h1 className="font-heading text-3xl text-primary">
-                지원자 보기
+                지원서 확인·출력
               </h1>
               <p className="mt-2 text-sm text-slate-600">
                 {selectedFormId
-                  ? `${selectedFormTitle}에 제출한 지원자를 확인할 수 있어요`
-                  : '지원서를 선택하면 지원자가 제출한 내용을 확인할 수 있어요'}
+                  ? `${selectedFormTitle}에 제출한 지원서를 확인하고 출력할 수 있어요`
+                  : '지원서를 선택하면 제출 내용을 확인하고 출력할 수 있어요'}
               </p>
             </div>
             <button
