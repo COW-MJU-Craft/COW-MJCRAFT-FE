@@ -1,4 +1,4 @@
-import type { CartItem } from '../cart/cart';
+import { createCartItem, type CartItem } from '../cart/cart';
 
 /**
  * 주문 draft 영속화 계층.
@@ -51,17 +51,19 @@ function sanitizeCartItems(raw: unknown): CartItem[] {
         ? Math.max(1, Math.trunc(item.quantity))
         : 1;
 
-    acc.push({
+    acc.push(createCartItem({
       itemId: String(item.itemId),
       projectId: String(item.projectId),
       name: String(item.name),
       price: item.price,
       thumbnailUrl: item.thumbnailUrl ?? null,
+      thumbnailKey: item.thumbnailKey ?? null,
       status: item.status,
       saleType: item.saleType,
+      selectedOptions: item.selectedOptions,
+      maxQuantity: item.maxQuantity,
       quantity,
-      mergedByDuplicateAdd: Boolean(item.mergedByDuplicateAdd),
-    });
+    }));
     return acc;
   }, []);
 }

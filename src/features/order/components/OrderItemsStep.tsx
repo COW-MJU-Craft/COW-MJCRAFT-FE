@@ -5,7 +5,7 @@ import { formatMoney } from '../format';
 type OrderItemsStepProps = {
   items: CartItem[];
   totalPrice: number;
-  onRemoveItem: (itemId: string) => void;
+  onRemoveItem: (cartItemId: string) => void;
 };
 
 export default function OrderItemsStep({
@@ -34,7 +34,7 @@ export default function OrderItemsStep({
       <ul className="space-y-3">
         {items.map((item) => (
           <li
-            key={`${item.projectId}-${item.itemId}`}
+            key={item.cartItemId}
             className="rounded-2xl border border-slate-200 px-4 py-3"
           >
             <div className="flex items-center justify-between gap-3">
@@ -43,7 +43,7 @@ export default function OrderItemsStep({
               </p>
               <button
                 type="button"
-                onClick={() => onRemoveItem(item.itemId)}
+                onClick={() => onRemoveItem(item.cartItemId)}
                 className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-50"
               >
                 삭제
@@ -52,6 +52,13 @@ export default function OrderItemsStep({
             <p className="mt-1 text-sm text-slate-700">
               {item.quantity}개 · {formatMoney(item.price * item.quantity)}원
             </p>
+            {item.selectedOptions.length > 0 && (
+              <p className="mt-1 text-xs text-slate-500">
+                {item.selectedOptions
+                  .map((option) => `${option.groupName}: ${option.valueName}`)
+                  .join(' · ')}
+              </p>
+            )}
           </li>
         ))}
       </ul>
