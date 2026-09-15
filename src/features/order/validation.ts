@@ -42,14 +42,7 @@ export function validateFulfillmentStep(draft: OrderDraft): string | null {
 }
 
 export function validateFinalStep(draft: OrderDraft): string | null {
-  const { lookup, buyer } = draft;
-  if (isBlank(lookup.lookupId)) return '조회 아이디를 입력해주세요.';
-  if (isBlank(lookup.password)) return '조회 비밀번호를 입력해주세요.';
-  if (isBlank(lookup.passwordConfirm))
-    return '조회 비밀번호 확인을 입력해주세요.';
-  if (lookup.password !== lookup.passwordConfirm) {
-    return '조회 비밀번호와 비밀번호 확인이 일치하지 않아요.';
-  }
+  const { buyer } = draft;
   if (isBlank(buyer.email)) return '이메일을 입력해주세요.';
   return null;
 }

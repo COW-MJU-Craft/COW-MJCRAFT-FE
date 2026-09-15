@@ -30,8 +30,6 @@ export function buildOrderCreatePayload(
   if (items.length === 0) return null;
 
   return {
-    lookupId: draft.lookup.lookupId.trim(),
-    password: draft.lookup.password,
     depositorName: draft.payment.depositorName.trim(),
     privacyAgreed: draft.agreements.privacy,
     refundAgreed: draft.agreements.noRefund,
