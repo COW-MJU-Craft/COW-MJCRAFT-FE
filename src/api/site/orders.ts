@@ -17,6 +17,7 @@ export type OrderCreateRequest = {
   items: Array<{
     projectItemId: number;
     quantity: number;
+    optionValueIds?: number[];
   }>;
   buyer: {
     buyerType: 'STUDENT' | 'STAFF' | 'EXTERNAL';
@@ -75,6 +76,7 @@ export type OrderQuoteResponse = {
     quantity: number;
     unitPrice: number;
     lineAmount: number;
+    optionNames: string[];
   }>;
   totalAmount: number;
   shippingFee: number;
@@ -86,12 +88,19 @@ export type OrderLookupRequest = {
   password: string;
 };
 
+export type OrderDetailOption = {
+  groupName: string;
+  valueName: string;
+  additionalPrice: number;
+};
+
 export type OrderDetailItem = {
   projectItemId?: number;
   itemName?: string;
   quantity?: number;
   unitPrice?: number;
   lineAmount?: number;
+  options?: OrderDetailOption[];
 };
 
 export type OrderDetailResponse = {
@@ -423,6 +432,38 @@ function pickBoolean(
   return undefined;
 }
 
+function toOrderDetailOption(raw: unknown): OrderDetailOption | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+
+  const groupName = pickString(
+    record,
+    'optionGroupNameSnapshot',
+    'option_group_name_snapshot',
+    'groupName',
+  );
+  const valueName = pickString(
+    record,
+    'optionValueNameSnapshot',
+    'option_value_name_snapshot',
+    'valueName',
+    'name',
+  );
+  const additionalPrice = pickNumberish(
+    record,
+    'additionalPriceSnapshot',
+    'additional_price_snapshot',
+    'additionalPrice',
+  );
+
+  if (!groupName || !valueName) return null;
+  return {
+    groupName,
+    valueName,
+    additionalPrice: additionalPrice ?? 0,
+  };
+}
+
 function toOrderDetailItem(raw: unknown): OrderDetailItem | null {
   const record = asRecord(raw);
   if (!record) return null;
@@ -444,6 +485,11 @@ function toOrderDetailItem(raw: unknown): OrderDetailItem | null {
     quantity: pickNumber(record, 'quantity'),
     unitPrice: pickNumber(record, 'unitPrice', 'unit_price'),
     lineAmount: pickNumber(record, 'lineAmount', 'line_amount', 'amount'),
+    options: Array.isArray(record.options)
+      ? record.options
+          .map((option) => toOrderDetailOption(option))
+          .filter((option): option is OrderDetailOption => option !== null)
+      : [],
   };
 }
 

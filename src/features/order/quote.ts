@@ -32,11 +32,14 @@ export function isSameOrderQuote(
     return false;
   }
 
+  const getQuoteItemKey = (item: OrderQuoteResponse['items'][number]) =>
+    `${item.projectItemId}:${[...(item.optionNames ?? [])].sort().join(',')}`;
+
   const previousItems = new Map(
-    previous.items.map((item) => [item.projectItemId, item]),
+    previous.items.map((item) => [getQuoteItemKey(item), item]),
   );
   return next.items.every((item) => {
-    const before = previousItems.get(item.projectItemId);
+    const before = previousItems.get(getQuoteItemKey(item));
     return (
       before?.quantity === item.quantity &&
       before.unitPrice === item.unitPrice &&
