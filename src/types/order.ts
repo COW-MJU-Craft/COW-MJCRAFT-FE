@@ -46,6 +46,11 @@ export type OrderCompleteItem = {
   quantity?: number;
   unitPrice?: number;
   lineAmount?: number;
+  options?: Array<{
+    groupName: string;
+    valueName: string;
+    additionalPrice: number;
+  }>;
 };
 
 export type OrderCompletePageResponse = {

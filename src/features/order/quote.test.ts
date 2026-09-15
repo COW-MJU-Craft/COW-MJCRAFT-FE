@@ -11,6 +11,7 @@ const quote: OrderQuoteResponse = {
       quantity: 2,
       unitPrice: 3_000,
       lineAmount: 6_000,
+      optionNames: [],
     },
   ],
   totalAmount: 6_000,
@@ -35,5 +36,12 @@ describe('isSameOrderQuote', () => {
 
   it('이전 견적이 없으면 확인을 요구한다', () => {
     expect(isSameOrderQuote(null, quote)).toBe(false);
+  });
+
+  it('같은 상품이라도 선택 옵션이 바뀌면 다시 확인을 요구한다', () => {
+    const changed = structuredClone(quote);
+    changed.items[0].optionNames = ['네이비'];
+
+    expect(isSameOrderQuote(quote, changed)).toBe(false);
   });
 });

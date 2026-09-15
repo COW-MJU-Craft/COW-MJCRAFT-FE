@@ -24,6 +24,8 @@ import { ApiError } from '../../../api/core/client';
 import { adminProjectsApi, type AdminProjectResponse, uploadToPresignedUrl } from '../../../api/admin/projects';
 import {
   adminItemsApi,
+  type AdminItemOptionGroup,
+  type AdminItemOptionValue,
   type AdminItemImage,
   type AdminItemResponse,
   type AdminItemSaleType,
@@ -83,6 +85,12 @@ type AdminItemUpdatePayload = {
   stockQty?: number | null;
 };
 
+type NewOptionValueDraft = {
+  name: string;
+  additionalPrice: string;
+  stockQty: string;
+};
+
 const STATUS_OPTIONS: { label: string; value: AdminItemStatus }[] = [
   { label: '준비중', value: 'PREPARING' },
   { label: '진행중', value: 'OPEN' },
@@ -106,6 +114,24 @@ const ITEMTYPE_HELPER_TEXT: Record<AdminItemType, string> = {
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10';
+
+function getNextSortOrder(items: Array<{ sortOrder: number }>) {
+  return Math.max(-1, ...items.map((item) => item.sortOrder)) + 1;
+}
+
+function getOptionValueInput(
+  value: AdminItemOptionValue,
+) {
+  return {
+    name: value.name.trim(),
+    additionalPrice: Math.max(0, Math.trunc(value.additionalPrice ?? 0)),
+    stockQty:
+      value.stockQty === null || value.stockQty === undefined
+        ? null
+        : Math.max(0, Math.trunc(value.stockQty)),
+    sortOrder: value.sortOrder,
+  };
+}
 
 function resolveContentType(file: File): string {
   if (file.type && file.type.trim().length > 0) return file.type;
@@ -302,6 +328,14 @@ export default function AdminItemDetailPage() {
   const [isEditingFundedQty, setIsEditingFundedQty] = useState(false);
   const [isEditingStockQty, setIsEditingStockQty] = useState(false);
   const [initialSnapshotReady, setInitialSnapshotReady] = useState(false);
+  const [optionGroups, setOptionGroups] = useState<AdminItemOptionGroup[]>([]);
+  const [optionGroupsLoading, setOptionGroupsLoading] = useState(false);
+  const [optionActionKey, setOptionActionKey] = useState<string | null>(null);
+  const [newOptionGroupName, setNewOptionGroupName] = useState('');
+  const [newOptionGroupRequired, setNewOptionGroupRequired] = useState(true);
+  const [newOptionValueDrafts, setNewOptionValueDrafts] = useState<
+    Record<string, NewOptionValueDraft>
+  >({});
 
   const objectUrlsRef = useRef<string[]>([]);
   const itemRef = useRef<AdminItemForm | null>(null);
@@ -401,12 +435,258 @@ export default function AdminItemDetailPage() {
     void loadItemDetail();
   }, [loadItemDetail]);
 
+  const canManageOptions =
+    item?.itemType === 'PHYSICAL' && item.saleType === 'NORMAL';
+
+  const loadOptionGroups = useCallback(async () => {
+    if (!itemId) return;
+    setOptionGroupsLoading(true);
+    try {
+      const groups = await adminItemsApi.getOptionGroups(itemId);
+      setOptionGroups(
+        [...groups]
+          .sort((left, right) => left.sortOrder - right.sortOrder)
+          .map((group) => ({
+            ...group,
+            values: [...group.values].sort(
+              (left, right) => left.sortOrder - right.sortOrder,
+            ),
+          })),
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : '상품 옵션을 불러오지 못했어요.',
+      );
+    } finally {
+      setOptionGroupsLoading(false);
+    }
+  }, [itemId]);
+
+  useEffect(() => {
+    if (!canManageOptions) {
+      setOptionGroups([]);
+      return;
+    }
+    void loadOptionGroups();
+  }, [canManageOptions, loadOptionGroups]);
+
   const updateItem = useCallback((patch: Partial<AdminItemForm>) => {
     setItem((prev) => {
       if (!prev) return prev;
       return { ...prev, ...patch };
     });
   }, []);
+
+  const updateOptionGroupDraft = useCallback(
+    (groupId: number, patch: Partial<AdminItemOptionGroup>) => {
+      setOptionGroups((previous) =>
+        previous.map((group) =>
+          group.id === groupId ? { ...group, ...patch } : group,
+        ),
+      );
+    },
+    [],
+  );
+
+  const updateOptionValueDraft = useCallback(
+    (
+      groupId: number,
+      valueId: number,
+      patch: Partial<AdminItemOptionValue>,
+    ) => {
+      setOptionGroups((previous) =>
+        previous.map((group) =>
+          group.id !== groupId
+            ? group
+            : {
+                ...group,
+                values: group.values.map((value) =>
+                  value.id === valueId ? { ...value, ...patch } : value,
+                ),
+              },
+        ),
+      );
+    },
+    [],
+  );
+
+  const runOptionAction = useCallback(
+    async (actionKey: string, action: () => Promise<unknown>, successMessage: string) => {
+      setOptionActionKey(actionKey);
+      setError(null);
+      try {
+        await action();
+        await loadOptionGroups();
+        toast.success(successMessage);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : '옵션 설정을 저장하지 못했어요.';
+        setError(message);
+        toast.error(message);
+      } finally {
+        setOptionActionKey(null);
+      }
+    },
+    [loadOptionGroups, toast],
+  );
+
+  const handleOptionGroupCreate = useCallback(async () => {
+    if (!item || !newOptionGroupName.trim()) {
+      toast.error('옵션 그룹명을 입력해주세요.');
+      return;
+    }
+    await runOptionAction(
+      'group-create',
+      async () => {
+        await adminItemsApi.createOptionGroup(item.id, {
+          name: newOptionGroupName.trim(),
+          required: newOptionGroupRequired,
+          sortOrder: getNextSortOrder(optionGroups),
+        });
+        setNewOptionGroupName('');
+        setNewOptionGroupRequired(true);
+      },
+      '옵션 그룹을 추가했어요.',
+    );
+  }, [item, newOptionGroupName, newOptionGroupRequired, optionGroups, runOptionAction, toast]);
+
+  const handleOptionGroupSave = useCallback(
+    async (group: AdminItemOptionGroup) => {
+      if (!item || !group.name.trim()) {
+        toast.error('옵션 그룹명을 입력해주세요.');
+        return;
+      }
+      await runOptionAction(
+        `group-${group.id}`,
+        () =>
+          adminItemsApi.updateOptionGroup(item.id, group.id, {
+            name: group.name.trim(),
+            required: group.required,
+            sortOrder: group.sortOrder,
+          }),
+        '옵션 그룹을 저장했어요.',
+      );
+    },
+    [item, runOptionAction, toast],
+  );
+
+  const handleOptionGroupDelete = useCallback(
+    async (group: AdminItemOptionGroup) => {
+      if (!item) return;
+      const confirmed = await confirm.open({
+        title: '옵션 그룹 삭제',
+        description: `${group.name} 그룹과 포함된 옵션값을 모두 삭제할까요?`,
+        confirmText: '삭제',
+        cancelText: '취소',
+        danger: true,
+      });
+      if (!confirmed) return;
+      await runOptionAction(
+        `group-delete-${group.id}`,
+        () => adminItemsApi.deleteOptionGroup(item.id, group.id),
+        '옵션 그룹을 삭제했어요.',
+      );
+    },
+    [confirm, item, runOptionAction],
+  );
+
+  const updateNewOptionValueDraft = useCallback(
+    (groupId: number, patch: Partial<NewOptionValueDraft>) => {
+      setNewOptionValueDrafts((previous) => ({
+        ...previous,
+        [groupId]: {
+          name: previous[groupId]?.name ?? '',
+          additionalPrice: previous[groupId]?.additionalPrice ?? '0',
+          stockQty: previous[groupId]?.stockQty ?? '',
+          ...patch,
+        },
+      }));
+    },
+    [],
+  );
+
+  const handleOptionValueCreate = useCallback(
+    async (group: AdminItemOptionGroup) => {
+      if (!item) return;
+      const draft = newOptionValueDrafts[group.id] ?? {
+        name: '',
+        additionalPrice: '0',
+        stockQty: '',
+      };
+      const additionalPrice = Number(draft.additionalPrice || 0);
+      const stockQty = draft.stockQty.trim() === '' ? null : Number(draft.stockQty);
+      if (!draft.name.trim()) {
+        toast.error('옵션값 이름을 입력해주세요.');
+        return;
+      }
+      if (
+        !Number.isFinite(additionalPrice) ||
+        additionalPrice < 0 ||
+        (stockQty !== null && (!Number.isFinite(stockQty) || stockQty < 0))
+      ) {
+        toast.error('추가 금액과 재고는 0 이상의 숫자로 입력해주세요.');
+        return;
+      }
+      await runOptionAction(
+        `value-create-${group.id}`,
+        async () => {
+          await adminItemsApi.createOptionValue(item.id, group.id, {
+            name: draft.name.trim(),
+            additionalPrice: Math.trunc(additionalPrice),
+            stockQty: stockQty === null ? null : Math.trunc(stockQty),
+            sortOrder: getNextSortOrder(group.values),
+          });
+          setNewOptionValueDrafts((previous) => ({
+            ...previous,
+            [group.id]: { name: '', additionalPrice: '0', stockQty: '' },
+          }));
+        },
+        '옵션값을 추가했어요.',
+      );
+    },
+    [item, newOptionValueDrafts, runOptionAction, toast],
+  );
+
+  const handleOptionValueSave = useCallback(
+    async (group: AdminItemOptionGroup, value: AdminItemOptionValue) => {
+      if (!item || !value.name.trim()) {
+        toast.error('옵션값 이름을 입력해주세요.');
+        return;
+      }
+      await runOptionAction(
+        `value-${value.id}`,
+        () =>
+          adminItemsApi.updateOptionValue(
+            item.id,
+            group.id,
+            value.id,
+            getOptionValueInput(value),
+          ),
+        '옵션값을 저장했어요.',
+      );
+    },
+    [item, runOptionAction, toast],
+  );
+
+  const handleOptionValueDelete = useCallback(
+    async (group: AdminItemOptionGroup, value: AdminItemOptionValue) => {
+      if (!item) return;
+      const confirmed = await confirm.open({
+        title: '옵션값 삭제',
+        description: `${value.name} 옵션값을 삭제할까요?`,
+        confirmText: '삭제',
+        cancelText: '취소',
+        danger: true,
+      });
+      if (!confirmed) return;
+      await runOptionAction(
+        `value-delete-${value.id}`,
+        () => adminItemsApi.deleteOptionValue(item.id, group.id, value.id),
+        '옵션값을 삭제했어요.',
+      );
+    },
+    [confirm, item, runOptionAction],
+  );
 
   const getValidation = useCallback((current: AdminItemForm): ValidationResult | null => {
     if (!current.name.trim()) return { field: 'name', message: '상품 명을 입력해주세요' };
@@ -1154,6 +1434,10 @@ export default function AdminItemDetailPage() {
                       onClick={() => {
                         if (option.value === item.itemType) return;
                         if (option.value === 'DIGITAL_JOURNAL') {
+                          if (optionGroups.length > 0) {
+                            toast.info('저널로 변경하려면 등록된 상품 옵션을 먼저 삭제해주세요.');
+                            return;
+                          }
                           updateItem({
                             itemType: option.value,
                             saleType: 'NORMAL',
@@ -1269,6 +1553,9 @@ export default function AdminItemDetailPage() {
                       <button
                         key={option.value}
                         type="button"
+                        disabled={
+                          option.value === 'GROUPBUY' && optionGroups.length > 0
+                        }
                         onClick={() =>
                           updateItem({
                             saleType: option.value,
@@ -1278,7 +1565,7 @@ export default function AdminItemDetailPage() {
                           })
                         }
                         className={[
-                          'rounded-2xl border px-4 py-3 text-sm font-bold transition',
+                          'rounded-2xl border px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45',
                           item.saleType === option.value
                             ? 'border-primary bg-primary/10 text-primary'
                             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
@@ -1351,6 +1638,254 @@ export default function AdminItemDetailPage() {
                 </div>
               )}
             </div>
+
+            {canManageOptions && (
+              <section className="border-y border-slate-200 py-6">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900">상품 옵션</h2>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                      색상, 사이즈처럼 구매자가 선택할 값을 등록하세요. 필수 옵션을 사용하면 옵션값별 재고가 주문 가능 수량을 결정합니다.
+                    </p>
+                  </div>
+                  {optionGroupsLoading && (
+                    <span className="text-xs font-semibold text-slate-400">불러오는 중...</span>
+                  )}
+                </div>
+
+                <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
+                  <label className="block">
+                    <span className="text-xs font-semibold text-slate-600">새 옵션 그룹</span>
+                    <input
+                      type="text"
+                      value={newOptionGroupName}
+                      onChange={(event) => setNewOptionGroupName(event.target.value)}
+                      placeholder="예: 색상, 사이즈"
+                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                    />
+                  </label>
+                  <label className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={newOptionGroupRequired}
+                      onChange={(event) => setNewOptionGroupRequired(event.target.checked)}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    필수 선택
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void handleOptionGroupCreate()}
+                    disabled={optionActionKey !== null}
+                    className="h-10 rounded-xl bg-primary px-4 text-sm font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    옵션 그룹 추가
+                  </button>
+                </div>
+
+                {optionGroups.length === 0 && !optionGroupsLoading ? (
+                  <p className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm text-slate-500">
+                    등록된 옵션이 없어요. 옵션이 필요 없는 상품은 그대로 판매할 수 있습니다.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {optionGroups.map((group) => {
+                      const newValue = newOptionValueDrafts[group.id] ?? {
+                        name: '',
+                        additionalPrice: '0',
+                        stockQty: '',
+                      };
+                      const groupBusy = optionActionKey !== null;
+
+                      return (
+                        <div
+                          key={group.id}
+                          className="rounded-2xl border border-slate-200 bg-white p-4"
+                        >
+                          <div className="flex flex-wrap items-end gap-3">
+                            <label className="min-w-[180px] flex-1">
+                              <span className="text-xs font-semibold text-slate-600">옵션 그룹명</span>
+                              <input
+                                type="text"
+                                value={group.name}
+                                onChange={(event) =>
+                                  updateOptionGroupDraft(group.id, {
+                                    name: event.target.value,
+                                  })
+                                }
+                                className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                              />
+                            </label>
+                            <label className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700">
+                              <input
+                                type="checkbox"
+                                checked={group.required}
+                                onChange={(event) =>
+                                  updateOptionGroupDraft(group.id, {
+                                    required: event.target.checked,
+                                  })
+                                }
+                                className="h-4 w-4 accent-primary"
+                              />
+                              필수 선택
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => void handleOptionGroupSave(group)}
+                              disabled={groupBusy}
+                              className="h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              저장
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleOptionGroupDelete(group)}
+                              disabled={groupBusy}
+                              className="h-10 rounded-xl border border-rose-200 px-3 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              삭제
+                            </button>
+                          </div>
+
+                          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+                            <table className="w-full min-w-[640px] text-left text-sm">
+                              <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
+                                <tr>
+                                  <th className="px-3 py-2.5">옵션값</th>
+                                  <th className="px-3 py-2.5">추가 금액</th>
+                                  <th className="px-3 py-2.5">옵션 재고</th>
+                                  <th className="w-32 px-3 py-2.5 text-right">관리</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {group.values.map((value) => (
+                                  <tr key={value.id} className="border-t border-slate-100">
+                                    <td className="px-3 py-2">
+                                      <input
+                                        type="text"
+                                        value={value.name}
+                                        onChange={(event) =>
+                                          updateOptionValueDraft(group.id, value.id, {
+                                            name: event.target.value,
+                                          })
+                                        }
+                                        className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-sm outline-none focus:border-primary/60"
+                                      />
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={value.additionalPrice}
+                                        onChange={(event) =>
+                                          updateOptionValueDraft(group.id, value.id, {
+                                            additionalPrice: Math.max(
+                                              0,
+                                              Number(event.target.value) || 0,
+                                            ),
+                                          })
+                                        }
+                                        className="h-9 w-28 rounded-lg border border-slate-200 px-2.5 text-sm outline-none focus:border-primary/60"
+                                      />
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={value.stockQty ?? ''}
+                                        onChange={(event) =>
+                                          updateOptionValueDraft(group.id, value.id, {
+                                            stockQty:
+                                              event.target.value === ''
+                                                ? null
+                                                : Math.max(
+                                                    0,
+                                                    Number(event.target.value) || 0,
+                                                  ),
+                                          })
+                                        }
+                                        placeholder="무제한"
+                                        className="h-9 w-28 rounded-lg border border-slate-200 px-2.5 text-sm outline-none focus:border-primary/60"
+                                      />
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <div className="flex justify-end gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => void handleOptionValueSave(group, value)}
+                                          disabled={groupBusy}
+                                          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                          저장
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => void handleOptionValueDelete(group, value)}
+                                          disabled={groupBusy}
+                                          className="rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                          삭제
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <div className="mt-3 grid gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-[minmax(0,1fr)_120px_120px_auto]">
+                            <input
+                              type="text"
+                              value={newValue.name}
+                              onChange={(event) =>
+                                updateNewOptionValueDraft(group.id, {
+                                  name: event.target.value,
+                                })
+                              }
+                              placeholder="새 옵션값"
+                              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              value={newValue.additionalPrice}
+                              onChange={(event) =>
+                                updateNewOptionValueDraft(group.id, {
+                                  additionalPrice: event.target.value,
+                                })
+                              }
+                              placeholder="추가 금액"
+                              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              value={newValue.stockQty}
+                              onChange={(event) =>
+                                updateNewOptionValueDraft(group.id, {
+                                  stockQty: event.target.value,
+                                })
+                              }
+                              placeholder="재고 (비우면 무제한)"
+                              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void handleOptionValueCreate(group)}
+                              disabled={groupBusy}
+                              className="h-10 rounded-xl bg-slate-800 px-4 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              옵션값 추가
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
 
             {!isJournalItem && (
               <div className="mt-2">
