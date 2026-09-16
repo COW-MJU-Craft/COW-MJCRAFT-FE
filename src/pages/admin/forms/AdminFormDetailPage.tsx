@@ -651,6 +651,12 @@ export default function AdminFormDetailPage() {
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link
+              to={`/admin/applications?formId=${formId}`}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+            >
+              지원서 확인·PDF 출력
+            </Link>
             {detail.open ? (
               <button
                 type="button"

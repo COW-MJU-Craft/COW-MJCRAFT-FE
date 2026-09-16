@@ -77,7 +77,7 @@ export default function CartView({
 
                 return (
                 <article
-                  key={item.itemId}
+                  key={item.cartItemId}
                   className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                 >
                   <Link
@@ -85,7 +85,7 @@ export default function CartView({
                     className="h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100"
                   >
                     {(() => {
-                      const key = String(item.itemId);
+                      const key = item.cartItemId;
                       const candidates = buildMediaUrlCandidates(
                         item.thumbnailUrl,
                         item.thumbnailKey ?? null,
@@ -128,7 +128,7 @@ export default function CartView({
                       </Link>
                       <button
                         type="button"
-                        onClick={() => onRemoveItem(item.itemId)}
+                        onClick={() => onRemoveItem(item.cartItemId)}
                         className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-400 hover:bg-rose-50 hover:text-rose-600"
                         aria-label="삭제"
                       >
@@ -144,6 +144,13 @@ export default function CartView({
                         </span>
                       )}
                     </p>
+                    {item.selectedOptions.length > 0 && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.selectedOptions
+                          .map((option) => `${option.groupName}: ${option.valueName}`)
+                          .join(' · ')}
+                      </p>
+                    )}
 
                     <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
                       <div className="flex items-center gap-2">
@@ -152,7 +159,7 @@ export default function CartView({
                             type="button"
                             onClick={() =>
                               onSetQuantity(
-                                item.itemId,
+                                item.cartItemId,
                                 Math.max(1, item.quantity - 1),
                               )
                             }
@@ -168,7 +175,7 @@ export default function CartView({
                             type="button"
                             onClick={() =>
                               onSetQuantity(
-                                item.itemId,
+                                item.cartItemId,
                                 item.quantity + 1,
                               )
                             }
@@ -189,7 +196,7 @@ export default function CartView({
                             동일 상품 합쳐짐
                             <button
                               type="button"
-                              onClick={() => onClearMergedNotice(item.itemId)}
+                              onClick={() => onClearMergedNotice(item.cartItemId)}
                               className="ml-1 underline"
                             >
                               닫기
