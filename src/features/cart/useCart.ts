@@ -15,6 +15,11 @@ import {
   type CartItem,
   updateCartItemMedia,
 } from '../../utils/cart/cart';
+import { trackGA4EcommerceEvent } from '../../utils/common/analytics';
+import {
+  getGA4EcommerceValue,
+  toGA4ItemsFromCart,
+} from '../../utils/common/analyticsEcommerce';
 
 export function useCart() {
   const navigate = useNavigate();
@@ -115,6 +120,11 @@ export function useCart() {
       cancelText: '계속 쇼핑',
     });
     if (!confirmed) return;
+    const analyticsItems = toGA4ItemsFromCart(items);
+    trackGA4EcommerceEvent('begin_checkout', {
+      items: analyticsItems,
+      value: getGA4EcommerceValue(analyticsItems),
+    });
     navigate('/order', { state: { source: 'cart' } });
   };
 

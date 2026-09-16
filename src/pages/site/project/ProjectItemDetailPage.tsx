@@ -1,5 +1,5 @@
 import React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../../components/ui/Reveal';
@@ -20,6 +20,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { Package } from 'lucide-react';
+import { trackGA4EcommerceEvent } from '../../../utils/common/analytics';
+import { toGA4ItemFromItem } from '../../../utils/common/analyticsEcommerce';
 import { getPurchaseStock } from '../../../features/order/optionStock';
 
 function formatMoney(value?: number | null) {
@@ -435,6 +437,7 @@ export default function ProjectItemDetailPage() {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [detailIndex, setDetailIndex] = useState(0);
   const [cartNoticeForKey, setCartNoticeForKey] = useState<string | null>(null);
+  const viewedItemKeyRef = useRef<string | null>(null);
 
   const showCartNotice = cartNoticeForKey === routeKey;
 
@@ -452,6 +455,20 @@ export default function ProjectItemDetailPage() {
     queryFn: () => itemsApi.getById(projectId!, itemId!),
     enabled: hasValidParams,
   });
+
+  useEffect(() => {
+    if (!item || !projectId) return;
+
+    const itemKey = `${projectId}:${item.id}`;
+    if (viewedItemKeyRef.current === itemKey) return;
+
+    viewedItemKeyRef.current = itemKey;
+    const analyticsItem = toGA4ItemFromItem(item, projectId);
+    trackGA4EcommerceEvent('view_item', {
+      items: [analyticsItem],
+      value: analyticsItem.price,
+    });
+  }, [item, projectId]);
 
   const parseCount = (value: unknown): number | null => {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -700,6 +717,11 @@ export default function ProjectItemDetailPage() {
     }
     addCartItem(cartItem);
     setCartNoticeForKey(`${projectId ?? ''}:${itemId ?? ''}`);
+    const analyticsItem = toGA4ItemFromItem(item, projectId);
+    trackGA4EcommerceEvent('add_to_cart', {
+      items: [analyticsItem],
+      value: analyticsItem.price,
+    });
     toast.success('장바구니에 상품을 담았어요.');
   };
 
@@ -722,6 +744,12 @@ export default function ProjectItemDetailPage() {
       toast.error('프로젝트 정보를 찾을 수 없어요.');
       return;
     }
+
+    const analyticsItem = toGA4ItemFromItem(item, projectId);
+    trackGA4EcommerceEvent('begin_checkout', {
+      items: [analyticsItem],
+      value: analyticsItem.price,
+    });
 
     navigate('/order', {
       state: {
