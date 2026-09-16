@@ -5,6 +5,37 @@ export type AdminItemSaleType = 'NORMAL' | 'GROUPBUY';
 export type AdminItemStatus = ProjectLifecycleStatus;
 export type AdminItemType = 'PHYSICAL' | 'DIGITAL_JOURNAL';
 
+export type AdminItemOptionValue = {
+  id: number;
+  optionGroupId: number;
+  name: string;
+  additionalPrice: number;
+  stockQty?: number | null;
+  sortOrder: number;
+};
+
+export type AdminItemOptionGroup = {
+  id: number;
+  itemId: number;
+  name: string;
+  required: boolean;
+  sortOrder: number;
+  values: AdminItemOptionValue[];
+};
+
+export type AdminItemOptionGroupInput = {
+  name: string;
+  required: boolean;
+  sortOrder: number;
+};
+
+export type AdminItemOptionValueInput = {
+  name: string;
+  additionalPrice: number;
+  stockQty: number | null;
+  sortOrder: number;
+};
+
 export type AdminItemImage = {
   id: number | string;
   imageKey?: string | null;
@@ -179,5 +210,70 @@ export const adminItemsApi = {
     return api<void>(withApiBase(`/admin/items/${itemId}/journal`), {
       method: 'DELETE',
     });
+  },
+
+  getOptionGroups(itemId: string) {
+    return api<AdminItemOptionGroup[]>(
+      withApiBase(`/admin/items/${itemId}/option-groups`),
+    );
+  },
+
+  createOptionGroup(itemId: string, body: AdminItemOptionGroupInput) {
+    return api<AdminItemOptionGroup>(
+      withApiBase(`/admin/items/${itemId}/option-groups`),
+      { method: 'POST', body },
+    );
+  },
+
+  updateOptionGroup(
+    itemId: string,
+    groupId: number,
+    body: AdminItemOptionGroupInput,
+  ) {
+    return api<AdminItemOptionGroup>(
+      withApiBase(`/admin/items/${itemId}/option-groups/${groupId}`),
+      { method: 'PUT', body },
+    );
+  },
+
+  deleteOptionGroup(itemId: string, groupId: number) {
+    return api<void>(
+      withApiBase(`/admin/items/${itemId}/option-groups/${groupId}`),
+      { method: 'DELETE' },
+    );
+  },
+
+  createOptionValue(
+    itemId: string,
+    groupId: number,
+    body: AdminItemOptionValueInput,
+  ) {
+    return api<AdminItemOptionValue>(
+      withApiBase(`/admin/items/${itemId}/option-groups/${groupId}/values`),
+      { method: 'POST', body },
+    );
+  },
+
+  updateOptionValue(
+    itemId: string,
+    groupId: number,
+    valueId: number,
+    body: AdminItemOptionValueInput,
+  ) {
+    return api<AdminItemOptionValue>(
+      withApiBase(
+        `/admin/items/${itemId}/option-groups/${groupId}/values/${valueId}`,
+      ),
+      { method: 'PUT', body },
+    );
+  },
+
+  deleteOptionValue(itemId: string, groupId: number, valueId: number) {
+    return api<void>(
+      withApiBase(
+        `/admin/items/${itemId}/option-groups/${groupId}/values/${valueId}`,
+      ),
+      { method: 'DELETE' },
+    );
   },
 };

@@ -150,7 +150,7 @@ export default function AdminFormsListPage() {
                       to={`/admin/applications?formId=${form.formId}`}
                       className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
                     >
-                      지원자 보기
+                      지원서 확인·PDF 출력
                     </Link>
                     <Link
                       to={`/admin/forms/${form.formId}`}

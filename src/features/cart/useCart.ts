@@ -15,6 +15,11 @@ import {
   type CartItem,
   updateCartItemMedia,
 } from '../../utils/cart/cart';
+import { trackGA4EcommerceEvent } from '../../utils/common/analytics';
+import {
+  getGA4EcommerceValue,
+  toGA4ItemsFromCart,
+} from '../../utils/common/analyticsEcommerce';
 
 export function useCart() {
   const navigate = useNavigate();
@@ -52,7 +57,7 @@ export function useCart() {
       for (const item of items) {
         if (!active) return;
 
-        const itemKey = String(item.itemId);
+        const itemKey = item.cartItemId;
         if (refreshedMediaItemIdsRef.current.has(itemKey)) continue;
 
         if (item.thumbnailKey && !looksLikeExpiredPresignedUrl(item.thumbnailUrl))
@@ -67,7 +72,7 @@ export function useCart() {
             nextThumbnailUrl !== (item.thumbnailUrl ?? null) ||
             nextThumbnailKey !== (item.thumbnailKey ?? null)
           ) {
-            updateCartItemMedia(item.itemId, {
+            updateCartItemMedia(item.cartItemId, {
               thumbnailUrl: nextThumbnailUrl,
               thumbnailKey: nextThumbnailKey,
             });
@@ -86,7 +91,7 @@ export function useCart() {
   }, [items]);
 
   useEffect(() => {
-    const existingIds = new Set(items.map((item) => String(item.itemId)));
+    const existingIds = new Set(items.map((item) => item.cartItemId));
     refreshedMediaItemIdsRef.current.forEach((id) => {
       if (!existingIds.has(id)) refreshedMediaItemIdsRef.current.delete(id);
     });
@@ -115,6 +120,11 @@ export function useCart() {
       cancelText: '계속 쇼핑',
     });
     if (!confirmed) return;
+    const analyticsItems = toGA4ItemsFromCart(items);
+    trackGA4EcommerceEvent('begin_checkout', {
+      items: analyticsItems,
+      value: getGA4EcommerceValue(analyticsItems),
+    });
     navigate('/order', { state: { source: 'cart' } });
   };
 

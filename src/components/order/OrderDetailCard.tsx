@@ -328,8 +328,17 @@ export default function OrderDetailCard({
                 className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
               >
                 <span className="text-slate-700">
-                  {item.itemName ?? `상품 #${item.projectItemId ?? '-'}`} x{' '}
-                  {item.quantity ?? '-'}
+                  <span className="block">
+                    {item.itemName ?? `상품 #${item.projectItemId ?? '-'}`} x{' '}
+                    {item.quantity ?? '-'}
+                  </span>
+                  {item.options && item.options.length > 0 && (
+                    <span className="mt-0.5 block text-xs text-slate-500">
+                      {item.options
+                        .map((option) => `${option.groupName}: ${option.valueName}`)
+                        .join(' · ')}
+                    </span>
+                  )}
                 </span>
                 <span className="font-semibold text-slate-900">
                   {formatMoney(item.lineAmount)}
