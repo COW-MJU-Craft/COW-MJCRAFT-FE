@@ -12,7 +12,7 @@ import { useToast } from '../../../components/toast/useToast';
 import { projectsApi } from '../../../api/site/projects';
 import { itemsApi } from '../../../api/site/items';
 import type { ItemResponse } from '../../../api/site/items';
-import { addCartItem } from '../../../utils/cart/cart';
+import { addCartItem, createCartItem } from '../../../utils/cart/cart';
 import { getItemSaleTypeLabel, getItemTypeLabel } from '../../../constants/itemLabels';
 import RouteMetadata from '../../../components/seo/RouteMetadata';
 import { trackGA4EcommerceEvent } from '../../../utils/common/analytics';
@@ -84,6 +84,10 @@ function isItemSoldOut(item: ItemResponse) {
 function isPurchasableItem(item: ItemResponse) {
   if (item.itemType === 'DIGITAL_JOURNAL') return false;
   return item.status === 'OPEN' && !isItemSoldOut(item);
+}
+
+function hasItemOptions(item: ItemResponse) {
+  return item.saleType === 'NORMAL' && Boolean(item.options?.length);
 }
 
 function getNormalStockTag(
@@ -190,7 +194,7 @@ export default function ProjectDetailPage() {
     );
     const purchasable = new Set(
       physicalItems
-        .filter((item) => isPurchasableItem(item))
+        .filter((item) => isPurchasableItem(item) && !hasItemOptions(item))
         .map((item) => String(item.id)),
     );
     // 상품 목록 변경 시 선택 수량 정리: 외부 상태(아이템 목록)와 동기화하는 표준 패턴이라 예외 처리한다.
@@ -305,7 +309,7 @@ export default function ProjectDetailPage() {
 
   const selectedEntries = useMemo(() => {
     return physicalItems
-      .filter((item) => isPurchasableItem(item))
+      .filter((item) => isPurchasableItem(item) && !hasItemOptions(item))
       .map((item) => ({ item, quantity: getSelectedQuantity(item.id) }))
       .filter(({ quantity }) => quantity > 0);
   }, [physicalItems, getSelectedQuantity]);
@@ -380,16 +384,18 @@ export default function ProjectDetailPage() {
     navigate('/order', {
       state: {
         source: 'direct',
-        items: selectedEntries.map(({ item, quantity }) => ({
-          itemId: String(item.id),
-          projectId: String(projectId),
-          name: item.name,
-          price: item.price,
-          thumbnailUrl: item.thumbnailUrl ?? null,
-          status: item.status,
-          saleType: item.saleType,
-          quantity,
-        })),
+        items: selectedEntries.map(({ item, quantity }) =>
+          createCartItem({
+            itemId: item.id,
+            projectId,
+            name: item.name,
+            price: item.price,
+            thumbnailUrl: item.thumbnailUrl ?? null,
+            status: item.status,
+            saleType: item.saleType,
+            quantity,
+          }),
+        ),
       },
     });
   }, [navigate, projectId, selectedEntries, selectedTotalPrice, toast]);
@@ -741,6 +747,7 @@ export default function ProjectDetailPage() {
                     const selectedQty = getSelectedQuantity(item.id);
                     const soldOut = isItemSoldOut(item);
                     const isPurchasable = isPurchasableItem(item);
+                    const requiresOptionSelection = hasItemOptions(item);
                     const normalizedName = item.name.trim();
                     const normalizedSummary = item.summary?.trim() ?? '';
                     const hasDistinctSummary =
@@ -759,7 +766,9 @@ export default function ProjectDetailPage() {
                     const achievementRate = parseCount(item.achievementRate);
                     const normalStockTag =
                       item.saleType === 'NORMAL'
-                        ? getNormalStockTag(availableStock)
+                        ? requiresOptionSelection
+                          ? { label: '옵션별 재고', tone: 'neutral' as const }
+                          : getNormalStockTag(availableStock)
                         : null;
                     const groupBuySummary =
                       item.saleType === 'GROUPBUY'
@@ -882,7 +891,14 @@ export default function ProjectDetailPage() {
 
                             <div className="mt-auto flex items-center justify-between gap-3 pt-4">
                               <div className="flex items-center gap-2">
-                                {isPurchasable ? (
+                                {isPurchasable && requiresOptionSelection ? (
+                                  <Link
+                                    to={`/projects/${projectId}/items/${item.id}`}
+                                    className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 active:scale-95"
+                                  >
+                                    옵션 선택
+                                  </Link>
+                                ) : isPurchasable ? (
                                   <>
                                     <button
                                       type="button"
@@ -1064,12 +1080,12 @@ export default function ProjectDetailPage() {
 
                 <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24">
                   <h3 className="text-sm font-bold text-slate-900">
-                    선택된 옵션
+                    선택한 상품
                   </h3>
 
                   {selectedEntries.length === 0 ? (
                     <p className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-500">
-                      선택한 상품이 여기에 표시됩니다.
+                      선택한 상품이 여기에 표시됩니다. 옵션 상품은 상세 보기에서 선택해주세요.
                     </p>
                   ) : (
                     <div className="mt-3 space-y-2">

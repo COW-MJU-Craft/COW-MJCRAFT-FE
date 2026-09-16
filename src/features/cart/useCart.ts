@@ -57,7 +57,7 @@ export function useCart() {
       for (const item of items) {
         if (!active) return;
 
-        const itemKey = String(item.itemId);
+        const itemKey = item.cartItemId;
         if (refreshedMediaItemIdsRef.current.has(itemKey)) continue;
 
         if (item.thumbnailKey && !looksLikeExpiredPresignedUrl(item.thumbnailUrl))
@@ -72,7 +72,7 @@ export function useCart() {
             nextThumbnailUrl !== (item.thumbnailUrl ?? null) ||
             nextThumbnailKey !== (item.thumbnailKey ?? null)
           ) {
-            updateCartItemMedia(item.itemId, {
+            updateCartItemMedia(item.cartItemId, {
               thumbnailUrl: nextThumbnailUrl,
               thumbnailKey: nextThumbnailKey,
             });
@@ -91,7 +91,7 @@ export function useCart() {
   }, [items]);
 
   useEffect(() => {
-    const existingIds = new Set(items.map((item) => String(item.itemId)));
+    const existingIds = new Set(items.map((item) => item.cartItemId));
     refreshedMediaItemIdsRef.current.forEach((id) => {
       if (!existingIds.has(id)) refreshedMediaItemIdsRef.current.delete(id);
     });

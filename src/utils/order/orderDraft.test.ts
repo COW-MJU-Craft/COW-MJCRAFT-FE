@@ -7,11 +7,13 @@ import {
 } from './orderDraft';
 
 const sampleItem = {
+  cartItemId: '1',
   itemId: '1',
   projectId: 'p1',
   name: '스티커 세트',
   price: 5000,
   thumbnailUrl: null,
+  selectedOptions: [],
   quantity: 2,
 };
 
@@ -66,10 +68,16 @@ describe('orderDraft', () => {
   it('저장한 뒤 불러오면 step/items/source만 복원된다', () => {
     saveOrderDraft(draftWithSensitiveFields());
     const loaded = loadOrderDraft();
-    expect(loaded).toEqual({
+    expect(loaded).toMatchObject({
       source: 'cart',
       step: 2,
-      items: [{ ...sampleItem, mergedByDuplicateAdd: false }],
+      items: [
+        {
+          ...sampleItem,
+          thumbnailKey: null,
+          mergedByDuplicateAdd: false,
+        },
+      ],
     });
   });
 

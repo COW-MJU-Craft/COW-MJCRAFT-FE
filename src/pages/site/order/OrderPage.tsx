@@ -173,13 +173,13 @@ export default function OrderPage() {
     draft.agreements.noRefund &&
     draft.agreements.cancelRisk;
 
-  const handleRemoveItem = (itemId: string) => {
+  const handleRemoveItem = (cartItemId: string) => {
     setDraft((prev) => ({
       ...prev,
-      items: prev.items.filter((item) => item.itemId !== itemId),
+      items: prev.items.filter((item) => item.cartItemId !== cartItemId),
     }));
     if (draft.source === 'cart') {
-      removeCartItem(itemId);
+      removeCartItem(cartItemId);
     }
   };
 
@@ -1069,19 +1069,28 @@ export default function OrderPage() {
 
                 {quote && quoteStatus === 'ready' && (
                   <div className="mt-3 space-y-2">
-                    {quote.items.map((item) => (
-                    <div
-                      key={`${item.projectId}-${item.projectItemId}`}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                    >
-                      <span className="text-slate-700">
-                        {item.itemName} x {item.quantity}
-                      </span>
-                      <span className="font-semibold text-slate-900">
-                        {formatMoney(item.lineAmount)}원
-                      </span>
-                    </div>
-                    ))}
+                    {quote.items.map((item) => {
+                      const optionNames = item.optionNames ?? [];
+
+                      return (
+                        <div
+                          key={`${item.projectId}-${item.projectItemId}-${optionNames.join('-')}`}
+                          className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                        >
+                          <span className="text-slate-700">
+                            <span className="block">{item.itemName} x {item.quantity}</span>
+                            {optionNames.length > 0 && (
+                              <span className="mt-0.5 block text-xs text-slate-500">
+                                {optionNames.join(' · ')}
+                              </span>
+                            )}
+                          </span>
+                          <span className="font-semibold text-slate-900">
+                            {formatMoney(item.lineAmount)}원
+                          </span>
+                        </div>
+                      );
+                    })}
                     <dl className="mt-4 space-y-2 border-t border-slate-200 pt-4 text-sm">
                       <div className="flex justify-between text-slate-600">
                         <dt>상품 합계</dt>

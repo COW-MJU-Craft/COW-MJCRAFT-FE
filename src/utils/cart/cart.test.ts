@@ -62,4 +62,49 @@ describe('cart stock quantity limit', () => {
       maxQuantity: 13,
     });
   });
+
+  it('같은 상품의 서로 다른 옵션 조합은 별도 장바구니 행으로 유지한다', () => {
+    addCartItem({
+      ...cartItem,
+      selectedOptions: [
+        {
+          groupId: 'color',
+          groupName: '색상',
+          valueId: 'navy',
+          valueName: '네이비',
+          additionalPrice: 0,
+          stockQty: 2,
+        },
+      ],
+      maxQuantity: 2,
+      quantity: 1,
+    });
+    addCartItem({
+      ...cartItem,
+      selectedOptions: [
+        {
+          groupId: 'color',
+          groupName: '색상',
+          valueId: 'white',
+          valueName: '화이트',
+          additionalPrice: 500,
+          stockQty: 5,
+        },
+      ],
+      price: 3500,
+      maxQuantity: 5,
+      quantity: 1,
+    });
+
+    expect(loadCartItems()).toEqual([
+      expect.objectContaining({
+        cartItemId: 'item-1::white',
+        selectedOptions: [expect.objectContaining({ valueName: '화이트' })],
+      }),
+      expect.objectContaining({
+        cartItemId: 'item-1::navy',
+        selectedOptions: [expect.objectContaining({ valueName: '네이비' })],
+      }),
+    ]);
+  });
 });

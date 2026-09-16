@@ -5,6 +5,20 @@ export type ItemSaleType = 'NORMAL' | 'GROUPBUY';
 export type ItemStatus = ProjectLifecycleStatus;
 export type ItemType = 'PHYSICAL' | 'DIGITAL_JOURNAL';
 
+export type ItemOptionValue = {
+  id: number | string;
+  name: string;
+  additionalPrice: number;
+  stockQty?: number | null;
+};
+
+export type ItemOptionGroup = {
+  id: number | string;
+  name: string;
+  required: boolean;
+  values: ItemOptionValue[];
+};
+
 export type ItemResponse = {
   id: number | string;
   projectId?: number | string | null;
@@ -22,6 +36,7 @@ export type ItemResponse = {
   stockQty?: number | null;
   remainingQty?: number | null;
   achievementRate?: number | null;
+  options?: ItemOptionGroup[] | null;
 };
 
 export type ItemJournalDownloadResponse = {
