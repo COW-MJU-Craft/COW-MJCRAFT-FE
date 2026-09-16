@@ -343,6 +343,18 @@ function buildOrderListQuery(
 }
 
 export const adminOrdersApi = {
+  async updateBuyerEmail(orderId: number, value: string) {
+    const email = value.trim();
+    if (!email) throw new Error('주문자 이메일을 입력해주세요.');
+
+    await api<void>(withApiBase(`/admin/orders/${orderId}/buyer-email`), {
+      method: 'PATCH',
+      body: { email },
+    });
+
+    return email;
+  },
+
   updateTrackingInformation(projectId: number, orderId: number, value: string | null) {
     const trackingInformation = value?.trim() || null;
     if (trackingInformation && trackingInformation.length > 500) {

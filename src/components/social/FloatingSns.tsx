@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { snsApi } from '../../api/site/sns';
 import instagramLogo from '../../assets/logos/instagram.png';
 import kakaoLogo from '../../assets/logos/kakao.png';
+import { trackGA4ExternalLinkClick } from '../../utils/common/analytics';
 
 export default function FloatingSns() {
   const queryClient = useQueryClient();
@@ -50,6 +51,9 @@ export default function FloatingSns() {
           href={instagramUrl}
           target="_blank"
           rel="noreferrer"
+          onClick={() =>
+            trackGA4ExternalLinkClick({ label: 'instagram', url: instagramUrl })
+          }
           className="h-13 w-13 overflow-hidden rounded-full shadow-lg"
           aria-label="Instagram"
         >
@@ -66,6 +70,9 @@ export default function FloatingSns() {
           href={kakaoUrl}
           target="_blank"
           rel="noreferrer"
+          onClick={() =>
+            trackGA4ExternalLinkClick({ label: 'kakao', url: kakaoUrl })
+          }
           className="h-13 w-13 overflow-hidden rounded-full shadow-lg"
           aria-label="Kakao"
         >

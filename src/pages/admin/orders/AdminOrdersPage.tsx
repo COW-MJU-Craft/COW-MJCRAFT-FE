@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import Reveal from '../../../components/ui/Reveal';
+import AdminBuyerEmailEditor from '../../../components/order/AdminBuyerEmailEditor';
 import AdminTrackingEditor from '../../../components/order/AdminTrackingEditor';
 import { canAdvanceTogether, nextOrderStatus } from '../../../features/order/advanceStatus';
 import { useConfirm } from '../../../components/confirm/useConfirm';
@@ -1061,6 +1062,20 @@ export default function AdminOrdersPage({ projectId, onOrdersChanged, onFilterCh
                   <h3 className="text-sm font-bold text-slate-900">
                     구매자 정보
                   </h3>
+                  {selectedOrderId !== null && detail.buyer && (
+                    <AdminBuyerEmailEditor
+                      key={`${selectedOrderId}-${detail.buyer.email ?? ''}`}
+                      orderId={selectedOrderId}
+                      initialEmail={detail.buyer.email ?? ''}
+                      disabled={actionLoading || detailLoading}
+                      onSaved={async () => {
+                        await loadDetail(selectedOrderId);
+                        toast.success(
+                          '주문자 이메일을 정정하고 새 조회 링크를 발송했어요.',
+                        );
+                      }}
+                    />
+                  )}
                   {buyerRows.length === 0 ? (
                     <p className="mt-2 text-sm text-slate-500">
                       구매자 정보가 없습니다.
