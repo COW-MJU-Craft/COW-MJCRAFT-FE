@@ -744,7 +744,6 @@ export default function ProjectItemDetailPage() {
       toast.error('프로젝트 정보를 찾을 수 없어요.');
       return;
     }
-
     const analyticsItem = toGA4ItemFromItem(item, projectId);
     trackGA4EcommerceEvent('begin_checkout', {
       items: [analyticsItem],
