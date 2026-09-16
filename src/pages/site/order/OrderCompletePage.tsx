@@ -13,11 +13,12 @@ import {
 import { ordersApi } from '../../../api/site/orders';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
+import CustomerEnrollmentCard from '../../../features/customer/CustomerEnrollmentCard';
 
 type OrderCompleteState = {
   orderNo?: string;
   status?: string;
-  lookupId?: string;
+  buyerEmail?: string;
   depositDeadline?: string;
   viewToken?: string;
   createdAt?: string;
@@ -35,7 +36,6 @@ type OrderCompleteState = {
 type DisplayOrder = {
   orderNo?: string;
   status?: string;
-  lookupId?: string;
   depositDeadline?: string;
   createdAt?: string;
   totalAmount?: number;
@@ -334,7 +334,6 @@ export default function OrderCompletePage() {
     () => ({
       orderNo: orderCompletePageQuery.data?.order?.orderNo ?? state.orderNo,
       status: orderCompletePageQuery.data?.order?.status ?? state.status,
-      lookupId: orderCompletePageQuery.data?.order?.lookupId ?? state.lookupId,
       depositDeadline:
         orderCompletePageQuery.data?.order?.depositDeadline ??
         state.depositDeadline,
@@ -373,9 +372,6 @@ export default function OrderCompletePage() {
     displayOrder.depositDeadline,
     displayOrder.orderNo,
   );
-  const canCopyLookupId = Boolean(
-    displayOrder.lookupId && displayOrder.lookupId.trim().length > 0,
-  );
   const paymentAccountNumberToCopy = useMemo(
     () =>
       pageContent.paymentInfo?.accountNumber?.trim() ||
@@ -409,12 +405,6 @@ export default function OrderCompletePage() {
         rawStatus: displayOrder.status,
       },
       {
-        key: 'lookupId',
-        label: '조회 아이디',
-        value: displayOrder.lookupId ?? '-',
-        valueBreakClassName: 'break-all',
-      },
-      {
         key: 'depositDeadline',
         label: '입금 마감',
         value: shouldHighlightDepositDeadline ? undefined : depositDeadlineText,
@@ -438,7 +428,6 @@ export default function OrderCompletePage() {
     [
       depositDeadlineText,
       displayOrder.finalAmount,
-      displayOrder.lookupId,
       displayOrder.orderNo,
       displayOrder.shippingFee,
       displayOrder.status,
@@ -447,16 +436,6 @@ export default function OrderCompletePage() {
       statusLabel,
     ],
   ).filter((row) => row.value && row.value !== '-');
-
-  const copyLookupId = async () => {
-    if (!canCopyLookupId) return;
-    try {
-      await navigator.clipboard.writeText(displayOrder.lookupId!.trim());
-      toast.success('조회 아이디를 복사했어요.');
-    } catch {
-      toast.error('복사에 실패했어요. 직접 입력해주세요.');
-    }
-  };
 
   const copyPaymentAccountNumber = async () => {
     if (!paymentAccountNumberToCopy) return;
@@ -512,6 +491,10 @@ export default function OrderCompletePage() {
         onCopyPaymentAccountNumber={() => void copyPaymentAccountNumber()}
       />
 
+      <Reveal className="mt-6">
+        <CustomerEnrollmentCard initialEmail={state.buyerEmail} />
+      </Reveal>
+
       <Reveal className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-6">
         <h2 className="text-lg font-bold text-slate-900 sm:text-lg">
           주문 핵심 정보
@@ -522,39 +505,17 @@ export default function OrderCompletePage() {
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 {row.label}
               </p>
-              {row.key === 'lookupId' && canCopyLookupId ? (
-                <div className="mt-1 flex items-center justify-between gap-3">
-                  <p
-                    className={[
-                      'text-base font-semibold text-slate-900',
-                      row.valueBreakClassName ?? 'wrap-break-word',
-                    ].join(' ')}
-                  >
-                    {row.value}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void copyLookupId()}
-                    aria-label="조회 아이디 복사"
-                    title="조회 아이디 복사"
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
-                  >
-                    <Copy size={12} aria-hidden="true" />
-                  </button>
-                </div>
-              ) : (
-                <p
-                  className={[
-                    'mt-1 text-base',
-                    row.valueBreakClassName ?? 'wrap-break-word',
-                    row.key === 'status'
-                      ? getStatusTextClass(row.rawStatus)
-                      : 'font-semibold text-slate-900',
-                  ].join(' ')}
-                >
-                  {row.value}
-                </p>
-              )}
+              <p
+                className={[
+                  'mt-1 text-base',
+                  row.valueBreakClassName ?? 'wrap-break-word',
+                  row.key === 'status'
+                    ? getStatusTextClass(row.rawStatus)
+                    : 'font-semibold text-slate-900',
+                ].join(' ')}
+              >
+                {row.value}
+              </p>
             </div>
           ))}
         </div>
@@ -565,7 +526,7 @@ export default function OrderCompletePage() {
           </p>
           <ol className="mt-2 space-y-1 text-[0.75rem] leading-5 text-amber-900/90 sm:mt-2 sm:space-y-1 sm:text-sm sm:leading-relaxed">
             <li>1. 입금 완료 후 주문 상태가 업데이트돼요.</li>
-            <li>2. '조회 아이디+비밀번호'로 주문 조회가 가능해요.</li>
+            <li>2. 이메일 인증 후 비밀번호를 등록하면 주문 조회가 가능해요.</li>
             <li>
               3. 이메일 링크 또는 주문 조회 페이지로 다시 확인할 수 있어요.
             </li>
@@ -585,6 +546,12 @@ export default function OrderCompletePage() {
             className="inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-5 text-[15px] font-semibold text-white hover:opacity-95 sm:h-11 sm:text-sm"
           >
             주문 조회하러 가기
+          </Link>
+          <Link
+            to="/orders/enroll"
+            className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 px-4 text-[15px] font-semibold text-slate-700 hover:bg-slate-50 sm:h-11 sm:px-5 sm:text-sm"
+          >
+            비밀번호 등록/재설정
           </Link>
           <Link
             to="/projects"
