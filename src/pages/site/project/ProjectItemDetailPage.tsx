@@ -7,15 +7,20 @@ import StatusBadge from '../../../components/ui/StatusBadge';
 import { SkeletonItemDetail } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../components/toast/useToast';
 import { itemsApi } from '../../../api/site/items';
-import type { ItemResponse } from '../../../api/site/items';
+import type { ItemOptionGroup, ItemResponse } from '../../../api/site/items';
 import type { ProjectStatus } from '../../../api/site/projects';
-import { addCartItem } from '../../../utils/cart/cart';
+import {
+  addCartItem,
+  createCartItem,
+  type CartItemOption,
+} from '../../../utils/cart/cart';
 import RouteMetadata from '../../../components/seo/RouteMetadata';
 import { getItemSaleTypeLabel } from '../../../constants/itemLabels';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { Package } from 'lucide-react';
+import { getPurchaseStock } from '../../../features/order/optionStock';
 
 function formatMoney(value?: number | null) {
   if (value === null || value === undefined) return '-';
@@ -43,10 +48,14 @@ type ProductGalleryProps = {
 type PurchaseCardProps = {
   item: ItemResponse;
   saleTypeLabel: string;
+  displayPrice: number;
   isPurchasable: boolean;
   isSoldOut: boolean;
   normalStockTag: NormalStockTag | null;
   groupBuySummary: string | null;
+  optionGroups: ItemOptionGroup[];
+  selectedOptionValueIds: Record<string, string>;
+  onSelectOption: (groupId: string, valueId: string) => void;
   onAddToCart: () => void;
   onBuyNow: () => void;
   showCartNotice: boolean;
@@ -147,10 +156,14 @@ function ProductGallery({
 function PurchaseCard({
   item,
   saleTypeLabel,
+  displayPrice,
   isPurchasable,
   isSoldOut,
   normalStockTag,
   groupBuySummary,
+  optionGroups,
+  selectedOptionValueIds,
+  onSelectOption,
   onAddToCart,
   onBuyNow,
   showCartNotice,
@@ -179,7 +192,7 @@ function PurchaseCard({
 
       <div className="mt-6 px-1">
         <p className="text-2xl font-bold text-slate-900">
-          {formatMoney(item.price)}원
+          {formatMoney(displayPrice)}원
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {item.saleType === 'NORMAL' && normalStockTag && (
@@ -206,6 +219,56 @@ function PurchaseCard({
           )}
         </div>
       </div>
+
+      {optionGroups.length > 0 && (
+        <div className="mt-6 space-y-4 border-t border-slate-200 pt-5">
+          {optionGroups.map((group) => (
+            <label key={group.id} className="block">
+              <span className="flex items-center gap-1 text-sm font-bold text-slate-800">
+                {group.name}
+                {group.required && <span className="text-rose-600">*</span>}
+              </span>
+              <select
+                value={selectedOptionValueIds[String(group.id)] ?? ''}
+                onChange={(event) =>
+                  onSelectOption(String(group.id), event.target.value)
+                }
+                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+              >
+                <option value="">
+                  {group.required
+                    ? `${group.name}을(를) 선택해주세요`
+                    : `${group.name} 선택 안 함`}
+                </option>
+                {group.values.map((value) => {
+                  const soldOut = value.stockQty === 0;
+                  const priceLabel =
+                    value.additionalPrice > 0
+                      ? ` (+${formatMoney(value.additionalPrice)}원)`
+                      : '';
+                  const stockLabel =
+                    value.stockQty !== null && value.stockQty !== undefined
+                      ? soldOut
+                        ? ' - 품절'
+                        : ` - 재고 ${value.stockQty}개`
+                      : '';
+
+                  return (
+                    <option key={value.id} value={value.id} disabled={soldOut}>
+                      {value.name}
+                      {priceLabel}
+                      {stockLabel}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          ))}
+          <p className="text-xs text-slate-500">
+            <span className="text-rose-600">*</span> 표시는 필수 선택 옵션입니다.
+          </p>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         {isPurchasable ? (
@@ -439,28 +502,56 @@ export default function ProjectItemDetailPage() {
     return merged.length > 0 ? merged : detailImages;
   }, [detailImages, item]);
 
-  const pushToCart = (target: ItemResponse) => {
-    if (!projectId) return false;
+  const [optionSelection, setOptionSelection] = useState<{
+    itemId: string;
+    valueIds: Record<string, string>;
+  }>({ itemId: '', valueIds: {} });
+  const selectedOptionValueIds = useMemo(
+    () =>
+      optionSelection.itemId === String(item?.id ?? '')
+        ? optionSelection.valueIds
+        : {},
+    [item?.id, optionSelection],
+  );
 
-    const stockQty = parseCount(target.stockQty);
-    const remainingQty = parseCount(target.remainingQty);
-    const availableStock = remainingQty ?? stockQty;
-
-    addCartItem({
-      itemId: target.id,
-      projectId,
-      name: target.name,
-      price: target.price,
-      thumbnailUrl: target.thumbnailUrl,
-      thumbnailKey: target.thumbnailKey,
-      status: target.status,
-      saleType: target.saleType,
-      maxQuantity:
-        target.saleType === 'NORMAL' ? availableStock : undefined,
-      quantity: 1,
+  const optionGroups = useMemo<ItemOptionGroup[]>(() => {
+    if (item?.saleType !== 'NORMAL') return [];
+    return item.options ?? [];
+  }, [item]);
+  const selectedOptions = useMemo<CartItemOption[]>(() => {
+    return optionGroups.flatMap((group) => {
+      const selectedValueId = selectedOptionValueIds[String(group.id)];
+      const value = group.values.find(
+        (candidate) => String(candidate.id) === selectedValueId,
+      );
+      if (!value) return [];
+      return [
+        {
+          groupId: String(group.id),
+          groupName: group.name,
+          valueId: String(value.id),
+          valueName: value.name,
+          additionalPrice: value.additionalPrice,
+          stockQty: value.stockQty,
+        },
+      ];
     });
-    return true;
-  };
+  }, [optionGroups, selectedOptionValueIds]);
+  const missingRequiredOptionGroup = useMemo(
+    () =>
+      optionGroups.find(
+        (group) =>
+          group.required && !selectedOptionValueIds[String(group.id)],
+      ),
+    [optionGroups, selectedOptionValueIds],
+  );
+  const optionAdditionalPrice = selectedOptions.reduce(
+    (sum, option) => sum + option.additionalPrice,
+    0,
+  );
+  const selectedOptionSoldOut = selectedOptions.some(
+    (option) => option.stockQty === 0,
+  );
 
   if (!hasValidParams) {
     return (
@@ -524,13 +615,25 @@ export default function ProjectItemDetailPage() {
   const targetQty = parseCount(item.targetQty);
   const achievementRate = parseCount(item.achievementRate);
   const availableStock = remainingQty ?? stockQty;
-  const isSoldOut =
-    item.saleType === 'NORMAL' &&
-    availableStock !== null &&
-    availableStock <= 0;
+  const { maxQuantity, isItemLevelSoldOut } = getPurchaseStock({
+    saleType: item.saleType,
+    availableStock,
+    hasOptionGroups: optionGroups.length > 0,
+    selectedOptionStockQtys: selectedOptions.map((option) => option.stockQty),
+  });
+  const isSoldOut = isItemLevelSoldOut || selectedOptionSoldOut;
   const isPurchasable = item.status === 'OPEN' && !isSoldOut;
+  const displayPrice = item.price + optionAdditionalPrice;
   const normalStockTag =
-    item.saleType === 'NORMAL' ? getNormalStockTag(availableStock) : null;
+    item.saleType === 'NORMAL'
+      ? optionGroups.length > 0
+        ? selectedOptions.length === 0
+          ? { label: '옵션 선택 후 재고 확인', tone: 'neutral' as const }
+          : maxQuantity === undefined
+            ? { label: '옵션별 재고', tone: 'neutral' as const }
+            : getNormalStockTag(maxQuantity)
+        : getNormalStockTag(availableStock)
+      : null;
   const groupBuySummary =
     item.saleType === 'GROUPBUY'
       ? targetQty !== null && fundedQty !== null
@@ -539,6 +642,46 @@ export default function ProjectItemDetailPage() {
           ? `달성률 ${achievementRate}%`
           : null
       : null;
+
+  const selectOption = (groupId: string, valueId: string) => {
+    const selectedItemId = String(item.id);
+    setOptionSelection((previous) => ({
+      itemId: selectedItemId,
+      valueIds: {
+        ...(previous.itemId === selectedItemId ? previous.valueIds : {}),
+        [groupId]: valueId,
+      },
+    }));
+  };
+
+  const validateSelectedOptions = () => {
+    if (missingRequiredOptionGroup) {
+      toast.error(`${missingRequiredOptionGroup.name} 옵션을 선택해주세요.`);
+      return false;
+    }
+    if (selectedOptionSoldOut) {
+      toast.error('선택한 옵션은 품절되었어요. 다른 옵션을 선택해주세요.');
+      return false;
+    }
+    return true;
+  };
+
+  const createSelectedCartItem = () => {
+    if (!projectId) return null;
+    return createCartItem({
+      itemId: item.id,
+      projectId,
+      name: item.name,
+      price: displayPrice,
+      thumbnailUrl: item.thumbnailUrl,
+      thumbnailKey: item.thumbnailKey,
+      status: item.status,
+      saleType: item.saleType,
+      selectedOptions,
+      maxQuantity,
+      quantity: 1,
+    });
+  };
 
   const handleAddToCart = () => {
     if (isSoldOut) {
@@ -549,11 +692,13 @@ export default function ProjectItemDetailPage() {
       toast.info('진행중인 상품만 장바구니에 담을 수 있어요.');
       return;
     }
-    const ok = pushToCart(item);
-    if (!ok) {
+    if (!validateSelectedOptions()) return;
+    const cartItem = createSelectedCartItem();
+    if (!cartItem) {
       toast.error('프로젝트 정보를 찾을 수 없어요.');
       return;
     }
+    addCartItem(cartItem);
     setCartNoticeForKey(`${projectId ?? ''}:${itemId ?? ''}`);
     toast.success('장바구니에 상품을 담았어요.');
   };
@@ -571,22 +716,17 @@ export default function ProjectItemDetailPage() {
       toast.error('프로젝트 정보를 찾을 수 없어요.');
       return;
     }
+    if (!validateSelectedOptions()) return;
+    const cartItem = createSelectedCartItem();
+    if (!cartItem) {
+      toast.error('프로젝트 정보를 찾을 수 없어요.');
+      return;
+    }
 
     navigate('/order', {
       state: {
         source: 'direct',
-        items: [
-          {
-            itemId: String(item.id),
-            projectId: String(projectId),
-            name: item.name,
-            price: item.price,
-            thumbnailUrl: item.thumbnailUrl ?? null,
-            status: item.status,
-            saleType: item.saleType,
-            quantity: 1,
-          },
-        ],
+        items: [cartItem],
       },
     });
   };
@@ -622,10 +762,14 @@ export default function ProjectItemDetailPage() {
             <PurchaseCard
               item={item}
               saleTypeLabel={saleTypeLabel}
+              displayPrice={displayPrice}
               isPurchasable={isPurchasable}
               isSoldOut={isSoldOut}
               normalStockTag={normalStockTag}
               groupBuySummary={groupBuySummary}
+              optionGroups={optionGroups}
+              selectedOptionValueIds={selectedOptionValueIds}
+              onSelectOption={selectOption}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
               showCartNotice={showCartNotice}

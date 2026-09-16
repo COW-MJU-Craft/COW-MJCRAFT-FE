@@ -4,23 +4,42 @@ import type { OrderDraft } from './types';
 export function buildOrderItemsPayload(
   items: OrderDraft['items'],
 ): OrderCreateRequest['items'] {
-  const aggregatedItems = items.reduce<Record<number, number>>(
+  const aggregatedItems = items.reduce<
+    Record<
+      string,
+      { projectItemId: number; quantity: number; optionValueIds: number[] }
+    >
+  >(
     (acc, item) => {
       const projectItemId = Number(item.itemId);
       if (!Number.isFinite(projectItemId)) return acc;
       const quantity = Number.isFinite(item.quantity)
         ? Math.max(1, item.quantity)
         : 1;
-      acc[projectItemId] = (acc[projectItemId] ?? 0) + quantity;
+      const optionValueIds = (item.selectedOptions ?? [])
+        .map((option) => Number(option.valueId))
+        .filter(Number.isFinite)
+        .sort((left, right) => left - right);
+      const key = `${projectItemId}:${optionValueIds.join(',')}`;
+      const current = acc[key];
+
+      acc[key] = {
+        projectItemId,
+        optionValueIds,
+        quantity: (current?.quantity ?? 0) + quantity,
+      };
       return acc;
     },
     {},
   );
 
-  return Object.entries(aggregatedItems).map(([projectItemId, quantity]) => ({
-    projectItemId: Number(projectItemId),
-    quantity,
-  }));
+  return Object.values(aggregatedItems).map(
+    ({ projectItemId, quantity, optionValueIds }) => ({
+      projectItemId,
+      quantity,
+      ...(optionValueIds.length > 0 ? { optionValueIds } : {}),
+    }),
+  );
 }
 
 export function buildOrderCreatePayload(
@@ -30,8 +49,6 @@ export function buildOrderCreatePayload(
   if (items.length === 0) return null;
 
   return {
-    lookupId: draft.lookup.lookupId.trim(),
-    password: draft.lookup.password,
     depositorName: draft.payment.depositorName.trim(),
     privacyAgreed: draft.agreements.privacy,
     refundAgreed: draft.agreements.noRefund,

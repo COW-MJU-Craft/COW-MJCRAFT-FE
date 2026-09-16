@@ -5,7 +5,6 @@ import type {
   CampusType,
   FulfillmentForm,
   FulfillmentMethod,
-  LookupForm,
   OrderStep,
   PaymentForm,
 } from './types';
@@ -36,12 +35,6 @@ export const DEFAULT_BUYER: BuyerForm = {
   refundAccount: '',
   referralSource: '',
   email: '',
-};
-
-export const DEFAULT_LOOKUP: LookupForm = {
-  lookupId: '',
-  password: '',
-  passwordConfirm: '',
 };
 
 export const DEFAULT_PAYMENT: PaymentForm = {
