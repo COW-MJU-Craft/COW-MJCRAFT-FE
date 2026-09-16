@@ -1,3 +1,4 @@
+import { getCurrentSessionAttribution } from './analyticsAttribution';
 import type { GA4EcommerceItem } from './analyticsEcommerce';
 
 export const GA4_MEASUREMENT_ID = (
@@ -81,14 +82,19 @@ export const initializeGA4 = () => {
 export const trackGA4PageView = (path: string) => {
   if (!isGA4Enabled || typeof window === 'undefined') return;
 
-  initializeGA4();
+  try {
+    initializeGA4();
 
-  window.gtag?.('event', 'page_view', {
-    page_path: path,
-    page_location: window.location.href,
-    page_title: document.title,
-    ...getDebugParams(),
-  });
+    window.gtag?.('event', 'page_view', {
+      page_path: path,
+      page_location: window.location.href,
+      page_title: document.title,
+      ...getCurrentSessionAttribution(),
+      ...getDebugParams(),
+    });
+  } catch {
+    // Analytics failures must never affect the site experience.
+  }
 };
 
 export const trackGA4Event = (eventName: string, params: GtagEventParams = {}) => {
@@ -98,6 +104,7 @@ export const trackGA4Event = (eventName: string, params: GtagEventParams = {}) =
     initializeGA4();
     window.gtag?.('event', eventName, {
       ...params,
+      ...getCurrentSessionAttribution(),
       ...getDebugParams(),
     });
   } catch {
