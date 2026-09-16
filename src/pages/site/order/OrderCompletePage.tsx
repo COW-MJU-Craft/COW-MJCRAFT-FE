@@ -10,6 +10,7 @@ import {
   isOrderCompletePageNotFoundError,
   orderCompletePageApi,
 } from '../../../api/site/orderCompletePage';
+import { ordersApi } from '../../../api/site/orders';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
 import CustomerEnrollmentCard from '../../../features/customer/CustomerEnrollmentCard';
@@ -298,6 +299,12 @@ export default function OrderCompletePage() {
     enabled: Boolean(token),
     retry: 1,
   });
+  const orderDetailQuery = useQuery({
+    queryKey: ['order-complete-detail', token],
+    queryFn: () => ordersApi.viewOrder(token),
+    enabled: Boolean(token),
+    retry: 1,
+  });
 
   const stateContent = useMemo<OrderCompletePageContent>(() => {
     return {
@@ -317,10 +324,12 @@ export default function OrderCompletePage() {
       paymentInfo: queriedContent.paymentInfo ?? stateContent.paymentInfo,
     };
   }, [queriedContent, stateContent]);
-  const items = useMemo(
-    () => orderCompletePageQuery.data?.items ?? EMPTY_ITEMS,
-    [orderCompletePageQuery.data?.items],
-  );
+  const items = useMemo(() => {
+    const detailedItems = orderDetailQuery.data?.items ?? EMPTY_ITEMS;
+    return detailedItems.length > 0
+      ? detailedItems
+      : orderCompletePageQuery.data?.items ?? EMPTY_ITEMS;
+  }, [orderCompletePageQuery.data?.items, orderDetailQuery.data?.items]);
   const displayOrder = useMemo<DisplayOrder>(
     () => ({
       orderNo: orderCompletePageQuery.data?.order?.orderNo ?? state.orderNo,
@@ -580,6 +589,13 @@ export default function OrderCompletePage() {
                       {typeof item.unitPrice === 'number' &&
                         ` · 단가 ${formatMoney(item.unitPrice)}`}
                     </p>
+                    {item.options && item.options.length > 0 && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.options
+                          .map((option) => `${option.groupName}: ${option.valueName}`)
+                          .join(' · ')}
+                      </p>
+                    )}
                   </div>
                   <p className="text-right text-[1.4rem] font-bold text-slate-900 sm:text-sm">
                     {formatMoney(item.lineAmount) ?? '-'}

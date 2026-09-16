@@ -171,6 +171,40 @@ function toOrderCompleteItem(raw: unknown): OrderCompleteItem | null {
   const quantity = pickNumber(record, 'quantity');
   const unitPrice = pickNumber(record, 'unitPrice', 'unit_price');
   const lineAmount = pickNumber(record, 'lineAmount', 'line_amount');
+  const options = Array.isArray(record.options)
+    ? record.options.reduce<NonNullable<OrderCompleteItem['options']>>(
+        (acc, rawOption) => {
+          const option = asRecord(rawOption);
+          const groupName = pickString(
+            option,
+            'optionGroupNameSnapshot',
+            'option_group_name_snapshot',
+            'groupName',
+          );
+          const valueName = pickString(
+            option,
+            'optionValueNameSnapshot',
+            'option_value_name_snapshot',
+            'valueName',
+            'name',
+          );
+          if (!groupName || !valueName) return acc;
+          acc.push({
+            groupName,
+            valueName,
+            additionalPrice:
+              pickNumber(
+                option,
+                'additionalPriceSnapshot',
+                'additional_price_snapshot',
+                'additionalPrice',
+              ) ?? 0,
+          });
+          return acc;
+        },
+        [],
+      )
+    : [];
 
   if (
     projectItemId === undefined &&
@@ -188,6 +222,7 @@ function toOrderCompleteItem(raw: unknown): OrderCompleteItem | null {
     quantity,
     unitPrice,
     lineAmount,
+    options,
   };
 }
 
