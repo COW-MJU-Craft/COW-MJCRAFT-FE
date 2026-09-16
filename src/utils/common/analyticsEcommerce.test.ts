@@ -47,6 +47,7 @@ describe('toGA4ItemsFromQuote', () => {
           quantity: 2,
           unitPrice: 3000,
           lineAmount: 6000,
+          optionNames: [],
         },
       ],
       totalAmount: 6000,
