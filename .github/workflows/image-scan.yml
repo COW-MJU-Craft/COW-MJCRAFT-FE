@@ -50,6 +50,7 @@ jobs:
           tags: cowmjucraft-fe:scan
           build-args: |
             BUILD_SHA=${{ github.sha }}
+            SKIP_PRERENDER=true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

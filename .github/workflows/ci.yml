@@ -17,7 +17,7 @@ jobs:
   lint-build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # VITE_API_BASE_URL은 build(npm run build)에서만 필요하다.
+    # VITE_API_BASE_URL은 Vite client bundle에만 필요하다.
     # workflow 전체에 걸면 test job도 이 값을 물려받아
     # "env 미설정" 케이스를 검증하는 테스트가 깨지므로 이 job에만 한정한다.
     env:
@@ -36,8 +36,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Type check + Build
-        run: npm run build
+      # 공개 API 장애가 코드 검증을 막지 않도록 PR CI에서는 prerender를 실행하지 않는다.
+      # main 배포 workflow의 Docker build는 별도 full build를 계속 사용한다.
+      - name: Type check + Client build
+        run: npm run build:client
 
   secret-scan:
     runs-on: ubuntu-latest
@@ -87,7 +89,7 @@ jobs:
   e2e-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # 프로덕션 빌드(vite build/preview) 실행에 필요 — lint-build job과 같은 이유
+    # 프로덕션 client bundle(vite build/preview) 실행에 필요 — lint-build job과 같은 이유
     env:
       VITE_API_BASE_URL: https://api.mju-craft.shop/api
     steps:
@@ -104,8 +106,8 @@ jobs:
       - name: Playwright 브라우저 설치
         run: npx playwright install --with-deps chromium
 
-      - name: Build
-        run: npm run build
+      - name: Client build
+        run: npm run build:client
 
       - name: Playwright 스모크 테스트
         run: npm run test:e2e
@@ -131,6 +133,8 @@ jobs:
         with:
           context: .
           push: false
+          build-args: |
+            SKIP_PRERENDER=true
           cache-from: type=gha
 
   agent-config:
