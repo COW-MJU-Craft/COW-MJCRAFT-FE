@@ -22,6 +22,7 @@ import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
 import { ApiError } from '../../../api/core/client';
 import { adminProjectsApi, type AdminProjectResponse, uploadToPresignedUrl } from '../../../api/admin/projects';
+import { getNormalSaleStockQty } from '../../../utils/admin/itemStock';
 import {
   adminItemsApi,
   type AdminItemOptionGroup,
@@ -34,7 +35,7 @@ import {
   type PresignPutItem,
 } from '../../../api/admin/items';
 
-type ValidationField = 'name' | 'description' | 'price' | 'targetQty' | 'journalFile';
+type ValidationField = 'name' | 'description' | 'price' | 'stockQty' | 'targetQty' | 'journalFile';
 type ValidationResult = { field: ValidationField; message: string };
 
 type ImageItem = {
@@ -707,6 +708,9 @@ export default function AdminItemDetailPage() {
       return { field: 'description', message: '상세 설명을 입력해주세요' };
     if (!Number.isFinite(current.price) || current.price <= 0)
       return { field: 'price', message: '가격을 입력해주세요' };
+    if (current.saleType === 'NORMAL' && getNormalSaleStockQty(current.stockQty) === null) {
+      return { field: 'stockQty', message: '일반 판매 상품은 재고 수량을 0 이상으로 입력해주세요' };
+    }
     if (current.saleType === 'GROUPBUY' && (!current.targetQty || current.targetQty <= 0)) {
       return { field: 'targetQty', message: '목표 수량을 입력해주세요' };
     }
@@ -744,9 +748,7 @@ export default function AdminItemDetailPage() {
       fundedQty: current.saleType === 'GROUPBUY' ? Number(current.fundedQty ?? 0) : null,
       stockQty:
         current.saleType === 'NORMAL'
-          ? current.stockQty === undefined || current.stockQty === null
-            ? null
-            : Number(current.stockQty)
+          ? getNormalSaleStockQty(current.stockQty)
           : null,
       thumbnailKey: current.thumbnailKey?.trim(),
     };
@@ -1558,11 +1560,10 @@ export default function AdminItemDetailPage() {
                         }
                         onClick={() =>
                           updateItem({
-                            saleType: option.value,
-                            targetQty: option.value === 'GROUPBUY' ? item.targetQty : undefined,
-                            fundedQty: option.value === 'GROUPBUY' ? item.fundedQty : 0,
-                            stockQty: option.value === 'NORMAL' ? item.stockQty : undefined,
-                          })
+                          saleType: option.value,
+                          targetQty: option.value === 'GROUPBUY' ? item.targetQty : undefined,
+                          fundedQty: option.value === 'GROUPBUY' ? item.fundedQty : 0,
+                        })
                         }
                         className={[
                           'rounded-2xl border px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45',
