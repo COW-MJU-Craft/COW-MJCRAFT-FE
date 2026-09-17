@@ -40,6 +40,7 @@ import AdminFormDetailPage from './pages/admin/forms/AdminFormDetailPage';
 import FloatingSns from './components/social/FloatingSns';
 import GoogleAnalytics from './components/analytics/GoogleAnalytics';
 import { ApplicationRouteMetadata } from './components/seo/RouteMetadata';
+import DeploymentVersion from './components/layout/DeploymentVersion';
 
 export default function App() {
   const location = useLocation();
@@ -133,6 +134,7 @@ export default function App() {
         </Route>
       </Routes>
       {!hideFloatingSns && <FloatingSns />}
+      <DeploymentVersion />
     </>
   );
 }
