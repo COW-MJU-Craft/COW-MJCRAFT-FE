@@ -50,9 +50,26 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trigger Coolify deploy
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_FE_WEBHOOK_URL }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
         run: |
-          curl -fSs -X GET "${{ secrets.COOLIFY_FE_WEBHOOK_URL }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
+          if [ -z "$COOLIFY_WEBHOOK_URL" ] || [ -z "$COOLIFY_API_TOKEN" ]; then
+            echo "::error::COOLIFY_FE_WEBHOOK_URL 또는 COOLIFY_API_TOKEN secret이 설정되지 않았습니다."
+            exit 1
+          fi
+
+          # GitHub-hosted runner가 접근 가능한 Coolify HTTPS webhook을 사용한다.
+          # 연결 불가 상태를 장시간 대기하지 않고, image push 후 원인을 명확히 남긴다.
+          curl --fail --silent --show-error --output /dev/null \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 3 \
+            --retry-connrefused \
+            --write-out 'Coolify webhook HTTP %{http_code}\n' \
+            --request GET "$COOLIFY_WEBHOOK_URL" \
+            --header "Authorization: Bearer $COOLIFY_API_TOKEN"
 
       - name: Verify deployment (smoke check)
         env:
