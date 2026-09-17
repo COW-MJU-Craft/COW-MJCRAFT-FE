@@ -25,7 +25,14 @@ ENV VITE_GA4_DEBUG_MODE=$VITE_GA4_DEBUG_MODE
 ENV VITE_SHOW_GA4_FOOTER_BADGE=$VITE_SHOW_GA4_FOOTER_BADGE
 ENV VITE_GA4_REPORT_URL=$VITE_GA4_REPORT_URL
 
-RUN npm run build
+# PR/이미지 스캔 검증은 외부 공개 API 상태와 독립적으로 번들·컨테이너 구성을 확인한다.
+# 실제 배포는 기본값(false)으로 full build를 실행해 prerender 실패 시 배포하지 않는다.
+ARG SKIP_PRERENDER=false
+RUN case "$SKIP_PRERENDER" in \
+      true) npm run build:client ;; \
+      false) npm run build ;; \
+      *) echo "SKIP_PRERENDER must be true or false" >&2; exit 1 ;; \
+    esac
 
 # 배포된 이미지가 실제로 어떤 커밋인지 런타임에 확인할 수 있도록 버전 파일을 심는다.
 # (로컬 빌드 등 값이 없을 때는 "unknown"으로 남겨 스모크 체크가 실패로 감지하게 한다.)
