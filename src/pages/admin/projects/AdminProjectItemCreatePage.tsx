@@ -21,6 +21,7 @@ import MarkdownEditor from '../../../components/ui/MarkdownEditor';
 import { useConfirm } from '../../../components/confirm/useConfirm';
 import { useToast } from '../../../components/toast/useToast';
 import { ApiError } from '../../../api/core/client';
+import { getNormalSaleStockQty } from '../../../utils/admin/itemStock';
 import {
   adminProjectsApi,
   type AdminProjectCategory,
@@ -40,6 +41,7 @@ type ValidationField =
   | 'name'
   | 'description'
   | 'price'
+  | 'stockQty'
   | 'thumbnail'
   | 'targetQty'
   | 'journalFile';
@@ -457,6 +459,12 @@ export default function AdminProjectItemCreatePage() {
         return { field: 'description', message: '상세 설명을 입력해주세요' };
       if (!Number.isFinite(current.price) || current.price <= 0)
         return { field: 'price', message: '가격을 입력해주세요' };
+      if (current.saleType === 'NORMAL' && getNormalSaleStockQty(current.stockQty) === null) {
+        return {
+          field: 'stockQty',
+          message: '일반 판매 상품은 재고 수량을 0 이상으로 입력해주세요',
+        };
+      }
       if (
         current.saleType === 'GROUPBUY' &&
         (!current.targetQty || current.targetQty <= 0)
@@ -504,9 +512,7 @@ export default function AdminProjectItemCreatePage() {
         current.saleType === 'GROUPBUY' ? Number(current.fundedQty ?? 0) : null,
       stockQty:
         current.saleType === 'NORMAL'
-          ? current.stockQty === undefined || current.stockQty === null
-            ? null
-            : Number(current.stockQty)
+          ? getNormalSaleStockQty(current.stockQty)
           : null,
     } as const;
     return payload;
@@ -1413,10 +1419,6 @@ export default function AdminProjectItemCreatePage() {
                                 : undefined,
                             fundedQty:
                               option.value === 'GROUPBUY' ? item.fundedQty : 0,
-                            stockQty:
-                              option.value === 'NORMAL'
-                                ? item.stockQty
-                                : undefined,
                           })
                         }
                         className={[
