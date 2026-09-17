@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && npm run prerender && npm run verify:prerender",
+    "build:client": "tsc -b && vite build",
+    "build": "npm run build:client && npm run prerender && npm run verify:prerender",
     "prerender": "node scripts/prerender.mjs",
     "verify:prerender": "node scripts/verify-prerender.mjs",
     "test:prerender": "node --test scripts/prerender.test.mjs",
