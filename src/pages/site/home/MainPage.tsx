@@ -203,7 +203,6 @@ export default function MainPage() {
                       <ProjectCard
                         project={project}
                         showApplyAction={false}
-                        size="main"
                       />
                     </Reveal>
                   </div>
