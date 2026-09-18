@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   DndContext,
   PointerSensor,
@@ -309,6 +309,7 @@ function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImage
 
 export default function AdminItemDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { itemId } = useParams();
   const confirm = useConfirm();
   const toast = useToast();
@@ -343,6 +344,8 @@ export default function AdminItemDetailPage() {
   const initialItemRef = useRef<AdminItemForm | null>(null);
   const thumbnailSectionRef = useRef<HTMLDivElement | null>(null);
   const detailImagesSectionRef = useRef<HTMLDivElement | null>(null);
+  const optionsSectionRef = useRef<HTMLElement | null>(null);
+  const hasScrolledToOptionsRef = useRef(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -470,6 +473,24 @@ export default function AdminItemDetailPage() {
     }
     void loadOptionGroups();
   }, [canManageOptions, loadOptionGroups]);
+
+  useEffect(() => {
+    if (location.hash !== '#options') {
+      hasScrolledToOptionsRef.current = false;
+      return;
+    }
+    if (!canManageOptions || hasScrolledToOptionsRef.current) {
+      return;
+    }
+
+    hasScrolledToOptionsRef.current = true;
+    window.requestAnimationFrame(() => {
+      optionsSectionRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    });
+  }, [canManageOptions, location.hash]);
 
   const updateItem = useCallback((patch: Partial<AdminItemForm>) => {
     setItem((prev) => {
@@ -1641,7 +1662,11 @@ export default function AdminItemDetailPage() {
             </div>
 
             {canManageOptions && (
-              <section className="border-y border-slate-200 py-6">
+              <section
+                id="options"
+                ref={optionsSectionRef}
+                className="scroll-mt-24 border-y border-slate-200 py-6"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h2 className="text-base font-bold text-slate-900">상품 옵션</h2>
@@ -1885,6 +1910,19 @@ export default function AdminItemDetailPage() {
                     })}
                   </div>
                 )}
+              </section>
+            )}
+
+            {item.itemType === 'PHYSICAL' && !canManageOptions && (
+              <section className="border-y border-slate-200 py-6">
+                <h2 className="text-base font-bold text-slate-900">상품 옵션</h2>
+                <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                  <p className="font-bold">공구 상품은 옵션을 지원하지 않습니다.</p>
+                  <p className="mt-1 text-xs leading-relaxed">
+                    사이즈나 색상 옵션이 필요하면 위 판매 유형을 일반으로
+                    변경한 뒤 상품을 저장해주세요.
+                  </p>
+                </div>
               </section>
             )}
 
