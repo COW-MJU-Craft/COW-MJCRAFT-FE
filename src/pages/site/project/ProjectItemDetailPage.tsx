@@ -22,7 +22,10 @@ import remarkGfm from 'remark-gfm';
 import { Package } from 'lucide-react';
 import { trackGA4EcommerceEvent } from '../../../utils/common/analytics';
 import { toGA4ItemFromItem } from '../../../utils/common/analyticsEcommerce';
-import { getPurchaseStock } from '../../../features/order/optionStock';
+import {
+  getPurchaseStock,
+  isOptionItemSoldOut,
+} from '../../../features/order/optionStock';
 
 function formatMoney(value?: number | null) {
   if (value === null || value === undefined) return '-';
@@ -638,13 +641,19 @@ export default function ProjectItemDetailPage() {
     hasOptionGroups: optionGroups.length > 0,
     selectedOptionStockQtys: selectedOptions.map((option) => option.stockQty),
   });
-  const isSoldOut = isItemLevelSoldOut || selectedOptionSoldOut;
+  const optionItemSoldOut = isOptionItemSoldOut(optionGroups);
+  const isSoldOut =
+    isItemLevelSoldOut ||
+    selectedOptionSoldOut ||
+    optionItemSoldOut;
   const isPurchasable = item.status === 'OPEN' && !isSoldOut;
   const displayPrice = item.price + optionAdditionalPrice;
   const normalStockTag =
     item.saleType === 'NORMAL'
       ? optionGroups.length > 0
-        ? selectedOptions.length === 0
+        ? optionItemSoldOut
+          ? { label: '옵션 품절', tone: 'danger' as const }
+          : selectedOptions.length === 0
           ? { label: '옵션 선택 후 재고 확인', tone: 'neutral' as const }
           : maxQuantity === undefined
             ? { label: '옵션별 재고', tone: 'neutral' as const }
