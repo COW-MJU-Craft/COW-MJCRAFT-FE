@@ -613,11 +613,11 @@ export default function ProjectDetailPage() {
 
             </div>
 
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
+            <div className="relative aspect-video overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
               {carouselImages.length > 0 ? (
                 <>
                   <div
-                    className="flex h-64 md:h-73"
+                    className="flex h-full"
                     style={{
                       width: `${carouselImages.length * 100}%`,
                       transform: `translateX(-${(carouselIndex / carouselImages.length) * 100}%)`,
@@ -690,7 +690,7 @@ export default function ProjectDetailPage() {
                   )}
                 </>
               ) : (
-                <div className="flex h-72 items-center justify-center text-sm font-semibold text-slate-400 md:h-80">
+                <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
                   대표 이미지 없음
                 </div>
               )}

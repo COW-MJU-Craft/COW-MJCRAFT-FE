@@ -245,10 +245,10 @@ function SortableImageCard({
         <img
           src={src}
           alt="상세 이미지 미리보기"
-          className="h-28 w-full object-cover"
+          className="aspect-video w-full object-cover"
         />
       ) : (
-        <div className="flex h-28 items-center justify-center text-[10px] font-semibold text-slate-400">
+        <div className="flex aspect-video items-center justify-center text-[10px] font-semibold text-slate-400">
           이미지가 없어요
         </div>
       )}
@@ -1106,11 +1106,11 @@ export default function AdminProjectEditorPage() {
             )}
 
             {thumbnailSrc && (
-              <div className="mt-3 overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
+              <div className="mt-3 aspect-video overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
                 <img
                   src={thumbnailSrc}
                   alt="대표 이미지 미리보기"
-                  className="h-64 w-full object-cover"
+                  className="h-full w-full object-cover"
                 />
                 <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 bg-white px-4 py-3">
                   <label className="cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
@@ -1151,7 +1151,7 @@ export default function AdminProjectEditorPage() {
             </div>
 
             <p className="mt-1 text-[11px] text-slate-400">
-              상세 이미지는 여러 장 등록할 수 있어요
+              상세 이미지는 16:9 비율로 여러 장 등록할 수 있어요
             </p>
 
             <label
