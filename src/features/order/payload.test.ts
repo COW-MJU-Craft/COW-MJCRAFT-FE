@@ -34,6 +34,7 @@ function createDraft(patch: Partial<OrderDraft> = {}): OrderDraft {
       refundAccount: ' 110-123-456789 ',
       referralSource: ' 에브리타임 ',
       email: ' test@example.com ',
+      password: 'password123!',
     },
     payment: {
       depositorName: ' 홍길동 ',
@@ -82,6 +83,8 @@ describe('buildOrderCreatePayload', () => {
     );
 
     expect(payload).toMatchObject({
+      lookupId: 'test@example.com',
+      password: 'password123!',
       depositorName: '홍길동',
       items: [{ projectItemId: 10, quantity: 5 }],
       buyer: {
@@ -97,8 +100,7 @@ describe('buildOrderCreatePayload', () => {
         receiverPhone: '010-1234-5678',
       },
     });
-    expect(payload).not.toHaveProperty('lookupId');
-    expect(payload).not.toHaveProperty('password');
+    expect(payload?.buyer.email).toBe('test@example.com');
   });
 
   it('유효한 숫자 itemId가 없으면 null을 반환한다', () => {

@@ -27,6 +27,7 @@ export type BuyerForm = {
   refundAccount: string;
   referralSource: string;
   email: string;
+  password: string;
 };
 
 export type PaymentForm = {
