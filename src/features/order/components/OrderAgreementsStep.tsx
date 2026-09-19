@@ -32,9 +32,9 @@ export default function OrderAgreementsStep({
                 onChange={(event) =>
                   onAgreementChange(agreement.key, event.target.checked)
                 }
-                className="mt-1 h-5 w-5 rounded-sm border-2 border-slate-300 text-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1 h-5 w-5 shrink-0 rounded-sm border-2 border-slate-300 text-primary focus:ring-2 focus:ring-primary/20"
               />
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-bold text-slate-900">
                   {agreement.title}{' '}
                   <span className="text-slate-700">[필수]</span>{' '}
