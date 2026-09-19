@@ -4,15 +4,6 @@ function isBlank(value: string) {
   return value.trim().length === 0;
 }
 
-function isValidLookupPassword(value: string) {
-  return (
-    value.length >= 8 &&
-    new TextEncoder().encode(value).length <= 72 &&
-    /[\p{L}]/u.test(value) &&
-    /\d/.test(value)
-  );
-}
-
 export function validateBuyerStep(draft: OrderDraft): string | null {
   const { buyer, payment } = draft;
   const isStudent = buyer.buyerType === 'STUDENT';
@@ -51,17 +42,7 @@ export function validateFulfillmentStep(draft: OrderDraft): string | null {
 }
 
 export function validateFinalStep(draft: OrderDraft): string | null {
-  const { lookup, buyer } = draft;
-  if (isBlank(lookup.lookupId)) return '조회 아이디를 입력해주세요.';
-  if (isBlank(lookup.password)) return '조회 비밀번호를 입력해주세요.';
-  if (!isValidLookupPassword(lookup.password)) {
-    return '조회 비밀번호는 영문자와 숫자를 포함해 8자 이상으로 입력해주세요.';
-  }
-  if (isBlank(lookup.passwordConfirm))
-    return '조회 비밀번호 확인을 입력해주세요.';
-  if (lookup.password !== lookup.passwordConfirm) {
-    return '조회 비밀번호와 비밀번호 확인이 일치하지 않아요.';
-  }
+  const { buyer } = draft;
   if (isBlank(buyer.email)) return '이메일을 입력해주세요.';
   return null;
 }

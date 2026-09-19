@@ -18,6 +18,7 @@ import PayoutsPage from './pages/site/payout/PayoutsPage';
 import CartPage from './pages/site/cart/CartPage';
 import OrderPage from './pages/site/order/OrderPage';
 import OrderCompletePage from './pages/site/order/OrderCompletePage';
+import CustomerEnrollmentPage from './pages/site/order/CustomerEnrollmentPage';
 import OrderLookupPage from './pages/site/order/OrderLookupPage';
 import OrderViewPage from './pages/site/order/OrderViewPage';
 import LoginPage from './pages/site/auth/LoginPage';
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order" element={<OrderPage />} />
           <Route path="/order/complete" element={<OrderCompletePage />} />
+          <Route path="/orders/enroll" element={<CustomerEnrollmentPage />} />
           <Route path="/orders/lookup" element={<OrderLookupPage />} />
           <Route path="/orders/view" element={<OrderViewPage />} />
           <Route path="/payouts" element={<PayoutsPage />} />
