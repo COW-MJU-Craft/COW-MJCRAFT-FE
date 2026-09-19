@@ -23,6 +23,13 @@ import { useToast } from '../../../components/toast/useToast';
 import { ApiError } from '../../../api/core/client';
 import { getNormalSaleStockQty } from '../../../utils/admin/itemStock';
 import {
+  pruneOptionDrafts,
+  saveOptionDrafts,
+  validateOptionDrafts,
+  type OptionGroupDraft,
+} from '../../../utils/admin/itemOptionDraft';
+import ItemOptionDraftEditor from '../../../features/adminItem/ItemOptionDraftEditor';
+import {
   adminProjectsApi,
   type AdminProjectCategory,
   uploadToPresignedUrl,
@@ -317,8 +324,10 @@ export default function AdminProjectItemCreatePage() {
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [isEditingFundedQty, setIsEditingFundedQty] = useState(false);
   const [isEditingStockQty, setIsEditingStockQty] = useState(false);
+  const [optionDrafts, setOptionDrafts] = useState<OptionGroupDraft[]>([]);
 
   const pendingThumbnailRef = useRef<File | null>(null);
+  const optionsPersistedRef = useRef(false);
   const objectUrlsRef = useRef<string[]>([]);
   const itemRef = useRef<AdminItemForm | null>(null);
   const initialItemRef = useRef<AdminItemForm | null>(null);
@@ -1015,6 +1024,16 @@ export default function AdminProjectItemCreatePage() {
       updateItem({ validationError: validation.message });
       return;
     }
+    const optionsSupported =
+      nextForSave.itemType === 'PHYSICAL' && nextForSave.saleType === 'NORMAL';
+    const optionError = optionsSupported
+      ? validateOptionDrafts(optionDrafts)
+      : null;
+    if (optionError) {
+      updateItem({ validationError: optionError });
+      return;
+    }
+    const optionsToSave = optionsSupported ? pruneOptionDrafts(optionDrafts) : [];
 
     setSaving(true);
     setError(null);
@@ -1039,6 +1058,21 @@ export default function AdminProjectItemCreatePage() {
           Boolean(img.imageId),
         ).length;
         await uploadImages(String(saved.id), pendingImages, baseOrder);
+      }
+
+      if (!optionsPersistedRef.current && optionsToSave.length > 0) {
+        const optionResult = await saveOptionDrafts(
+          adminItemsApi,
+          String(saved.id),
+          optionsToSave,
+        );
+        if (!optionResult.ok) {
+          const message = `상품은 생성했지만 옵션 저장을 마치지 못했어요. ${optionResult.message} 옵션 관리 화면에서 확인하고 이어서 등록해주세요.`;
+          toast.error(message);
+          navigate(`/admin/items/${saved.id}#options`);
+          return;
+        }
+        optionsPersistedRef.current = true;
       }
 
       toast.success('저장했어요');
@@ -1072,6 +1106,7 @@ export default function AdminProjectItemCreatePage() {
     item,
     navigate,
     normalizeDigits,
+    optionDrafts,
     priceInput,
     projectId,
     toast,
@@ -1108,8 +1143,11 @@ export default function AdminProjectItemCreatePage() {
   const isDirty = useMemo(() => {
     const initial = snapshotItem(initialItemRef.current);
     const current = snapshotItem(item);
-    return JSON.stringify(initial) !== JSON.stringify(current);
-  }, [item, snapshotItem]);
+    return (
+      JSON.stringify(initial) !== JSON.stringify(current) ||
+      pruneOptionDrafts(optionDrafts).length > 0
+    );
+  }, [item, optionDrafts, snapshotItem]);
 
   const handleBack = useCallback(async () => {
     if (!isDirty) {
@@ -1215,7 +1253,7 @@ export default function AdminProjectItemCreatePage() {
                   ? '업로드 중...'
                   : justSaved
                     ? '저장 완료 ✓'
-                    : canManageOptions
+                    : canManageOptions && optionDrafts.length === 0
                       ? '저장 후 옵션 설정'
                       : '저장'}
             </button>
@@ -1526,18 +1564,22 @@ export default function AdminProjectItemCreatePage() {
               <section className="border-y border-slate-200 py-6">
                 <h2 className="text-base font-bold text-slate-900">상품 옵션</h2>
                 {canManageOptions ? (
-                  <div className="mt-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-slate-700">
-                    <p className="font-bold text-primary">
-                      상품을 저장하면 옵션 설정 화면으로 바로 이동합니다.
+                  <>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                      선택 사항이에요. 색상, 사이즈처럼 구매자가 고를 옵션을 함께
+                      등록할 수 있어요. 옵션을 등록하면 실제 주문 가능 수량은
+                      옵션값별 재고(비우면 무제한)를 기준으로 계산합니다. 옵션을
+                      입력하지 않으면 저장 후 옵션 설정 화면으로 이동해요.
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                      사이즈, 색상 등의 옵션 그룹과 옵션별 재고는 상품 ID가
-                      생성된 후 등록할 수 있어요. 위 재고에는 우선 전체 수량을
-                      입력하고, 저장 후 각 옵션값의 재고를 설정해주세요. 옵션이
-                      등록되면 실제 주문 가능 수량은 옵션별 재고를 기준으로
-                      계산합니다.
-                    </p>
-                  </div>
+                    <ItemOptionDraftEditor
+                      groups={optionDrafts}
+                      onChange={(next) => {
+                        setOptionDrafts(next);
+                        updateItem({ validationError: null });
+                      }}
+                      disabled={saving}
+                    />
+                  </>
                 ) : (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                     <p className="font-bold">공구 상품은 옵션을 지원하지 않습니다.</p>
