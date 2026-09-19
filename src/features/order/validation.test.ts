@@ -24,6 +24,11 @@ function createDraft(patch: Partial<OrderDraft> = {}): OrderDraft {
       referralSource: '에브리타임',
       email: 'test@example.com',
     },
+    lookup: {
+      lookupId: 'guest-mju-001',
+      password: 'password123!',
+      passwordConfirm: 'password123!',
+    },
     payment: {
       depositorName: '홍길동',
     },
@@ -72,6 +77,35 @@ describe('order validation', () => {
         }),
       ),
     ).toBe('기본 주소를 입력해주세요.');
+  });
+
+  it('조회 비밀번호 확인이 일치하지 않으면 메시지를 반환한다', () => {
+    expect(
+      validateFinalStep(
+        createDraft({
+          lookup: {
+            ...createDraft().lookup,
+            passwordConfirm: 'different-password',
+          },
+        }),
+      ),
+    ).toBe('조회 비밀번호와 비밀번호 확인이 일치하지 않아요.');
+  });
+
+  it('조회 비밀번호가 서버 정책보다 약하면 메시지를 반환한다', () => {
+    expect(
+      validateFinalStep(
+        createDraft({
+          lookup: {
+            ...createDraft().lookup,
+            password: '12345678',
+            passwordConfirm: '12345678',
+          },
+        }),
+      ),
+    ).toBe(
+      '조회 비밀번호는 영문자와 숫자를 포함해 8자 이상으로 입력해주세요.',
+    );
   });
 
   it('이메일이 비어 있으면 메시지를 반환한다', () => {

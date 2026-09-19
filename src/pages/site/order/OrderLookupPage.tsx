@@ -1,12 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import {
-  customersApi,
-  type CustomerCredentials,
-  type CustomerOrderSummary,
-} from '../../../api/site/customers';
-import type { OrderDetailResponse } from '../../../api/site/orders';
+import { ordersApi, type OrderDetailResponse } from '../../../api/site/orders';
 import OrderDetailCard from '../../../components/order/OrderDetailCard';
 import Reveal from '../../../components/ui/Reveal';
 import {
@@ -17,57 +12,21 @@ import {
 const INPUT_CLASS =
   'mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 aria-[invalid=true]:border-rose-400 aria-[invalid=true]:focus:ring-rose-100';
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING_DEPOSIT: '입금 대기',
-  PAID: '입금 완료',
-  CANCELED: '주문 취소',
-  REFUND_REQUESTED: '환불 요청',
-  REFUNDED: '환불 완료',
-};
-
-function formatMoney(value: number) {
-  return `${value.toLocaleString('ko-KR')}원`;
-}
-
-function formatDateTime(value?: string | null) {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  }).format(date);
-}
-
 export default function OrderLookupPage() {
-  const [email, setEmail] = useState('');
+  const [lookupId, setLookupId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<CustomerOrderSummary[] | null>(null);
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [order, setOrder] = useState<OrderDetailResponse | null>(null);
   const [lookupError, setLookupError] =
     useState<OrderLookupErrorState | null>(null);
 
-  const credentials = (): CustomerCredentials => ({
-    email: email.trim(),
-    password,
-  });
-
-  const clearResults = () => {
-    setOrders(null);
-    setSelectedOrderId(null);
-    setOrder(null);
-    setLookupError(null);
-  };
-
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
-    if (!email.trim() || !password.trim()) {
+    setOrder(null);
+    if (!lookupId.trim() || !password.trim()) {
       setLookupError({
         title: '입력 정보를 확인해주세요',
-        description: '이메일과 비밀번호를 모두 입력해주세요.',
+        description: '조회 아이디와 비밀번호를 모두 입력해주세요.',
         fieldRelated: true,
         retryable: false,
       });
@@ -76,27 +35,15 @@ export default function OrderLookupPage() {
 
     setLoading(true);
     setLookupError(null);
-    setOrder(null);
-    setSelectedOrderId(null);
     try {
-      setOrders(await customersApi.getOrders(credentials()));
-    } catch (error) {
-      setOrders(null);
-      setLookupError(getOrderLookupErrorState(error));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelectOrder = async (orderId: number) => {
-    setLoading(true);
-    setLookupError(null);
-    setSelectedOrderId(orderId);
-    try {
-      setOrder(await customersApi.getOrderDetail(orderId, credentials()));
+      setOrder(
+        await ordersApi.lookupOrder({
+          lookupId: lookupId.trim(),
+          password,
+        }),
+      );
     } catch (error) {
       setOrder(null);
-      setSelectedOrderId(null);
       setLookupError(getOrderLookupErrorState(error));
     } finally {
       setLoading(false);
@@ -124,10 +71,10 @@ export default function OrderLookupPage() {
             >
               <path d="M15 18l-6-6 6-6" />
             </svg>
-            주문 조회
+            비회원 주문 조회
           </Link>
           <p className="mt-2 text-sm text-slate-600 lg:mt-0">
-            주문에 사용한 이메일과 등록한 비밀번호로 주문 내역을 확인하세요.
+            주문 시 설정한 조회 아이디와 비밀번호로 주문 상태를 확인하세요.
           </p>
         </div>
       </Reveal>
@@ -139,20 +86,20 @@ export default function OrderLookupPage() {
         >
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="text-sm font-semibold text-slate-700">
-              이메일
+              조회 아이디
               <input
-                type="email"
-                value={email}
+                value={lookupId}
                 disabled={loading}
-                autoComplete="email"
+                autoComplete="username"
                 aria-invalid={lookupError?.fieldRelated || undefined}
                 aria-describedby={lookupError ? 'order-lookup-error' : undefined}
                 onChange={(event) => {
-                  setEmail(event.target.value);
-                  clearResults();
+                  setLookupId(event.target.value);
+                  if (order) setOrder(null);
+                  if (lookupError) setLookupError(null);
                 }}
                 className={INPUT_CLASS}
-                placeholder="주문에 사용한 이메일"
+                placeholder="예) guest-mju-001"
               />
             </label>
             <label className="text-sm font-semibold text-slate-700">
@@ -166,10 +113,11 @@ export default function OrderLookupPage() {
                 aria-describedby={lookupError ? 'order-lookup-error' : undefined}
                 onChange={(event) => {
                   setPassword(event.target.value);
-                  clearResults();
+                  if (order) setOrder(null);
+                  if (lookupError) setLookupError(null);
                 }}
                 className={INPUT_CLASS}
-                placeholder="등록한 비밀번호"
+                placeholder="비밀번호 입력"
               />
             </label>
           </div>
@@ -188,12 +136,6 @@ export default function OrderLookupPage() {
               className="inline-flex h-11 flex-1 items-center justify-center rounded-2xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:flex-none"
             >
               주문하러 가기
-            </Link>
-            <Link
-              to="/orders/enroll"
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-2xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:flex-none"
-            >
-              비밀번호 등록/재설정
             </Link>
           </div>
 
@@ -228,48 +170,6 @@ export default function OrderLookupPage() {
           )}
         </form>
       </Reveal>
-
-      {orders && (
-        <Reveal className="mx-auto mt-6 max-w-4xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">내 주문</h2>
-          {orders.length === 0 ? (
-            <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              이 이메일로 확인할 수 있는 주문이 없어요.
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-2">
-              {orders.map((summary) => (
-                <li key={summary.orderId}>
-                  <button
-                    type="button"
-                    onClick={() => void handleSelectOrder(summary.orderId)}
-                    disabled={loading}
-                    className="grid w-full grid-cols-1 gap-1 rounded-2xl border border-slate-200 px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold text-slate-900">
-                        {summary.itemSummary}
-                      </span>
-                      <span className="mt-1 block text-xs text-slate-500">
-                        {summary.orderNo} · {formatDateTime(summary.createdAt)}
-                      </span>
-                    </span>
-                    <span className="text-sm font-semibold text-slate-700 sm:text-right">
-                      {STATUS_LABELS[summary.status] ?? summary.status} ·{' '}
-                      {formatMoney(summary.finalAmount)}
-                    </span>
-                    {selectedOrderId === summary.orderId && loading && (
-                      <span className="text-xs font-semibold text-primary sm:col-span-2">
-                        주문 상세를 불러오는 중...
-                      </span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Reveal>
-      )}
 
       {order && (
         <Reveal className="mt-6 lg:mx-auto lg:max-w-4xl">
