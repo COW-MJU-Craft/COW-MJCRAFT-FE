@@ -379,7 +379,6 @@ export default function OrderPage() {
         state: {
           orderNo: result.orderNo,
           status: result.status,
-          buyerEmail: payload.buyer.email,
           depositDeadline: result.depositDeadline,
           viewToken: result.viewToken,
           createdAt: result.createdAt,
@@ -812,34 +811,20 @@ export default function OrderPage() {
             <div className="mt-6 space-y-4">
               <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <h3 className="text-sm font-bold text-slate-900">
-                  주문 조회 정보
+                  주문 안내 이메일
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                  주문 이후 입력한 이메일과 비밀번호로 주문 내역을 조회할 수
-                  있어요.
+                  주문 접수 및 운영 안내를 받을 이메일을 입력해주세요.
                 </p>
-                <div className="mt-3 space-y-3">
-                  <label className="text-sm font-semibold text-slate-700">
+                <div className="mt-3">
+                  <label className="block text-sm font-semibold text-slate-700">
                     이메일 <span className="text-rose-500">*</span>
                     <input
                       type="email"
                       value={draft.buyer.email}
                       onChange={(event) => updateBuyer('email', event.target.value)}
                       className={INPUT_CLASS}
-                      placeholder="주문 조회에 사용할 이메일"
-                    />
-                  </label>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    비밀번호 <span className="text-rose-500">*</span>
-                    <input
-                      type="password"
-                      value={draft.buyer.password}
-                      onChange={(event) =>
-                        updateBuyer('password', event.target.value)
-                      }
-                      className={INPUT_CLASS}
-                      placeholder="영문자와 숫자를 포함해 8자 이상"
-                      autoComplete="new-password"
+                      placeholder="주문 안내를 받을 이메일"
                     />
                   </label>
                 </div>

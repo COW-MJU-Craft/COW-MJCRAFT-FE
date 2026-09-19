@@ -20,7 +20,6 @@ export default function HeaderDesktop() {
       apply: pathname.startsWith('/apply'),
       feedback: pathname.startsWith('/feedback'),
       cart: pathname.startsWith('/cart'),
-      orderLookup: pathname.startsWith('/orders'),
     }),
     [pathname],
   );
@@ -136,17 +135,6 @@ export default function HeaderDesktop() {
         className={`${navBase} ${isActive.cart ? navActive : navIdle}`}
       >
         장바구니
-      </Link>
-
-      <Link
-        to="/orders/lookup"
-        onClick={() => {
-          setOpen(null);
-          scrollToTopAfterNav();
-        }}
-        className={`${navBase} ${isActive.orderLookup ? navActive : navIdle}`}
-      >
-        주문조회
       </Link>
 
       <Link

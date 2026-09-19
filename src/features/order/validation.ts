@@ -4,15 +4,6 @@ function isBlank(value: string) {
   return value.trim().length === 0;
 }
 
-function isValidOrderPassword(value: string) {
-  return (
-    value.length >= 8 &&
-    new TextEncoder().encode(value).length <= 72 &&
-    /[\p{L}]/u.test(value) &&
-    /\d/.test(value)
-  );
-}
-
 export function validateBuyerStep(draft: OrderDraft): string | null {
   const { buyer, payment } = draft;
   const isStudent = buyer.buyerType === 'STUDENT';
@@ -53,9 +44,5 @@ export function validateFulfillmentStep(draft: OrderDraft): string | null {
 export function validateFinalStep(draft: OrderDraft): string | null {
   const { buyer } = draft;
   if (isBlank(buyer.email)) return '이메일을 입력해주세요.';
-  if (isBlank(buyer.password)) return '비밀번호를 입력해주세요.';
-  if (!isValidOrderPassword(buyer.password)) {
-    return '비밀번호는 영문자와 숫자를 포함해 8자 이상으로 입력해주세요.';
-  }
   return null;
 }
