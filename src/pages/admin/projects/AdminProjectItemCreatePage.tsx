@@ -1049,7 +1049,14 @@ export default function AdminProjectItemCreatePage() {
         () => setJustSaved(false),
         1500,
       );
-      navigate(`/admin/projects/${projectId}/items`);
+      const canManageOptions =
+        nextForSave.itemType === 'PHYSICAL' &&
+        nextForSave.saleType === 'NORMAL';
+      navigate(
+        canManageOptions
+          ? `/admin/items/${saved.id}#options`
+          : `/admin/projects/${projectId}/items`,
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : '저장에 실패했어요';
       setError(message);
@@ -1127,6 +1134,8 @@ export default function AdminProjectItemCreatePage() {
     [item?.images],
   );
   const isJournalItem = item?.itemType === 'DIGITAL_JOURNAL';
+  const canManageOptions =
+    item?.itemType === 'PHYSICAL' && item.saleType === 'NORMAL';
   const isJournalProject = projectCategory === 'JOURNAL';
   const projectCategoryLabel = isJournalProject
     ? '저널(JOURNAL)'
@@ -1206,7 +1215,9 @@ export default function AdminProjectItemCreatePage() {
                   ? '업로드 중...'
                   : justSaved
                     ? '저장 완료 ✓'
-                    : '저장'}
+                    : canManageOptions
+                      ? '저장 후 옵션 설정'
+                      : '저장'}
             </button>
           </div>
         </div>
@@ -1510,6 +1521,34 @@ export default function AdminProjectItemCreatePage() {
                 </div>
               )}
             </div>
+
+            {!isJournalItem && (
+              <section className="border-y border-slate-200 py-6">
+                <h2 className="text-base font-bold text-slate-900">상품 옵션</h2>
+                {canManageOptions ? (
+                  <div className="mt-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-slate-700">
+                    <p className="font-bold text-primary">
+                      상품을 저장하면 옵션 설정 화면으로 바로 이동합니다.
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                      사이즈, 색상 등의 옵션 그룹과 옵션별 재고는 상품 ID가
+                      생성된 후 등록할 수 있어요. 위 재고에는 우선 전체 수량을
+                      입력하고, 저장 후 각 옵션값의 재고를 설정해주세요. 옵션이
+                      등록되면 실제 주문 가능 수량은 옵션별 재고를 기준으로
+                      계산합니다.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    <p className="font-bold">공구 상품은 옵션을 지원하지 않습니다.</p>
+                    <p className="mt-1 text-xs leading-relaxed">
+                      사이즈나 색상 옵션이 필요하면 판매 유형을 일반으로
+                      변경해주세요.
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
 
             {!isJournalItem && (
               <div className="mt-2">

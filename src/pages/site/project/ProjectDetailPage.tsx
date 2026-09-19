@@ -17,6 +17,7 @@ import { getItemSaleTypeLabel, getItemTypeLabel } from '../../../constants/itemL
 import RouteMetadata from '../../../components/seo/RouteMetadata';
 import { trackGA4EcommerceEvent } from '../../../utils/common/analytics';
 import { toGA4ItemFromItem } from '../../../utils/common/analyticsEcommerce';
+import { isOptionItemSoldOut } from '../../../features/order/optionStock';
 
 type NormalStockTag = {
   label: string;
@@ -77,6 +78,7 @@ function getAvailableStock(item: ItemResponse) {
 
 function isItemSoldOut(item: ItemResponse) {
   if (item.saleType !== 'NORMAL') return false;
+  if (item.options?.length) return isOptionItemSoldOut(item.options);
   const availableStock = getAvailableStock(item);
   return availableStock !== null && availableStock <= 0;
 }
@@ -767,7 +769,9 @@ export default function ProjectDetailPage() {
                     const normalStockTag =
                       item.saleType === 'NORMAL'
                         ? requiresOptionSelection
-                          ? { label: '옵션별 재고', tone: 'neutral' as const }
+                          ? soldOut
+                            ? { label: '옵션 품절', tone: 'danger' as const }
+                            : { label: '옵션별 재고', tone: 'neutral' as const }
                           : getNormalStockTag(availableStock)
                         : null;
                     const groupBuySummary =
