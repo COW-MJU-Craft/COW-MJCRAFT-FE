@@ -29,12 +29,6 @@ export type BuyerForm = {
   email: string;
 };
 
-export type LookupForm = {
-  lookupId: string;
-  password: string;
-  passwordConfirm: string;
-};
-
 export type PaymentForm = {
   depositorName: string;
 };
@@ -56,14 +50,6 @@ export type OrderDraft = {
   step: OrderStep;
   agreements: AgreementState;
   buyer: BuyerForm;
-  lookup: LookupForm;
   payment: PaymentForm;
   fulfillment: FulfillmentForm;
 };
-
-export type LookupCheckState =
-  | 'idle'
-  | 'checking'
-  | 'available'
-  | 'taken'
-  | 'error';

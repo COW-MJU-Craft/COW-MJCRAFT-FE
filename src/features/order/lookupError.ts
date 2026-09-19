@@ -15,7 +15,7 @@ export function getOrderLookupErrorState(
       return {
         title: '주문 정보를 확인할 수 없어요',
         description:
-          '조회 아이디 또는 비밀번호가 일치하지 않아요. 입력한 정보를 다시 확인해주세요.',
+          '이메일 또는 비밀번호가 일치하지 않아요. 입력한 정보를 다시 확인해주세요.',
         fieldRelated: true,
         retryable: false,
       };
@@ -25,7 +25,7 @@ export function getOrderLookupErrorState(
       return {
         title: '입력 정보를 확인해주세요',
         description:
-          '조회 아이디와 비밀번호 형식이 올바르지 않아요. 입력한 정보를 다시 확인해주세요.',
+          '이메일과 비밀번호 형식이 올바르지 않아요. 입력한 정보를 다시 확인해주세요.',
         fieldRelated: true,
         retryable: false,
       };

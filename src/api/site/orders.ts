@@ -2,8 +2,8 @@ import { api, withApiBase } from '../core/client';
 import type { DateTimeArray, OrderCompletePaymentInfo } from '../../types/order';
 
 export type OrderCreateRequest = {
-  lookupId: string;
-  password: string;
+  lookupId?: string;
+  password?: string;
   depositorName: string;
   privacyAgreed: boolean;
   refundAgreed: boolean;
@@ -35,12 +35,6 @@ export type OrderCreateRequest = {
     addressLine2?: string;
     deliveryMemo?: string;
   };
-};
-
-export type LookupIdAvailabilityResponse = {
-  lookupId: string;
-  available: boolean;
-  message?: string;
 };
 
 export type OrderCreateResponse = {
@@ -150,31 +144,6 @@ export type OrderDetailResponse = {
   items: OrderDetailItem[];
   raw: unknown;
 };
-
-function toLookupAvailability(
-  lookupId: string,
-  raw: unknown,
-): LookupIdAvailabilityResponse {
-  if (typeof raw === 'boolean') {
-    return { lookupId, available: raw };
-  }
-
-  const record = asRecord(raw);
-  const available = record?.available ?? record?.isAvailable ?? record?.usable;
-  if (typeof available === 'boolean') {
-    return {
-      lookupId,
-      available,
-      message: pickString(record, 'message'),
-    };
-  }
-
-  return {
-    lookupId,
-    available: false,
-    message: '조회 아이디 확인 응답을 해석할 수 없어요.',
-  };
-}
 
 function toOrderCreateResponse(raw: unknown): OrderCreateResponse {
   if (!raw || typeof raw !== 'object') return { raw };
@@ -750,16 +719,6 @@ export function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
 }
 
 export const ordersApi = {
-  async checkLookupIdAvailability(lookupId: string) {
-    const trimmed = lookupId.trim();
-    const data = await api<unknown>(
-      withApiBase(
-        `/orders/lookup-id/availability?lookupId=${encodeURIComponent(trimmed)}`,
-      ),
-    );
-    return toLookupAvailability(trimmed, data);
-  },
-
   async createOrder(payload: OrderCreateRequest) {
     const data = await api<unknown>(
       withApiBase('/orders'),
@@ -776,14 +735,6 @@ export const ordersApi = {
       method: 'POST',
       body: payload,
     });
-  },
-
-  async lookupOrder(payload: OrderLookupRequest) {
-    const data = await api<unknown>(withApiBase('/orders/lookup'), {
-      method: 'POST',
-      body: payload,
-    });
-    return toOrderDetailResponse(data);
   },
 
   async viewOrder(token: string) {
