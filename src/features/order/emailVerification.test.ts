@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../../api/core/client';
 import {
+  createThrowawayPassword,
   getEmailVerificationError,
   isEmailVerified,
 } from './emailVerification';
@@ -24,21 +25,30 @@ describe('isEmailVerified', () => {
 });
 
 describe('getEmailVerificationError', () => {
-  it('explains an invalid code on 401 in code mode', () => {
-    expect(
-      getEmailVerificationError(new ApiError(401, null), 'code'),
-    ).toContain('인증 코드');
-  });
-
-  it('explains a credential mismatch on 401 in password mode', () => {
-    expect(
-      getEmailVerificationError(new ApiError(401, null), 'password'),
-    ).toContain('일치하지');
-  });
-
-  it('explains weak passwords on 422', () => {
-    expect(getEmailVerificationError(new ApiError(422, null), 'code')).toContain(
-      '약해요',
+  it('explains an invalid or expired code on 401', () => {
+    expect(getEmailVerificationError(new ApiError(401, null))).toContain(
+      '인증 코드',
     );
+  });
+
+  it('explains a malformed email on 400', () => {
+    expect(getEmailVerificationError(new ApiError(400, null))).toContain(
+      '이메일 형식',
+    );
+  });
+});
+
+describe('createThrowawayPassword', () => {
+  it('has the requested length and every character class', () => {
+    const password = createThrowawayPassword();
+    expect(password).toHaveLength(24);
+    expect(password).toMatch(/[A-Z]/);
+    expect(password).toMatch(/[a-z]/);
+    expect(password).toMatch(/\d/);
+    expect(password).toMatch(/[!@#$%^&*]/);
+  });
+
+  it('differs between calls', () => {
+    expect(createThrowawayPassword()).not.toBe(createThrowawayPassword());
   });
 });
