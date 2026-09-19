@@ -11,7 +11,7 @@ export function Skeleton({ className = '' }: SkeletonProps) {
 export function SkeletonProjectCard() {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4">
-      <Skeleton className="h-40 w-full rounded-xl" />
+      <Skeleton className="aspect-video w-full rounded-xl" />
       <div className="mt-4 space-y-2">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-full" />
@@ -41,7 +41,7 @@ export function SkeletonProjectDetail() {
               <Skeleton className="h-3 w-4/5" />
             </div>
           </div>
-          <Skeleton className="h-72 w-full rounded-3xl md:h-80" />
+          <Skeleton className="aspect-video w-full rounded-3xl" />
         </div>
       </div>
 

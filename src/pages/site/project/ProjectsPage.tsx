@@ -356,7 +356,6 @@ export default function ProjectsPage() {
                       <Reveal delayMs={i * 40}>
                         <ProjectCard
                           project={p}
-                          size="large"
                           showApplyAction={false}
                         />
                       </Reveal>
@@ -381,7 +380,6 @@ export default function ProjectsPage() {
                     <Reveal key={p.id} delayMs={(sectionIndex + i) * 30}>
                       <ProjectCard
                         project={p}
-                        size="large"
                         showApplyAction={false}
                       />
                     </Reveal>
