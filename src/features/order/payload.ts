@@ -50,8 +50,6 @@ export function buildOrderCreatePayload(
   const email = draft.buyer.email.trim();
 
   return {
-    lookupId: email,
-    password: draft.buyer.password,
     depositorName: draft.payment.depositorName.trim(),
     privacyAgreed: draft.agreements.privacy,
     refundAgreed: draft.agreements.noRefund,

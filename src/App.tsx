@@ -1,4 +1,4 @@
-﻿import { Route, Routes, useLocation } from 'react-router-dom';
+﻿import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import SiteLayout from './components/layout/SiteLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import MainPage from './pages/site/home/MainPage';
@@ -18,8 +18,6 @@ import PayoutsPage from './pages/site/payout/PayoutsPage';
 import CartPage from './pages/site/cart/CartPage';
 import OrderPage from './pages/site/order/OrderPage';
 import OrderCompletePage from './pages/site/order/OrderCompletePage';
-import CustomerEnrollmentPage from './pages/site/order/CustomerEnrollmentPage';
-import OrderLookupPage from './pages/site/order/OrderLookupPage';
 import OrderViewPage from './pages/site/order/OrderViewPage';
 import LoginPage from './pages/site/auth/LoginPage';
 import AdminDashboardPage from './pages/admin/dashboard/AdminDashboardPage';
@@ -64,9 +62,9 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order" element={<OrderPage />} />
           <Route path="/order/complete" element={<OrderCompletePage />} />
-          <Route path="/orders/enroll" element={<CustomerEnrollmentPage />} />
-          <Route path="/orders/lookup" element={<OrderLookupPage />} />
           <Route path="/orders/view" element={<OrderViewPage />} />
+          <Route path="/orders/lookup" element={<Navigate to="/" replace />} />
+          <Route path="/orders/enroll" element={<Navigate to="/" replace />} />
           <Route path="/payouts" element={<PayoutsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/notices" element={<NoticesPage />} />

@@ -35,7 +35,6 @@ export const DEFAULT_BUYER: BuyerForm = {
   refundAccount: '',
   referralSource: '',
   email: '',
-  password: '',
 };
 
 export const DEFAULT_PAYMENT: PaymentForm = {

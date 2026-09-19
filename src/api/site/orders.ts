@@ -2,8 +2,6 @@ import { api, withApiBase } from '../core/client';
 import type { DateTimeArray, OrderCompletePaymentInfo } from '../../types/order';
 
 export type OrderCreateRequest = {
-  lookupId?: string;
-  password?: string;
   depositorName: string;
   privacyAgreed: boolean;
   refundAgreed: boolean;
@@ -46,7 +44,6 @@ export type OrderCreateResponse = {
   finalAmount?: number;
   depositDeadline?: string;
   createdAt?: string;
-  lookupId?: string;
   viewToken?: string;
   messageTitle?: string;
   messageDescription?: string;
@@ -77,11 +74,6 @@ export type OrderQuoteResponse = {
   finalAmount: number;
 };
 
-export type OrderLookupRequest = {
-  lookupId: string;
-  password: string;
-};
-
 export type OrderDetailOption = {
   groupName: string;
   valueName: string;
@@ -106,7 +98,6 @@ export type OrderDetailResponse = {
   finalAmount?: number;
   depositDeadline?: string;
   createdAt?: string;
-  lookupId?: string;
   viewToken?: string;
   depositorName?: string;
   paymentInformation?: string;
@@ -184,7 +175,6 @@ function toOrderCreateResponse(raw: unknown): OrderCreateResponse {
       'deadline',
     ),
     createdAt: pickDateTime(infoRecord, 'createdAt', 'created_at'),
-    lookupId: pickString(infoRecord, 'lookupId', 'lookup_id'),
     viewToken: pickString(infoRecord, 'viewToken', 'view_token'),
     messageTitle: pickString(
       contentRecord ?? record,
@@ -569,7 +559,6 @@ export function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
       'deadline',
     ),
     createdAt: pickDateTime(infoRecord, 'createdAt', 'created_at'),
-    lookupId: pickString(infoRecord, 'lookupId', 'lookup_id'),
     viewToken: pickString(infoRecord, 'viewToken', 'view_token'),
     depositorName: pickString(infoRecord, 'depositorName', 'depositor_name'),
     paymentInformation: pickStringFromRecords(

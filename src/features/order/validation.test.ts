@@ -23,7 +23,6 @@ function createDraft(patch: Partial<OrderDraft> = {}): OrderDraft {
       refundAccount: '110-123-456789',
       referralSource: '에브리타임',
       email: 'test@example.com',
-      password: 'password123!',
     },
     payment: {
       depositorName: '홍길동',
@@ -88,29 +87,4 @@ describe('order validation', () => {
     ).toBe('이메일을 입력해주세요.');
   });
 
-  it('비밀번호가 비어 있으면 메시지를 반환한다', () => {
-    expect(
-      validateFinalStep(
-        createDraft({
-          buyer: {
-            ...createDraft().buyer,
-            password: ' ',
-          },
-        }),
-      ),
-    ).toBe('비밀번호를 입력해주세요.');
-  });
-
-  it('비밀번호가 정책에 맞지 않으면 메시지를 반환한다', () => {
-    expect(
-      validateFinalStep(
-        createDraft({
-          buyer: {
-            ...createDraft().buyer,
-            password: 'password',
-          },
-        }),
-      ),
-    ).toBe('비밀번호는 영문자와 숫자를 포함해 8자 이상으로 입력해주세요.');
-  });
 });
