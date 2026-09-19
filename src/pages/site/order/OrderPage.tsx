@@ -6,6 +6,8 @@ import {
 } from '../../../api/site/orders';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
+import OrderEmailVerification from '../../../features/order/components/OrderEmailVerification';
+import { isEmailVerified } from '../../../features/order/emailVerification';
 import OrderAgreementsStep from '../../../features/order/components/OrderAgreementsStep';
 import OrderItemsStep from '../../../features/order/components/OrderItemsStep';
 import OrderStepActions from '../../../features/order/components/OrderStepActions';
@@ -100,6 +102,9 @@ export default function OrderPage() {
     return base;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 인증에 성공한 이메일. 코드/비밀번호와 마찬가지로 draft·storage에는 저장하지 않는다.
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const emailVerified = isEmailVerified(verifiedEmail, draft.buyer.email);
   const [quote, setQuote] = useState<OrderQuoteResponse | null>(null);
   const [quoteStatus, setQuoteStatus] = useState<
     'idle' | 'loading' | 'ready' | 'error'
@@ -264,6 +269,7 @@ export default function OrderPage() {
     key: K,
     value: BuyerForm[K],
   ) => {
+    if (key === 'email') setVerifiedEmail(null);
     setDraft((prev) => ({
       ...prev,
       buyer: {
@@ -333,7 +339,7 @@ export default function OrderPage() {
   };
 
   const handleSubmit = async () => {
-    const validationMessage = validateFinalStep(draft);
+    const validationMessage = validateFinalStep(draft, emailVerified);
     if (validationMessage) {
       toast.error(validationMessage);
       return;
@@ -827,6 +833,14 @@ export default function OrderPage() {
                       placeholder="주문 안내를 받을 이메일"
                     />
                   </label>
+                  {draft.buyer.email.trim() !== '' && (
+                    <OrderEmailVerification
+                      key={draft.buyer.email.trim().toLowerCase()}
+                      email={draft.buyer.email}
+                      verified={emailVerified}
+                      onVerified={setVerifiedEmail}
+                    />
+                  )}
                 </div>
               </section>
 
@@ -999,7 +1013,9 @@ export default function OrderPage() {
         <OrderStepActions
           step={draft.step}
           isSubmitting={isSubmitting}
-          isSubmitDisabled={quoteStatus !== 'ready' || quote === null}
+          isSubmitDisabled={
+            quoteStatus !== 'ready' || quote === null || !emailVerified
+          }
           onPrev={goPrevStep}
           onNext={goNextStep}
           onSubmit={() => void handleSubmit()}
