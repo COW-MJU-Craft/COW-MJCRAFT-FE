@@ -381,7 +381,7 @@ function DetailImagesViewer({
   return (
     <div className="mt-5 space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-        <div className="aspect-3/4 w-full">
+        <div className="aspect-video w-full">
           {preview && (
             <button
               type="button"
@@ -419,7 +419,7 @@ function DetailImagesViewer({
               alt={`${name} 상세 썸네일 ${idx + 1}`}
               loading="lazy"
               decoding="async"
-              className="block h-20 w-15 bg-white object-contain"
+              className="block h-20 w-36 bg-white object-contain"
             />
           </button>
         ))}

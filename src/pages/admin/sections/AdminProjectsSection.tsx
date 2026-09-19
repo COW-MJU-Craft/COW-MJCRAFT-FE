@@ -722,13 +722,13 @@ export default function AdminProjectsSection({
                     </p>
                   )}
 
-                  <div className="mt-3 relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                  <div className="mt-3 relative aspect-video overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                     {thumbnailSrc ? (
                       <>
                         <img
                           src={thumbnailSrc}
                           alt="대표 이미지 미리보기"
-                          className="h-40 w-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                         <button
                           type="button"
@@ -740,7 +740,7 @@ export default function AdminProjectsSection({
                         </button>
                       </>
                     ) : (
-                      <div className="flex h-32 items-center justify-center text-xs font-semibold text-slate-400">
+                      <div className="flex h-full items-center justify-center text-xs font-semibold text-slate-400">
                         대표 이미지 없음
                       </div>
                     )}
@@ -764,6 +764,10 @@ export default function AdminProjectsSection({
                       ) : null}
                     </div>
                   </div>
+
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    상세 이미지는 16:9 비율로 표시돼요.
+                  </p>
 
                   <label
                     onDragOver={(e) => {
@@ -817,7 +821,7 @@ export default function AdminProjectsSection({
                           <img
                             src={url}
                             alt={`상세 이미지 ${idx + 1}`}
-                            className="h-16 w-full object-cover"
+                            className="aspect-video w-full object-cover"
                           />
                           <button
                             type="button"

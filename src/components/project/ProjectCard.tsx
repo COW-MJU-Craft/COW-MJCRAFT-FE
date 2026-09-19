@@ -7,27 +7,17 @@ import type { Project } from '../../api/site/projects';
 type ProjectCardProps = {
   project: Project;
   showApplyAction?: boolean;
-  size?: 'default' | 'large' | 'main';
 };
 
 export default function ProjectCard({
   project,
   showApplyAction = true,
-  size = 'default',
 }: ProjectCardProps) {
   const navigate = useNavigate();
   const canApply = project.status === 'OPEN';
   const deadlineText = project.deadlineDate || project.endAt || '';
-  const isLarge = size === 'large';
-  const isMain = size === 'main';
   const isClosed = project.status === 'CLOSED';
   const [imgLoaded, setImgLoaded] = useState(false);
-
-  const imageHeightClass = isMain
-    ? 'h-52 sm:h-56'
-    : isLarge
-      ? 'h-44 sm:h-48'
-      : 'h-36 sm:h-40';
 
   const goPayout = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -45,7 +35,7 @@ export default function ProjectCard({
         to={`/projects/${project.id}`}
         className="flex min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       >
-        <div className={`relative overflow-hidden bg-slate-100 ${imageHeightClass}`}>
+        <div className="relative aspect-video overflow-hidden bg-slate-100">
           {project.thumbnailUrl ? (
             <>
               {!imgLoaded && (

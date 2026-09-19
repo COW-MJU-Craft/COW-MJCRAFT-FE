@@ -253,7 +253,7 @@ function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImage
       ref={setNodeRef}
       style={style}
       className={[
-        'group relative h-28 w-[84px] overflow-hidden rounded-xl border border-slate-200 bg-white',
+        'group relative aspect-video w-36 overflow-hidden rounded-xl border border-slate-200 bg-white',
         isDragging ? 'opacity-60' : '',
         isOver ? 'ring-2 ring-primary/30' : '',
       ].join(' ')}
@@ -1955,7 +1955,7 @@ export default function AdminItemDetailPage() {
                   <p className="text-[11px] font-bold text-slate-600">권장 등록 기준</p>
                   <ul className="mt-2 space-y-1 text-[11px] leading-relaxed text-slate-500">
                     <li>목록 대표 이미지: 3:4 비율, 최소 900x1200px 권장</li>
-                    <li>상세 이미지: 원본 비율 유지, 긴 이미지는 세로형으로 등록 권장</li>
+                    <li>상세 이미지: 16:9 비율, 최소 1280x720px 권장</li>
                     <li>이미지 여백이 필요한 경우 흰 배경 위에 상품 전체가 보이도록 제작</li>
                   </ul>
                 </div>
@@ -2062,7 +2062,7 @@ export default function AdminItemDetailPage() {
                     <div>
                       <p className="text-xs font-semibold text-slate-500">상세 이미지</p>
                       <p className="mt-1 text-[11px] text-slate-400">
-                        상세 이미지는 여러 장 등록할 수 있어요
+                        상세 이미지는 16:9 비율로 여러 장 등록할 수 있어요
                       </p>
                     </div>
                     <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-slate-500">
