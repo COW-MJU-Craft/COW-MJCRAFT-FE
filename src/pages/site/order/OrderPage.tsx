@@ -812,13 +812,13 @@ export default function OrderPage() {
             <div className="mt-6 space-y-4">
               <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <h3 className="text-sm font-bold text-slate-900">
-                  주문 조회 이메일
+                  주문 조회 정보
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                  주문 완료 후 이 이메일로 비밀번호를 등록하면, 이후 이메일과
-                  비밀번호로 모든 주문을 조회할 수 있어요.
+                  주문 이후 입력한 이메일과 비밀번호로 주문 내역을 조회할 수
+                  있어요.
                 </p>
-                <div className="mt-3">
+                <div className="mt-3 space-y-3">
                   <label className="text-sm font-semibold text-slate-700">
                     이메일 <span className="text-rose-500">*</span>
                     <input
@@ -827,6 +827,19 @@ export default function OrderPage() {
                       onChange={(event) => updateBuyer('email', event.target.value)}
                       className={INPUT_CLASS}
                       placeholder="주문 조회에 사용할 이메일"
+                    />
+                  </label>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    비밀번호 <span className="text-rose-500">*</span>
+                    <input
+                      type="password"
+                      value={draft.buyer.password}
+                      onChange={(event) =>
+                        updateBuyer('password', event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                      placeholder="영문자와 숫자를 포함해 8자 이상"
+                      autoComplete="new-password"
                     />
                   </label>
                 </div>
