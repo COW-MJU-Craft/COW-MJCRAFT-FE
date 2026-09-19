@@ -31,6 +31,7 @@ import {
   DEFAULT_AGREEMENTS,
   DEFAULT_BUYER,
   DEFAULT_FULFILLMENT,
+  DEFAULT_LOOKUP,
   DEFAULT_PAYMENT,
   FULFILLMENT_METHOD_LABELS,
   INPUT_CLASS,
@@ -49,6 +50,8 @@ import type {
   BuyerType,
   FulfillmentForm,
   FulfillmentMethod,
+  LookupCheckState,
+  LookupForm,
   OrderDraft,
   OrderLocationState,
   OrderStep,
@@ -69,7 +72,7 @@ export default function OrderPage() {
   const [draft, setDraft] = useState<OrderDraft>(() => {
     // 보안 정책: 이름/전화/이메일/주소/환불계좌/비밀번호 등은 저장하지 않으므로
     // 여기서 복원되는 것은 진행 단계(step)와 선택 상품(items)뿐이다.
-    // buyer/payment/fulfillment는 새로고침 시 항상 빈 값으로 시작한다.
+    // buyer/lookup/payment/fulfillment는 새로고침 시 항상 빈 값으로 시작한다.
     const saved = loadOrderDraft();
     const base: OrderDraft = {
       source: saved?.source ?? 'cart',
@@ -77,6 +80,7 @@ export default function OrderPage() {
       step: saved?.step ?? 0,
       agreements: DEFAULT_AGREEMENTS,
       buyer: DEFAULT_BUYER,
+      lookup: DEFAULT_LOOKUP,
       payment: DEFAULT_PAYMENT,
       fulfillment: DEFAULT_FULFILLMENT,
     };
@@ -99,6 +103,10 @@ export default function OrderPage() {
     }
     return base;
   });
+  const [lookupCheckState, setLookupCheckState] =
+    useState<LookupCheckState>('idle');
+  const [lookupCheckMessage, setLookupCheckMessage] = useState('');
+  const [lookupCheckedId, setLookupCheckedId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quote, setQuote] = useState<OrderQuoteResponse | null>(null);
   const [quoteStatus, setQuoteStatus] = useState<
@@ -273,6 +281,30 @@ export default function OrderPage() {
     }));
   };
 
+  const updateLookup = <K extends keyof LookupForm>(
+    key: K,
+    value: LookupForm[K],
+  ) => {
+    const nextLookupId =
+      key === 'lookupId' ? String(value) : draft.lookup.lookupId;
+    const resetCheck =
+      key === 'lookupId' && nextLookupId.trim() !== lookupCheckedId;
+
+    setDraft((prev) => ({
+      ...prev,
+      lookup: {
+        ...prev.lookup,
+        [key]: value,
+      },
+    }));
+
+    if (resetCheck) {
+      setLookupCheckState('idle');
+      setLookupCheckMessage('');
+      setLookupCheckedId('');
+    }
+  };
+
   const updatePayment = <K extends keyof PaymentForm>(
     key: K,
     value: PaymentForm[K],
@@ -297,6 +329,39 @@ export default function OrderPage() {
         [key]: value,
       },
     }));
+  };
+
+  const handleLookupIdCheck = async () => {
+    const lookupId = draft.lookup.lookupId.trim();
+    if (!lookupId) {
+      toast.error('조회 아이디를 먼저 입력해주세요.');
+      return;
+    }
+
+    setLookupCheckState('checking');
+    setLookupCheckMessage('조회 아이디 사용 가능 여부를 확인하고 있어요.');
+    try {
+      const result = await ordersApi.checkLookupIdAvailability(lookupId);
+      if (result.available) {
+        setLookupCheckState('available');
+        setLookupCheckedId(lookupId);
+        setLookupCheckMessage(result.message ?? '사용 가능한 조회 아이디입니다.');
+      } else {
+        setLookupCheckState('taken');
+        setLookupCheckedId('');
+        setLookupCheckMessage(
+          result.message ?? '이미 사용 중인 조회 아이디예요. 다른 아이디를 입력해주세요.',
+        );
+      }
+    } catch (error) {
+      setLookupCheckState('error');
+      setLookupCheckedId('');
+      setLookupCheckMessage(
+        error instanceof Error
+          ? error.message
+          : '조회 아이디 확인 중 오류가 발생했어요.',
+      );
+    }
   };
 
   const openDeliveryPostcode = async () => {
@@ -336,6 +401,14 @@ export default function OrderPage() {
     const validationMessage = validateFinalStep(draft);
     if (validationMessage) {
       toast.error(validationMessage);
+      return;
+    }
+
+    if (
+      lookupCheckState !== 'available' ||
+      lookupCheckedId !== draft.lookup.lookupId.trim()
+    ) {
+      toast.error('조회 아이디 중복 확인을 완료해주세요.');
       return;
     }
 
@@ -379,7 +452,7 @@ export default function OrderPage() {
         state: {
           orderNo: result.orderNo,
           status: result.status,
-          buyerEmail: payload.buyer.email,
+          lookupId: result.lookupId ?? payload.lookupId,
           depositDeadline: result.depositDeadline,
           viewToken: result.viewToken,
           createdAt: result.createdAt,
@@ -812,21 +885,102 @@ export default function OrderPage() {
             <div className="mt-6 space-y-4">
               <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <h3 className="text-sm font-bold text-slate-900">
-                  주문 조회 이메일
+                  주문 조회 계정 설정
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                  주문 완료 후 이 이메일로 비밀번호를 등록하면, 이후 이메일과
-                  비밀번호로 모든 주문을 조회할 수 있어요.
+                  주문 이후 입금과 배송 상태를 확인할 조회 아이디와 비밀번호를 설정해주세요.
                 </p>
-                <div className="mt-3">
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                   <label className="text-sm font-semibold text-slate-700">
+                    조회 아이디 <span className="text-rose-500">*</span>
+                    <input
+                      value={draft.lookup.lookupId}
+                      onChange={(event) =>
+                        updateLookup('lookupId', event.target.value)
+                      }
+                      autoComplete="username"
+                      className={INPUT_CLASS}
+                      placeholder="예) guest-mju-001"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void handleLookupIdCheck()}
+                    disabled={lookupCheckState === 'checking'}
+                    className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {lookupCheckState === 'checking' ? '확인 중...' : '아이디 확인'}
+                  </button>
+                </div>
+
+                {lookupCheckMessage && (
+                  <p
+                    className={[
+                      'mt-2 rounded-xl px-3 py-2 text-xs font-semibold',
+                      lookupCheckState === 'available'
+                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : lookupCheckState === 'taken' || lookupCheckState === 'error'
+                          ? 'border border-rose-200 bg-rose-50 text-rose-700'
+                          : 'border border-slate-200 bg-white text-slate-600',
+                    ].join(' ')}
+                  >
+                    {lookupCheckMessage}
+                  </p>
+                )}
+
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label className="text-sm font-semibold text-slate-700">
+                    조회 비밀번호 <span className="text-rose-500">*</span>
+                    <input
+                      type="password"
+                      value={draft.lookup.password}
+                      onChange={(event) =>
+                        updateLookup('password', event.target.value)
+                      }
+                      autoComplete="new-password"
+                      className={INPUT_CLASS}
+                      placeholder="비밀번호 입력"
+                    />
+                    <span className="mt-1 block text-xs font-normal text-slate-500">
+                      영문자와 숫자를 포함해 8자 이상 입력해주세요.
+                    </span>
+                  </label>
+                  <label className="text-sm font-semibold text-slate-700">
+                    비밀번호 확인 <span className="text-rose-500">*</span>
+                    <input
+                      type="password"
+                      value={draft.lookup.passwordConfirm}
+                      onChange={(event) =>
+                        updateLookup('passwordConfirm', event.target.value)
+                      }
+                      autoComplete="new-password"
+                      className={INPUT_CLASS}
+                      placeholder="비밀번호 다시 입력"
+                    />
+                    {draft.lookup.passwordConfirm && (
+                      <p
+                        className={[
+                          'mt-1 text-xs font-semibold',
+                          draft.lookup.password === draft.lookup.passwordConfirm
+                            ? 'text-emerald-600'
+                            : 'text-rose-600',
+                        ].join(' ')}
+                      >
+                        {draft.lookup.password === draft.lookup.passwordConfirm
+                          ? '비밀번호가 일치합니다.'
+                          : '비밀번호가 일치하지 않습니다.'}
+                      </p>
+                    )}
+                  </label>
+                  <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
                     이메일 <span className="text-rose-500">*</span>
                     <input
                       type="email"
                       value={draft.buyer.email}
                       onChange={(event) => updateBuyer('email', event.target.value)}
+                      autoComplete="email"
                       className={INPUT_CLASS}
-                      placeholder="주문 조회에 사용할 이메일"
+                      placeholder="주문 안내를 받을 이메일"
                     />
                   </label>
                 </div>
@@ -945,6 +1099,25 @@ export default function OrderPage() {
                   </div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     알게 된 경로: {draft.buyer.referralSource || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    이메일: {draft.buyer.email || '-'}
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
+                <h3 className="text-sm font-bold text-slate-900">조회 계정 정보</h3>
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    조회 아이디: {draft.lookup.lookupId || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    조회 비밀번호: {draft.lookup.password ? '입력 완료' : '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    아이디 확인 상태:{' '}
+                    {lookupCheckState === 'available' ? '확인 완료' : '미확인'}
                   </div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     이메일: {draft.buyer.email || '-'}
