@@ -257,7 +257,23 @@ export default function AdminProjectItemsListPage() {
                     </div>
                   </Link>
 
-                  <div className="mt-3 flex justify-end">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        to={`/admin/items/${item.id}`}
+                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-white"
+                      >
+                        상품 수정
+                      </Link>
+                      {!isJournal && !isGroupbuy && (
+                        <Link
+                          to={`/admin/items/${item.id}#options`}
+                          className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/10"
+                        >
+                          옵션 설정
+                        </Link>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => void handleDelete(item)}

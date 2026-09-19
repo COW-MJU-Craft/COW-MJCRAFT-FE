@@ -5,6 +5,11 @@ type PurchaseStockInput = {
   selectedOptionStockQtys: Array<number | null | undefined>;
 };
 
+type OptionStockGroup = {
+  required: boolean;
+  values: Array<{ stockQty?: number | null }>;
+};
+
 function getSelectedOptionStockLimit(
   stockQtys: Array<number | null | undefined>,
 ) {
@@ -14,6 +19,21 @@ function getSelectedOptionStockLimit(
   );
 
   return limits.length > 0 ? Math.min(...limits) : undefined;
+}
+
+/**
+ * 필수 옵션 중 하나라도 선택 가능한 값이 없으면 상품 전체를 품절로 본다.
+ * 선택 옵션은 구매자가 고르지 않고 주문할 수 있으므로 전체 품절 판정에서 제외한다.
+ */
+export function isOptionItemSoldOut(optionGroups: OptionStockGroup[]) {
+  return optionGroups
+    .filter((group) => group.required)
+    .some((group) =>
+      group.values.every(
+        (value) =>
+          typeof value.stockQty === 'number' && value.stockQty <= 0,
+      ),
+    );
 }
 
 /**
