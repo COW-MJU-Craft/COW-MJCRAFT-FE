@@ -83,7 +83,19 @@ describe('order validation', () => {
             email: ' ',
           },
         }),
+        true,
       ),
     ).toBe('이메일을 입력해주세요.');
   });
+
+  it('이메일 인증이 끝나지 않았으면 제출할 수 없다', () => {
+    expect(validateFinalStep(createDraft(), false)).toBe(
+      '이메일 인증을 완료해주세요.',
+    );
+  });
+
+  it('이메일 인증이 끝나면 통과한다', () => {
+    expect(validateFinalStep(createDraft(), true)).toBeNull();
+  });
+
 });

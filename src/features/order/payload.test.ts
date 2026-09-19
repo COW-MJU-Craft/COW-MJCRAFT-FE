@@ -97,6 +97,7 @@ describe('buildOrderCreatePayload', () => {
         receiverPhone: '010-1234-5678',
       },
     });
+    expect(payload?.buyer.email).toBe('test@example.com');
     expect(payload).not.toHaveProperty('lookupId');
     expect(payload).not.toHaveProperty('password');
   });

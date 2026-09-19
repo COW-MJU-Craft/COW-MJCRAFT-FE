@@ -41,8 +41,12 @@ export function validateFulfillmentStep(draft: OrderDraft): string | null {
   return null;
 }
 
-export function validateFinalStep(draft: OrderDraft): string | null {
+export function validateFinalStep(
+  draft: OrderDraft,
+  emailVerified: boolean,
+): string | null {
   const { buyer } = draft;
   if (isBlank(buyer.email)) return '이메일을 입력해주세요.';
+  if (!emailVerified) return '이메일 인증을 완료해주세요.';
   return null;
 }
