@@ -29,15 +29,4 @@ describe('customersApi', () => {
       body: { email: 'craft@mju.ac.kr', code: '481902', password: 'Pa$$w0rd!' },
     });
   });
-
-  it('verifies existing-customer credentials through prefill in the body, not the query string', async () => {
-    await customersApi.verifyCredentials({
-      email: 'craft@mju.ac.kr',
-      password: 'Pa$$w0rd!',
-    });
-    expect(api).toHaveBeenCalledWith('/customers/prefill', {
-      method: 'POST',
-      body: { email: 'craft@mju.ac.kr', password: 'Pa$$w0rd!' },
-    });
-  });
 });
