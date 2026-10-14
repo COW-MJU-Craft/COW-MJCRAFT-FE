@@ -410,7 +410,7 @@ export default function ApplyForm({ project }: { project: Project }) {
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {[
                 '에브리타임 게시물',
-                '명지공방(明智工房) 인스타그램',
+                '명지공방 인스타그램',
                 '지인 소개',
                 '물품 전시',
                 '교내 포스터',
