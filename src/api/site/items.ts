@@ -1,5 +1,6 @@
 import { api, withApiBase } from '../core/client';
 import type { ProjectLifecycleStatus } from '../../types/status';
+import { normalizeBrandCopy } from '../../utils/common/brandCopy';
 
 export type ItemSaleType = 'NORMAL' | 'GROUPBUY';
 export type ItemStatus = ProjectLifecycleStatus;
@@ -44,22 +45,33 @@ export type ItemJournalDownloadResponse = {
   expiresInSeconds?: number;
 };
 
+function normalizeItemCopy(item: ItemResponse): ItemResponse {
+  return {
+    ...item,
+    summary: item.summary ? normalizeBrandCopy(item.summary) : item.summary,
+    description: item.description
+      ? normalizeBrandCopy(item.description)
+      : item.description,
+  };
+}
+
 export const itemsApi = {
   listByProject(projectId: string) {
     return api<ItemResponse[]>(
       withApiBase(`/projects/${projectId}/items`),
-    );
+    ).then((items) => items.map(normalizeItemCopy));
   },
 
   async getById(projectId: string, itemId: string) {
     try {
-      return await api<ItemResponse>(
+      const item = await api<ItemResponse>(
         withApiBase(`/items/${itemId}`),
       );
+      return normalizeItemCopy(item);
     } catch {
       return api<ItemResponse>(
         withApiBase(`/projects/${projectId}/items/${itemId}`),
-      );
+      ).then(normalizeItemCopy);
     }
   },
 

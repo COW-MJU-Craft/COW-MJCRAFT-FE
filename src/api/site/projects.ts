@@ -1,5 +1,6 @@
 import { api, withApiBase } from '../core/client';
 import type { ProjectLifecycleStatus } from '../../types/status';
+import { normalizeBrandCopy } from '../../utils/common/brandCopy';
 export type ProjectStatus = ProjectLifecycleStatus;
 
 export type Project = {
@@ -83,7 +84,7 @@ function toProject(
   return {
     id: String(item.id),
     title: item.title,
-    summary: item.summary,
+    summary: normalizeBrandCopy(item.summary) ?? item.summary,
     status: item.status,
     startAt: '',
     endAt: deadlineDate ?? '',
@@ -95,7 +96,10 @@ function toProject(
       'thumbnailKey' in item ? item.thumbnailKey ?? undefined : undefined,
     imageKeys: 'imageKeys' in item ? item.imageKeys ?? undefined : undefined,
 
-    description: 'description' in item ? item.description ?? undefined : undefined,
+    description:
+      'description' in item
+        ? normalizeBrandCopy(item.description ?? undefined)
+        : undefined,
     imageUrls: 'imageUrls' in item ? item.imageUrls ?? undefined : undefined,
     pinned: 'pinned' in item ? item.pinned ?? undefined : undefined,
     pinnedOrder:
