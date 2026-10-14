@@ -129,7 +129,7 @@ function pageShell({ heading, description, children = '' }) {
 async function projectCard(project) {
   const href = projectPath(project.id);
   const title = text(project.title, '프로젝트');
-  const description = summary(project.summary, '명지공방 프로젝트');
+  const description = summary(normalizeBrandCopy(project.summary), '명지공방 프로젝트');
   const thumbnail = await image(project.thumbnailUrl);
   return `<article><a href="${escapeHtml(href)}"><img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(title)}" /><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></a></article>`;
 }
@@ -137,7 +137,7 @@ async function projectCard(project) {
 async function itemCard(projectId, item) {
   const href = itemPath(projectId, item.id);
   const title = text(item.name, '상품');
-  const description = summary(item.description ?? item.summary, `${title} 상품 정보`);
+  const description = summary(normalizeBrandCopy(item.description ?? item.summary), `${title} 상품 정보`);
   const thumbnail = await image(item.thumbnailUrl);
   return `<article><a href="${escapeHtml(href)}"><img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(title)}" /><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><p>${escapeHtml(Number(item.price ?? 0).toLocaleString('ko-KR'))}원</p></a></article>`;
 }
@@ -178,8 +178,17 @@ const notices = array(noticesPayload, '/notices').sort((a, b) => String(a.id).lo
 const introMain = introMainPayload ?? {};
 const intro = introPayload ?? {};
 
-const homeTitle = text(introMain.title, '명지공방');
-const homeDescription = summary(introMain.summary ?? introMain.subtitle, '명지대학교 문화와 굿즈를 만드는 명지공방입니다.');
+function normalizeBrandCopy(value) {
+  return String(value ?? '')
+    .replaceAll('(明智工房)', '')
+    .replace(/본 프로젝트는 명지대학교와 무관하며,\s*교내\s+창업\s*동아리\s+소속\s*[‘’']?명지공방[‘’']?이\s+기획\s+및\s+프로젝트를\s+진행합니다\./g, '명지대학교 굿즈 제작 동아리 ‘명지공방’이 기획 및 프로젝트를 진행합니다.')
+    .replace(/This project has nothing to do with Myongji University\.\s*MJU Craft, a member of the school.?s start up club, will carry out the planning and project\./gi, "MJU Craft, Myongji University's merchandise-making club, plans and runs this project.")
+    .replace(/명지대학교\s+비공식\s+굿즈\s+제작\s+프로젝트\s+팀/g, '명지대학교 굿즈 제작 동아리')
+    .replace(/명지대학교\s+창업\s*동아리\s+소속\s+자체\s+제작\s+굿즈\s+프로젝트\s+팀/g, '명지대학교 굿즈 제작 동아리');
+}
+
+const homeTitle = text(normalizeBrandCopy(introMain.title), '명지공방');
+const homeDescription = summary(normalizeBrandCopy(introMain.summary ?? introMain.subtitle), '명지대학교 굿즈 제작 동아리 명지공방입니다.');
 const projectCards = await Promise.all(projects.map(projectCard));
 await addPage({
   route: '/',
@@ -207,8 +216,8 @@ await addPage({
   }),
 });
 
-const aboutTitle = text(intro.brand?.title ?? intro.intro?.title, '명지공방 소개');
-const aboutDescription = summary(intro.intro?.body ?? intro.purpose?.description, '명지공방의 소개와 활동 방향을 확인하세요.');
+const aboutTitle = text(normalizeBrandCopy(intro.brand?.title ?? intro.intro?.title), '명지공방 소개');
+const aboutDescription = summary(normalizeBrandCopy(intro.intro?.body ?? intro.purpose?.description), '명지공방의 소개와 활동 방향을 확인하세요.');
 await addPage({
   route: '/about',
   title: `${aboutTitle} | 명지공방`,
@@ -242,8 +251,9 @@ for (const listedProject of projects) {
   const itemsPayload = await getPublic(`/projects/${encodeURIComponent(String(id))}/items`);
   const items = array(itemsPayload, `/projects/${id}/items`).sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const projectTitle = text(project.title, '프로젝트');
-  const projectDescription = summary(project.description ?? project.summary, `${projectTitle} 프로젝트 소개`);
-  const projectBody = text(project.description ?? project.summary, projectDescription);
+  const projectCopy = normalizeBrandCopy(project.description ?? project.summary);
+  const projectDescription = summary(projectCopy, `${projectTitle} 프로젝트 소개`);
+  const projectBody = text(projectCopy, projectDescription);
   const itemCards = await Promise.all(items.map((item) => itemCard(id, item)));
   await addPage({
     route: projectPath(id),
@@ -265,8 +275,9 @@ for (const listedProject of projects) {
       continue;
     }
     const itemTitle = text(item.name, '상품');
-    const itemDescription = summary(item.description ?? item.summary, `${itemTitle} 상품 정보`);
-    const itemBody = text(item.description ?? item.summary, itemDescription);
+    const itemCopy = normalizeBrandCopy(item.description ?? item.summary);
+    const itemDescription = summary(itemCopy, `${itemTitle} 상품 정보`);
+    const itemBody = text(itemCopy, itemDescription);
     const price = Number(item.price ?? 0).toLocaleString('ko-KR');
     const itemImage = await image(item.thumbnailUrl ?? project.thumbnailUrl);
     const itemPageTitle = itemTitle === projectTitle

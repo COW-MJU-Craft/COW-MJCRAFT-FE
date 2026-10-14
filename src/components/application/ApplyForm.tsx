@@ -562,14 +562,7 @@ export default function ApplyForm({ project }: { project: Project }) {
 
       {step === 4 && (
         <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6">
-          <div className="text-lg font-bold text-slate-900">
-            물품 수령 장소 및 방법
-          </div>
-          <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
-            인문캠(서울) 학생회관 10층 창업동아리실, S21006
-            <br />
-            자연캠(용인)은 택배 배송으로만 진행됩니다.
-          </div>
+          <div className="text-lg font-bold text-slate-900">물품 수령 방법</div>
           <div className="text-xs text-slate-500">
             스티커/뱃지, 인형 수령 방법이 다를 경우 택배 배송을 선택해주세요.
           </div>
