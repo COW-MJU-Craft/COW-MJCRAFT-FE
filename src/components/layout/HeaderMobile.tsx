@@ -32,7 +32,6 @@ export default function HeaderMobile({ visible = true }: HeaderMobileProps) {
       apply: pathname.startsWith('/apply'),
       feedback: pathname.startsWith('/feedback'),
       cart: pathname.startsWith('/cart'),
-      orderLookup: pathname.startsWith('/orders'),
     }),
     [pathname],
   );
@@ -244,16 +243,6 @@ export default function HeaderMobile({ visible = true }: HeaderMobileProps) {
             className={`${menuBase} ${isActive.cart ? menuActive : menuIdle}`}
           >
             장바구니
-          </Link>
-
-          <Link
-            to="/orders/lookup"
-            onClick={closeAllAndScrollTop}
-            className={`${menuBase} ${
-              isActive.orderLookup ? menuActive : menuIdle
-            }`}
-          >
-            주문조회
           </Link>
 
           <Link

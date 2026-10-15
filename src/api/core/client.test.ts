@@ -254,13 +254,13 @@ describe('api 토큰 재발급', () => {
   });
 
   it('Authorization 헤더가 없던 요청의 401은 재발급하지 않는다', async () => {
-    // 비회원 주문 조회의 비밀번호 불일치 — 재발급으로 해결되지 않는다
+    // 인증 정보가 없는 공개 요청의 401은 관리자 토큰 재발급 대상이 아니다.
     vi.mocked(getAccessToken).mockReturnValue(null);
     vi.mocked(getRefreshToken).mockReturnValue('ref123');
     const f = vi.fn().mockResolvedValue(jsonResponse(401, { message: '비밀번호 불일치' }));
     vi.stubGlobal('fetch', f);
 
-    await expect(api('/orders/lookup', { method: 'POST', body: {} })).rejects.toBeInstanceOf(
+    await expect(api('/orders', { method: 'POST', body: {} })).rejects.toBeInstanceOf(
       ApiError,
     );
 

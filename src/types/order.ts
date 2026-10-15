@@ -35,7 +35,6 @@ export type OrderCompleteOrderSummary = {
   finalAmount?: number;
   depositDeadline?: string;
   createdAt?: string;
-  lookupId?: string;
   viewToken?: string;
   depositorName?: string;
 };

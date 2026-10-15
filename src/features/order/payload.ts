@@ -47,6 +47,7 @@ export function buildOrderCreatePayload(
 ): OrderCreateRequest | null {
   const items = buildOrderItemsPayload(draft.items);
   if (items.length === 0) return null;
+  const email = draft.buyer.email.trim();
 
   return {
     depositorName: draft.payment.depositorName.trim(),
@@ -70,7 +71,7 @@ export function buildOrderCreatePayload(
       refundBank: draft.buyer.refundBank.trim(),
       refundAccount: draft.buyer.refundAccount.trim(),
       referralSource: draft.buyer.referralSource.trim(),
-      email: draft.buyer.email.trim(),
+      email,
     },
     fulfillment: {
       method: draft.fulfillment.method,

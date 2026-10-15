@@ -46,14 +46,6 @@ export default function CartView({
               </svg>
               장바구니 {items.length > 0 && `(${totalCount}개)`}
             </Link>
-            <div className="flex gap-2">
-              <Link
-                to="/orders/lookup"
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
-              >
-                주문 조회
-              </Link>
-            </div>
           </div>
         </Reveal>
 
