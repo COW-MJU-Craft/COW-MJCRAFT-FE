@@ -42,7 +42,7 @@ it('saves a corrected email after confirmation and refreshes the order detail', 
     ),
   );
   expect(onSaved).toHaveBeenCalledWith('corrected@mju.ac.kr');
-  expect(screen.getByRole('status')).toHaveTextContent('새 주문 조회 링크를 발송');
+  expect(screen.getByRole('status')).toHaveTextContent('새 주문 확인 링크를 발송');
 });
 
 it('retains the draft when the update request fails', async () => {

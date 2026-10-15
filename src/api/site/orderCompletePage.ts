@@ -111,7 +111,6 @@ function toOrderSummary(raw: unknown): OrderCompleteOrderSummary | undefined {
     'deposit_deadline',
     'deadline',
   );
-  const lookupId = pickString(record, 'lookupId', 'lookup_id');
   const viewToken = pickString(record, 'viewToken', 'view_token');
   const totalAmount = pickNumber(record, 'totalAmount', 'total_amount');
   const shippingFee = pickNumber(record, 'shippingFee', 'shipping_fee');
@@ -128,7 +127,6 @@ function toOrderSummary(raw: unknown): OrderCompleteOrderSummary | undefined {
     finalAmount === undefined &&
     !depositDeadline &&
     !createdAt &&
-    !lookupId &&
     !viewToken &&
     !depositorName
   ) {
@@ -144,7 +142,6 @@ function toOrderSummary(raw: unknown): OrderCompleteOrderSummary | undefined {
     finalAmount,
     depositDeadline,
     createdAt,
-    lookupId,
     viewToken,
     depositorName,
   };

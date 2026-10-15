@@ -13,12 +13,10 @@ import {
 import { ordersApi } from '../../../api/site/orders';
 import Reveal from '../../../components/ui/Reveal';
 import { useToast } from '../../../components/toast/useToast';
-import CustomerEnrollmentCard from '../../../features/customer/CustomerEnrollmentCard';
 
 type OrderCompleteState = {
   orderNo?: string;
   status?: string;
-  buyerEmail?: string;
   depositDeadline?: string;
   viewToken?: string;
   createdAt?: string;
@@ -491,10 +489,6 @@ export default function OrderCompletePage() {
         onCopyPaymentAccountNumber={() => void copyPaymentAccountNumber()}
       />
 
-      <Reveal className="mt-6">
-        <CustomerEnrollmentCard initialEmail={state.buyerEmail} />
-      </Reveal>
-
       <Reveal className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-6">
         <h2 className="text-lg font-bold text-slate-900 sm:text-lg">
           주문 핵심 정보
@@ -526,10 +520,7 @@ export default function OrderCompletePage() {
           </p>
           <ol className="mt-2 space-y-1 text-[0.75rem] leading-5 text-amber-900/90 sm:mt-2 sm:space-y-1 sm:text-sm sm:leading-relaxed">
             <li>1. 입금 완료 후 주문 상태가 업데이트돼요.</li>
-            <li>2. 이메일 인증 후 비밀번호를 등록하면 주문 조회가 가능해요.</li>
-            <li>
-              3. 이메일 링크 또는 주문 조회 페이지로 다시 확인할 수 있어요.
-            </li>
+            <li>2. 주문 관련 안내는 입력한 이메일로 전달돼요.</li>
           </ol>
         </div>
 
@@ -541,18 +532,6 @@ export default function OrderCompletePage() {
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:gap-2">
-          <Link
-            to="/orders/lookup"
-            className="inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-5 text-[15px] font-semibold text-white hover:opacity-95 sm:h-11 sm:text-sm"
-          >
-            주문 조회하러 가기
-          </Link>
-          <Link
-            to="/orders/enroll"
-            className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 px-4 text-[15px] font-semibold text-slate-700 hover:bg-slate-50 sm:h-11 sm:px-5 sm:text-sm"
-          >
-            비밀번호 등록/재설정
-          </Link>
           <Link
             to="/projects"
             className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 px-4 text-[15px] font-semibold text-slate-700 hover:bg-slate-50 sm:h-11 sm:px-5 sm:text-sm"

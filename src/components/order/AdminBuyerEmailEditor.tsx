@@ -83,7 +83,7 @@ export default function AdminBuyerEmailEditor({
       const confirmed = await confirm.open({
         title: '주문자 이메일 정정',
         description:
-          '정정한 이메일로 주문 조회 링크를 다시 보냅니다. 기존 조회 링크는 즉시 사용할 수 없게 됩니다.',
+          '정정한 이메일로 주문 확인 링크를 다시 보냅니다. 기존 확인 링크는 즉시 사용할 수 없게 됩니다.',
         confirmText: '저장 및 재발송',
         cancelText: '취소',
       });
@@ -102,7 +102,7 @@ export default function AdminBuyerEmailEditor({
 
       setEmail(updatedEmail);
       setSavedEmail(updatedEmail);
-      setSuccess('이메일을 정정하고 새 주문 조회 링크를 발송했어요.');
+      setSuccess('이메일을 정정하고 새 주문 확인 링크를 발송했어요.');
       await onSaved(updatedEmail);
     } catch (cause) {
       if (!mounted.current || currentRequest !== request.current) return;
