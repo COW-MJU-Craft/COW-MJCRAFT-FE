@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   DndContext,
   PointerSensor,
@@ -28,6 +28,7 @@ import {
   type AdminProjectStatus,
   type PresignPutItem,
 } from '../../../api/admin/projects';
+import { shouldOfferLaunchNotice } from '../../../utils/project/launchNotice';
 
 type ValidationField =
   | 'title'
@@ -60,6 +61,7 @@ type AdminProjectForm = {
   thumbnailUrl?: string;
   thumbnailPreviewUrl?: string;
   images: ImageItem[];
+  launchNoticeId?: number | null;
   isDirty?: boolean;
   isUploadingThumbnail?: boolean;
   thumbnailUploadError?: string | null;
@@ -153,6 +155,7 @@ function mapProjectToForm(project: AdminProjectResponse): AdminProjectForm {
     thumbnailKey: project.thumbnailKey ?? '',
     thumbnailUrl: project.thumbnailUrl ?? undefined,
     images: buildImageItems(project.imageKeys, project.imageUrls),
+    launchNoticeId: project.launchNoticeId ?? null,
     isDirty: false,
   };
 }
@@ -177,6 +180,7 @@ function mergeServerProject(
     thumbnailKey: saved.thumbnailKey ?? form.thumbnailKey,
     thumbnailUrl: saved.thumbnailUrl ?? form.thumbnailUrl,
     images: buildImageItems(saved.imageKeys, saved.imageUrls),
+    launchNoticeId: saved.launchNoticeId ?? form.launchNoticeId ?? null,
     thumbnailPreviewUrl: hasThumbnailUrl ? undefined : form.thumbnailPreviewUrl,
     isDirty: false,
     thumbnailUploadError: null,
@@ -303,6 +307,7 @@ export default function AdminProjectEditorPage() {
   const [error, setError] = useState<string | null>(null);
   const [thumbnailDeleting, setThumbnailDeleting] = useState(false);
   const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
+  const [publishLaunchNotice, setPublishLaunchNotice] = useState(true);
   // 렌더 중 isDirtyBySnapshot()에서 읽어야 하므로 ref 대신 state로 보관한다
   // (react-hooks/refs: 렌더 중 ref.current 읽기 금지).
   const [initialProjectSnapshot, setInitialProjectSnapshot] =
@@ -504,8 +509,17 @@ export default function AdminProjectEditorPage() {
     setSaving(true);
     setError(null);
 
+    const offerLaunchNotice = shouldOfferLaunchNotice({
+      savedStatus: isEditMode ? (initialProjectSnapshot?.status ?? null) : null,
+      nextStatus: project.status,
+      launchNoticeId: project.launchNoticeId,
+    });
+
     try {
-      const payload = buildPayload(project);
+      const payload = {
+        ...buildPayload(project),
+        ...(offerLaunchNotice ? { publishLaunchNotice } : {}),
+      };
       const saved = isEditMode
         ? await adminProjectsApi.updateProject(String(projectId), payload)
         : await adminProjectsApi.createProject(payload);
@@ -528,7 +542,13 @@ export default function AdminProjectEditorPage() {
         return merged;
       });
 
-      toast.success('저장했어요');
+      const launchNoticePublished =
+        offerLaunchNotice && publishLaunchNotice && saved?.launchNoticeId != null;
+      toast.success(
+        launchNoticePublished
+          ? '저장했어요. 출시 공지도 등록했어요'
+          : '저장했어요',
+      );
       if (!isEditMode) {
         window.setTimeout(() => {
           navigate('/admin/projects');
@@ -544,10 +564,12 @@ export default function AdminProjectEditorPage() {
   }, [
     buildPayload,
     getValidation,
+    initialProjectSnapshot,
     isEditMode,
     navigate,
     project,
     projectId,
+    publishLaunchNotice,
     revokePreviewUrl,
     toast,
     updateProject,
@@ -829,6 +851,11 @@ export default function AdminProjectEditorPage() {
     project.isUploadingThumbnail ||
     project.images.some((img) => img.isUploading);
   const hasChanges = isDirtyBySnapshot(project);
+  const canOfferLaunchNotice = shouldOfferLaunchNotice({
+    savedStatus: isEditMode ? (initialProjectSnapshot?.status ?? null) : null,
+    nextStatus: project.status,
+    launchNoticeId: project.launchNoticeId,
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12 pt-12">
@@ -912,6 +939,35 @@ export default function AdminProjectEditorPage() {
             </select>
           </div>
         </div>
+
+        {canOfferLaunchNotice && (
+          <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={publishLaunchNotice}
+              onChange={(e) => setPublishLaunchNotice(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+            />
+            <span>
+              저장할 때 공지사항에 출시 공지를 함께 등록해요
+              <span className="mt-0.5 block font-medium text-slate-500">
+                제목·한 줄 설명·마감일·대표 이미지와 프로젝트 링크가 들어가요
+              </span>
+            </span>
+          </label>
+        )}
+
+        {project.launchNoticeId != null && (
+          <p className="mt-3 text-xs font-semibold text-slate-500">
+            출시 공지가 등록된 프로젝트예요.{' '}
+            <Link
+              to={`/admin/notices/${project.launchNoticeId}`}
+              className="font-bold text-primary underline-offset-2 hover:underline"
+            >
+              출시 공지 보기
+            </Link>
+          </p>
+        )}
 
         {project.validationError && (
           <p className="mt-3 text-xs font-semibold text-rose-600">

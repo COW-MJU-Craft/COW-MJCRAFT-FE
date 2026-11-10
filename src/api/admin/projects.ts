@@ -19,6 +19,8 @@ export type AdminProjectResponse = {
   pinned?: boolean | null;
   pinnedOrder?: number | null;
   manualOrder?: number | null;
+  /** 자동 등록된 출시 공지 ID (없으면 null) */
+  launchNoticeId?: number | null;
   updatedAt?: string | number[] | null;
 };
 
@@ -42,6 +44,8 @@ export type AdminProjectUpsertRequest = {
   deadlineDate: string;
   thumbnailKey: string;
   imageKeys?: string[];
+  /** OPEN 전환 시 출시 공지 자동 등록 여부 (미입력 시 서버가 등록) */
+  publishLaunchNotice?: boolean;
 };
 
 export type PresignPutRequest = {
