@@ -1,6 +1,6 @@
 import { useState, type MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Pin, Receipt } from 'lucide-react';
+import { Calendar, ImageOff, Pin, Receipt } from 'lucide-react';
 import StatusBadge from '../ui/StatusBadge';
 import type { Project } from '../../api/site/projects';
 import { useAuth } from '../../hooks/useAuth';
@@ -22,6 +22,7 @@ export default function ProjectCard({
   const { isLoggedIn } = useAuth();
   const canViewPayout = isClosed && isLoggedIn;
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const goPayout = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -40,7 +41,16 @@ export default function ProjectCard({
         className="flex min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       >
         <div className="relative aspect-video overflow-hidden bg-slate-100">
-          {project.thumbnailUrl ? (
+          {project.thumbnailUrl && imgFailed ? (
+            <div
+              role="img"
+              aria-label={`${project.title} (이미지를 불러오지 못했어요)`}
+              className="flex h-full w-full flex-col items-center justify-center gap-1 text-xs font-semibold text-slate-400 sm:text-sm"
+            >
+              <ImageOff className="h-6 w-6" aria-hidden="true" />
+              이미지를 불러오지 못했어요
+            </div>
+          ) : project.thumbnailUrl ? (
             <>
               {!imgLoaded && (
                 <div className="absolute inset-0 animate-pulse bg-slate-200" />
@@ -51,6 +61,7 @@ export default function ProjectCard({
                 loading="lazy"
                 decoding="async"
                 onLoad={() => setImgLoaded(true)}
+                onError={() => setImgFailed(true)}
                 className={[
                   'h-full w-full object-cover transition-all duration-300 ease-out group-hover:scale-105',
                   imgLoaded ? 'opacity-100' : 'opacity-0',

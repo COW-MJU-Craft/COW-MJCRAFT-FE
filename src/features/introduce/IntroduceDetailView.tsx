@@ -3,6 +3,7 @@ import { withApiBase } from '../../api/core/client';
 import type { IntroduceDetailPayload } from '../../api/site/intro';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import SafeImage from '../../components/ui/SafeImage';
 
 type FallbackDetail = {
   brandTitle?: string;
@@ -123,7 +124,7 @@ export default function IntroduceDetailView({
         {currentLogoUrl ? (
           <div className="mt-4">
             <div className="flex h-80 w-full items-center justify-center rounded-2xl bg-slate-50">
-              <img
+              <SafeImage
                 src={currentLogoUrl}
                 alt="로고"
                 className="
@@ -161,7 +162,7 @@ export default function IntroduceDetailView({
               >
                 {imageUrl ? (
                   <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-slate-50">
-                    <img
+                    <SafeImage
                       src={imageUrl}
                       alt={history.year ? `${history.year} 로고` : '로고'}
                       className="

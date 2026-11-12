@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import Reveal from '../../components/ui/Reveal';
 import type { IntroduceMainSummary } from '../../api/site/intro';
+import SafeImage from '../../components/ui/SafeImage';
 
 type Props = {
   data: IntroduceMainSummary | null;
@@ -142,7 +143,7 @@ function PreviewView({
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {safeLogos.map((logo, idx) => {
               const img = (
-              <img
+              <SafeImage compact
                 src={logo.imageUrl ?? ''}
                 alt={`logo-${idx}`}
                 loading="lazy"
@@ -298,7 +299,7 @@ function PublicView({
                       className="w-full shrink-0"
                     >
                       <LogoWrap linkToAbout={linkToAbout}>
-                        <img
+                        <SafeImage
                           src={logo.imageUrl ?? ''}
                           alt={`logo-${idx}`}
                           loading={idx === 0 ? undefined : 'lazy'}

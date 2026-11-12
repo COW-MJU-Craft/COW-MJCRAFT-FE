@@ -26,6 +26,7 @@ import {
   getPurchaseStock,
   isOptionItemSoldOut,
 } from '../../../features/order/optionStock';
+import SafeImage from '../../../components/ui/SafeImage';
 
 function formatMoney(value?: number | null) {
   if (value === null || value === undefined) return '-';
@@ -111,7 +112,7 @@ function ProductGallery({
               className="block h-full w-full"
               aria-label="대표 이미지 크게 보기"
             >
-              <img
+              <SafeImage
                 src={activeImage}
                 alt={name}
                 loading="eager"
@@ -142,7 +143,7 @@ function ProductGallery({
                 }`}
                 aria-label={`${name} 이미지 ${idx + 1} 보기`}
               >
-                <img
+                <SafeImage compact
                   src={url}
                   alt={`${name} 썸네일 ${idx + 1}`}
                   loading="lazy"
@@ -389,7 +390,7 @@ function DetailImagesViewer({
               className="h-full w-full"
               aria-label="상세 이미지 크게 보기"
             >
-              <img
+              <SafeImage
                 src={preview}
                 alt={`${name} 상세 이미지 ${activeIndex + 1}`}
                 loading="eager"
@@ -414,7 +415,7 @@ function DetailImagesViewer({
             }`}
             aria-label={`상세 이미지 ${idx + 1} 보기`}
           >
-            <img
+            <SafeImage compact
               src={url}
               alt={`${name} 상세 썸네일 ${idx + 1}`}
               loading="lazy"
@@ -979,7 +980,7 @@ export default function ProjectItemDetailPage() {
             aria-label="닫기"
           />
           <div className="relative z-10 max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-black">
-            <img
+            <SafeImage
               src={activeImage}
               alt="상세 이미지 크게 보기"
               loading="eager"

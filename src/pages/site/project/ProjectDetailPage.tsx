@@ -18,6 +18,7 @@ import RouteMetadata from '../../../components/seo/RouteMetadata';
 import { trackGA4EcommerceEvent } from '../../../utils/common/analytics';
 import { toGA4ItemFromItem } from '../../../utils/common/analyticsEcommerce';
 import { isOptionItemSoldOut } from '../../../features/order/optionStock';
+import SafeImage from '../../../components/ui/SafeImage';
 
 type NormalStockTag = {
   label: string;
@@ -632,7 +633,7 @@ export default function ProjectDetailPage() {
                         className="h-full shrink-0"
                         style={{ width: `${100 / carouselImages.length}%` }}
                       >
-                        <img
+                        <SafeImage
                           src={url}
                           alt={
                             idx === 0
@@ -796,7 +797,7 @@ export default function ProjectDetailPage() {
                         <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-4 sm:grid-cols-[120px_minmax(0,1fr)]">
                           <div className="relative aspect-3/4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
                             {item.thumbnailUrl ? (
-                              <img
+                              <SafeImage
                                 src={item.thumbnailUrl}
                                 alt={item.name}
                                 loading="lazy"
@@ -1008,7 +1009,7 @@ export default function ProjectDetailPage() {
                               <div className="grid gap-3 sm:grid-cols-[90px_1fr] sm:items-center">
                                 <div className="aspect-3/4 overflow-hidden rounded-xl border border-slate-200 bg-white">
                                   {item.thumbnailUrl ? (
-                                    <img
+                                    <SafeImage
                                       src={item.thumbnailUrl}
                                       alt={item.name}
                                       loading="lazy"
