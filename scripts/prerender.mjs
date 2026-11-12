@@ -10,6 +10,7 @@ import {
   escapeHtml,
   normalizeOrigin,
   renderDocument,
+  seoImage,
   stripMarkup,
   summary,
   writeRoute,
@@ -131,7 +132,7 @@ async function projectCard(project) {
   const title = text(project.title, '프로젝트');
   const description = summary(normalizeBrandCopy(project.summary), '명지공방 프로젝트');
   const thumbnail = await image(project.thumbnailUrl);
-  return `<article><a href="${escapeHtml(href)}"><img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(title)}" /><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></a></article>`;
+  return `<article><a href="${escapeHtml(href)}">${seoImage(thumbnail, title)}<h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></a></article>`;
 }
 
 async function itemCard(projectId, item) {
@@ -139,7 +140,7 @@ async function itemCard(projectId, item) {
   const title = text(item.name, '상품');
   const description = summary(normalizeBrandCopy(item.description ?? item.summary), `${title} 상품 정보`);
   const thumbnail = await image(item.thumbnailUrl);
-  return `<article><a href="${escapeHtml(href)}"><img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(title)}" /><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><p>${escapeHtml(Number(item.price ?? 0).toLocaleString('ko-KR'))}원</p></a></article>`;
+  return `<article><a href="${escapeHtml(href)}">${seoImage(thumbnail, title)}<h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><p>${escapeHtml(Number(item.price ?? 0).toLocaleString('ko-KR'))}원</p></a></article>`;
 }
 
 async function addPage({ route, title, description, image: pageImage, body, category }) {
@@ -292,7 +293,7 @@ for (const listedProject of projects) {
       body: pageShell({
         heading: itemTitle,
         description: itemDescription,
-        children: `<p>가격: ${escapeHtml(price)}원</p><p>프로젝트: <a href="${escapeHtml(projectPath(id))}">${escapeHtml(projectTitle)}</a></p><section><h2>상품 설명</h2><p>${escapeHtml(itemBody)}</p></section><img src="${escapeHtml(itemImage)}" alt="${escapeHtml(itemTitle)}" />`,
+        children: `<p>가격: ${escapeHtml(price)}원</p><p>프로젝트: <a href="${escapeHtml(projectPath(id))}">${escapeHtml(projectTitle)}</a></p><section><h2>상품 설명</h2><p>${escapeHtml(itemBody)}</p></section>${seoImage(itemImage, itemTitle)}`,
       }),
     });
   }
@@ -317,7 +318,7 @@ for (const listedNotice of notices) {
     body: pageShell({
       heading: title,
       description,
-      children: `<p><a href="/notices">공지사항 목록</a></p><article><p>${escapeHtml(text(notice.content, description))}</p>${staticImages.map((url, index) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(`${title} 이미지 ${index + 1}`)}" />`).join('')}</article>`,
+      children: `<p><a href="/notices">공지사항 목록</a></p><article><p>${escapeHtml(text(notice.content, description))}</p>${staticImages.map((url, index) => `${seoImage(url, `${title} 이미지 ${index + 1}`)}`).join('')}</article>`,
     }),
   });
 }

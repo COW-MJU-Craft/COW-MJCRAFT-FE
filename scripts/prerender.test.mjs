@@ -6,6 +6,7 @@ import {
   normalizeOrigin,
   renderDocument,
   routeOutputPath,
+  seoImage,
 } from './prerender-lib.mjs';
 
 test('route metadata is route-specific and never uses localhost', () => {
@@ -37,4 +38,14 @@ test('sitemap and robots reserve Disallow for private admin routes', () => {
 
 test('route output cannot leave dist directory', () => {
   assert.throws(() => routeOutputPath('/tmp/dist', '/../outside'));
+});
+
+test('prerender images are wrapped in noscript and escaped', () => {
+  const html = seoImage('/seo-media/a.webp?x=1&y="2"', '입학키트 <특별>');
+
+  assert.equal(
+    html,
+    '<noscript><img src="/seo-media/a.webp?x=1&amp;y=&quot;2&quot;" alt="입학키트 &lt;특별&gt;" /></noscript>',
+  );
+  assert.doesNotMatch(html.replace(/<\/?noscript>/g, ''), /<img[^>]*>[^<]*<img/);
 });
