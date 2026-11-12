@@ -1,44 +1,47 @@
-﻿import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+﻿import { Suspense, lazy } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import SiteLayout from './components/layout/SiteLayout';
-import AdminLayout from './components/layout/AdminLayout';
 import MainPage from './pages/site/home/MainPage';
-import AboutPage from './pages/site/about/AboutPage';
-import NoticesPage from './pages/site/notice/NoticesPage';
-import NoticeDetailPage from './pages/site/notice/NoticeDetailPage';
-import FeedbackPage from './pages/site/feedback/FeedbackPage';
-import ApplyPage from './pages/site/application/ApplyPage';
-import ApplyEntryPage from './pages/site/application/ApplyEntryPage';
-import ApplicationManagePage from './pages/site/application/ApplicationManagePage';
-import ApplicationResultPage from './pages/site/application/ApplicationResultPage';
-import MyPage from './pages/site/mypage/MyPage';
-import ProjectsPage from './pages/site/project/ProjectsPage';
-import ProjectDetailPage from './pages/site/project/ProjectDetailPage';
-import ProjectItemDetailPage from './pages/site/project/ProjectItemDetailPage';
-import PayoutsPage from './pages/site/payout/PayoutsPage';
-import CartPage from './pages/site/cart/CartPage';
-import OrderPage from './pages/site/order/OrderPage';
-import OrderCompletePage from './pages/site/order/OrderCompletePage';
-import OrderViewPage from './pages/site/order/OrderViewPage';
-import LoginPage from './pages/site/auth/LoginPage';
-import AdminDashboardPage from './pages/admin/dashboard/AdminDashboardPage';
-import AdminProjectsListPage from './pages/admin/projects/AdminProjectsListPage';
-import AdminProjectEditorPage from './pages/admin/projects/AdminProjectEditorPage';
-import AdminProjectItemsListPage from './pages/admin/projects/AdminProjectItemsListPage';
-import AdminProjectItemCreatePage from './pages/admin/projects/AdminProjectItemCreatePage';
-import AdminItemDetailPage from './pages/admin/items/AdminItemDetailPage';
-import AdminOrdersPage from './pages/admin/orders/AdminProjectOrdersPage';
-import AdminOrderPolicyPage from './pages/admin/orders/AdminOrderPolicyPage';
-import AdminNoticesListPage from './pages/admin/notices/AdminNoticesListPage';
-import AdminNoticeEditorPage from './pages/admin/notices/AdminNoticeEditorPage';
-import AdminNoticeDetailPage from './pages/admin/notices/AdminNoticeDetailPage';
-import AdminApplicationsListPage from './pages/admin/applications/AdminApplicationsListPage';
-import AdminApplicationDetailPage from './pages/admin/applications/AdminApplicationDetailPage';
-import AdminFormsListPage from './pages/admin/forms/AdminFormsListPage';
-import AdminFormDetailPage from './pages/admin/forms/AdminFormDetailPage';
 import FloatingSns from './components/social/FloatingSns';
 import GoogleAnalytics from './components/analytics/GoogleAnalytics';
 import { ApplicationRouteMetadata } from './components/seo/RouteMetadata';
 import DeploymentVersion from './components/layout/DeploymentVersion';
+import PageFallback from './components/ui/PageFallback';
+
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
+const AboutPage = lazy(() => import('./pages/site/about/AboutPage'));
+const NoticesPage = lazy(() => import('./pages/site/notice/NoticesPage'));
+const NoticeDetailPage = lazy(() => import('./pages/site/notice/NoticeDetailPage'));
+const FeedbackPage = lazy(() => import('./pages/site/feedback/FeedbackPage'));
+const ApplyPage = lazy(() => import('./pages/site/application/ApplyPage'));
+const ApplyEntryPage = lazy(() => import('./pages/site/application/ApplyEntryPage'));
+const ApplicationManagePage = lazy(() => import('./pages/site/application/ApplicationManagePage'));
+const ApplicationResultPage = lazy(() => import('./pages/site/application/ApplicationResultPage'));
+const MyPage = lazy(() => import('./pages/site/mypage/MyPage'));
+const ProjectsPage = lazy(() => import('./pages/site/project/ProjectsPage'));
+const ProjectDetailPage = lazy(() => import('./pages/site/project/ProjectDetailPage'));
+const ProjectItemDetailPage = lazy(() => import('./pages/site/project/ProjectItemDetailPage'));
+const PayoutsPage = lazy(() => import('./pages/site/payout/PayoutsPage'));
+const CartPage = lazy(() => import('./pages/site/cart/CartPage'));
+const OrderPage = lazy(() => import('./pages/site/order/OrderPage'));
+const OrderCompletePage = lazy(() => import('./pages/site/order/OrderCompletePage'));
+const OrderViewPage = lazy(() => import('./pages/site/order/OrderViewPage'));
+const LoginPage = lazy(() => import('./pages/site/auth/LoginPage'));
+const AdminDashboardPage = lazy(() => import('./pages/admin/dashboard/AdminDashboardPage'));
+const AdminProjectsListPage = lazy(() => import('./pages/admin/projects/AdminProjectsListPage'));
+const AdminProjectEditorPage = lazy(() => import('./pages/admin/projects/AdminProjectEditorPage'));
+const AdminProjectItemsListPage = lazy(() => import('./pages/admin/projects/AdminProjectItemsListPage'));
+const AdminProjectItemCreatePage = lazy(() => import('./pages/admin/projects/AdminProjectItemCreatePage'));
+const AdminItemDetailPage = lazy(() => import('./pages/admin/items/AdminItemDetailPage'));
+const AdminOrdersPage = lazy(() => import('./pages/admin/orders/AdminProjectOrdersPage'));
+const AdminOrderPolicyPage = lazy(() => import('./pages/admin/orders/AdminOrderPolicyPage'));
+const AdminNoticesListPage = lazy(() => import('./pages/admin/notices/AdminNoticesListPage'));
+const AdminNoticeEditorPage = lazy(() => import('./pages/admin/notices/AdminNoticeEditorPage'));
+const AdminNoticeDetailPage = lazy(() => import('./pages/admin/notices/AdminNoticeDetailPage'));
+const AdminApplicationsListPage = lazy(() => import('./pages/admin/applications/AdminApplicationsListPage'));
+const AdminApplicationDetailPage = lazy(() => import('./pages/admin/applications/AdminApplicationDetailPage'));
+const AdminFormsListPage = lazy(() => import('./pages/admin/forms/AdminFormsListPage'));
+const AdminFormDetailPage = lazy(() => import('./pages/admin/forms/AdminFormDetailPage'));
 
 export default function App() {
   const location = useLocation();
@@ -78,7 +81,13 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
         </Route>
 
-        <Route element={<AdminLayout />}>
+        <Route
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <AdminLayout />
+            </Suspense>
+          }
+        >
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/projects" element={<AdminProjectsListPage />} />
           <Route
