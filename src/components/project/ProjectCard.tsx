@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Pin, Receipt } from 'lucide-react';
 import StatusBadge from '../ui/StatusBadge';
 import type { Project } from '../../api/site/projects';
+import { useAuth } from '../../hooks/useAuth';
 
 type ProjectCardProps = {
   project: Project;
@@ -17,6 +18,9 @@ export default function ProjectCard({
   const canApply = project.status === 'OPEN';
   const deadlineText = project.deadlineDate || project.endAt || '';
   const isClosed = project.status === 'CLOSED';
+  // 정산 내역 바로가기는 관리자(로그인 사용자)에게만 노출한다.
+  const { isLoggedIn } = useAuth();
+  const canViewPayout = isClosed && isLoggedIn;
   const [imgLoaded, setImgLoaded] = useState(false);
 
   const goPayout = (e: MouseEvent<HTMLButtonElement>) => {
@@ -65,7 +69,7 @@ export default function ProjectCard({
             </div>
           )}
 
-          {isClosed && (
+          {canViewPayout && (
             <button
               type="button"
               onClick={goPayout}
