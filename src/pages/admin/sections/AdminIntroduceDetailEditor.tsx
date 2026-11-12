@@ -7,6 +7,7 @@ import {
   type AdminIntroduceDetailResponse,
   type AdminIntroduceDetailUpdateRequest,
 } from '../../../api/admin/introduce';
+import { prepareImageFiles } from '../../../utils/common/image';
 
 type UploadTarget = 'current' | `history:${number}` | null;
 
@@ -245,7 +246,8 @@ export default function AdminIntroduceDetailEditor() {
     return presign.key as string;
   };
 
-  const handleUploadCurrentLogo = async (files: File[]) => {
+  const handleUploadCurrentLogo = async (rawFiles: File[]) => {
+    const files = await prepareImageFiles(rawFiles);
     const file = files.find(isImageFile);
     if (!file) return;
 
@@ -276,7 +278,8 @@ export default function AdminIntroduceDetailEditor() {
     }
   };
 
-  const handleUploadHistoryImage = async (files: File[], index: number) => {
+  const handleUploadHistoryImage = async (rawFiles: File[], index: number) => {
+    const files = await prepareImageFiles(rawFiles);
     const file = files.find(isImageFile);
     if (!file) return;
 

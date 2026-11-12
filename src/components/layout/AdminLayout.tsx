@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import AdminHeaderDesktop from './AdminHeaderDesktop';
+import PageFallback from '../ui/PageFallback';
 import AdminHeaderMobile from './AdminHeaderMobile';
 import { isLoggedIn } from '../../utils/auth/auth';
 
@@ -84,7 +85,9 @@ export default function AdminLayout() {
         <AdminHeaderMobile visible={mobileHeaderVisible} />
       </header>
       <main className="overflow-x-hidden pt-20 md:pt-6">
-        <Outlet />
+        <Suspense fallback={<PageFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

@@ -1,30 +1,23 @@
-@font-face {
-  font-family: 'Pretendard';
-  src: url('../assets/fonts/pretendard/PretendardVariable.woff2')
-    format('woff2');
-  font-weight: 45 920;
-  font-style: normal;
-  font-display: swap;
-}
+@import './pretendard-subset.css';
 
 @font-face {
   font-family: 'GmarketSans';
-  src: url('../assets/fonts/gmarket/GmarketSansTTFLight.ttf') format('truetype');
+  src: url('../assets/fonts/gmarket/GmarketSansTTFLight.woff2') format('woff2');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'GmarketSans';
-  src: url('../assets/fonts/gmarket/GmarketSansTTFMedium.ttf')
-    format('truetype');
+  src: url('../assets/fonts/gmarket/GmarketSansTTFMedium.woff2')
+    format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'GmarketSans';
-  src: url('../assets/fonts/gmarket/GmarketSansTTFBold.ttf') format('truetype');
+  src: url('../assets/fonts/gmarket/GmarketSansTTFBold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -34,7 +27,7 @@
   --font-heading: 'GmarketSans', ui-sans-serif, system-ui, -apple-system,
     'Segoe UI', Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
 
-  --font-body: 'Pretendard', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+  --font-body: 'Pretendard Variable', 'Pretendard', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
     Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
 }
 
