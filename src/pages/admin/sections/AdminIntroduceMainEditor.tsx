@@ -3,6 +3,7 @@ import Reveal from '../../../components/ui/Reveal';
 import { ApiError } from '../../../api/core/client';
 import { adminIntroduceApi } from '../../../api/admin/introduce';
 import MarkdownEditor from '../../../components/ui/MarkdownEditor';
+import { prepareImageFiles } from '../../../utils/common/image';
 
 type HeroLogoItem = {
   key: string;
@@ -120,7 +121,8 @@ export default function AdminIntroduceMainEditor() {
     };
   }, []);
 
-  const handleHeroLogoUploadFiles = async (files: File[]) => {
+  const handleHeroLogoUploadFiles = async (rawFiles: File[]) => {
+    const files = await prepareImageFiles(rawFiles);
     const imageFiles = files.filter(isImageFile);
     if (imageFiles.length === 0) return;
 

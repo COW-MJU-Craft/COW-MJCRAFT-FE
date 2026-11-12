@@ -12,6 +12,7 @@ import type {
   AdminProjectStatus,
   PresignPutItem,
 } from '../../../api/admin/projects';
+import { prepareImageFiles } from '../../../utils/common/image';
 
 type Props = {
   registerSave?: (handler: () => Promise<string | null>) => void;
@@ -330,7 +331,8 @@ export default function AdminProjectsSection({
   );
 
   const handleThumbnailUpload = useCallback(
-    async (localId: string, files: File[]) => {
+    async (localId: string, rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!files.length) return;
       const file = files[0];
       const contentType = resolveContentType(file);
@@ -363,7 +365,8 @@ export default function AdminProjectsSection({
   );
 
   const handleImagesUpload = useCallback(
-    async (localId: string, files: File[]) => {
+    async (localId: string, rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!files.length) return;
       const payloadFiles = files.map((file) => ({
         fileName: file.name,

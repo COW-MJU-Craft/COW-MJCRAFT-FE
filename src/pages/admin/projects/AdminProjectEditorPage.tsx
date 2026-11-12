@@ -29,6 +29,7 @@ import {
   type PresignPutItem,
 } from '../../../api/admin/projects';
 import { shouldOfferLaunchNotice } from '../../../utils/project/launchNotice';
+import { prepareImageFiles } from '../../../utils/common/image';
 
 type ValidationField =
   | 'title'
@@ -576,7 +577,8 @@ export default function AdminProjectEditorPage() {
   ]);
 
   const handleThumbnailUpload = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!project || !files.length) return;
       const file = files[0];
       const contentType = resolveContentType(file);
@@ -620,7 +622,8 @@ export default function AdminProjectEditorPage() {
   );
 
   const handleImagesUpload = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!project || !files.length) return;
 
       const filesToUpload = files;

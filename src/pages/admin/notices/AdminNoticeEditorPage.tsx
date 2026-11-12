@@ -26,6 +26,7 @@ import {
 } from '../../../api/admin/notices';
 import { uploadToPresignedUrl } from '../../../api/admin/projects';
 import { API_BASE } from '../../../api/core/client';
+import { prepareImageFiles } from '../../../utils/common/image';
 
 type ImageItem = {
   id: string;
@@ -306,7 +307,8 @@ export default function AdminNoticeEditorPage() {
   }, [confirm, isDirty, navigate]);
 
   const handleUploadImages = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!form || !files.length) return;
 
       const remaining = MAX_IMAGES - form.images.length;

@@ -43,6 +43,7 @@ import {
   type AdminItemType,
   type PresignPutItem,
 } from '../../../api/admin/items';
+import { prepareImageFiles } from '../../../utils/common/image';
 
 type ValidationField =
   | 'name'
@@ -661,7 +662,8 @@ export default function AdminProjectItemCreatePage() {
   );
 
   const handleThumbnailSelect = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!item || !files.length) return;
       const file = files[0];
       if (!(file instanceof File) || file.size <= 0) {
@@ -695,7 +697,8 @@ export default function AdminProjectItemCreatePage() {
   );
 
   const handleImagesUpload = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!item || !files.length) return;
 
       const now = Date.now();
@@ -731,7 +734,8 @@ export default function AdminProjectItemCreatePage() {
   );
 
   const handleJournalUpload = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!files.length || !projectId || journalUploading) return;
       if (projectCategory !== 'JOURNAL') {
         const message =
