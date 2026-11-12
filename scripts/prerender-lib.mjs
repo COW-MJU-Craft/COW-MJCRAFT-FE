@@ -2,6 +2,14 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 export const DEFAULT_SITE_ORIGIN = 'https://mju-craft.shop';
 
+// prerender 본문의 이미지는 <noscript>로 감싼다.
+// JS가 켜진 브라우저는 noscript 안의 이미지를 내려받지 않으므로, React가 마운트하기 전에
+// 같은 이미지를 한 번 더 받는 낭비를 막는다(loading="lazy"는 화면 근처 이미지를 모두 받아 효과가 없었다).
+// JS 없이 HTML만 읽는 크롤러는 noscript 안의 <img>를 그대로 읽는다.
+export function seoImage(src, alt) {
+  return `<noscript><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" /></noscript>`;
+}
+
 export function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
