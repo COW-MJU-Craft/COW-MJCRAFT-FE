@@ -157,8 +157,8 @@ export default function NoticeDetailPage() {
         )}
       </Reveal>
 
-      <Reveal delayMs={180} className="mt-6">
-        {images.length > 0 ? (
+      {images.length > 0 && (
+        <Reveal delayMs={180} className="mt-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {images.map((url, idx) => (
               <button
@@ -179,12 +179,8 @@ export default function NoticeDetailPage() {
               </button>
             ))}
           </div>
-        ) : (
-          <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/70 text-sm font-semibold text-slate-400">
-            등록된 이미지가 없어요
-          </div>
-        )}
-      </Reveal>
+        </Reveal>
+      )}
 
       {activeImage && (
         <div
