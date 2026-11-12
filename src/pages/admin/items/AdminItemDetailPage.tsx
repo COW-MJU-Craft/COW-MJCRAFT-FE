@@ -34,6 +34,7 @@ import {
   type AdminItemType,
   type PresignPutItem,
 } from '../../../api/admin/items';
+import { prepareImageFiles } from '../../../utils/common/image';
 
 type ValidationField = 'name' | 'description' | 'price' | 'stockQty' | 'targetQty' | 'journalFile';
 type ValidationResult = { field: ValidationField; message: string };
@@ -937,7 +938,8 @@ export default function AdminItemDetailPage() {
   }, [confirm, hasChanges, navigate, project?.id]);
 
   const handleThumbnailSelect = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!item || !files.length) return;
       const file = files[0];
       if (item.thumbnailPreviewUrl) revokePreviewUrl(item.thumbnailPreviewUrl);
@@ -982,7 +984,8 @@ export default function AdminItemDetailPage() {
   );
 
   const handleJournalUpload = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!item || !files.length || !project?.id || journalUploading) return;
       if (project.category !== 'JOURNAL') {
         const message =
@@ -1103,7 +1106,8 @@ export default function AdminItemDetailPage() {
   }, [confirm, item, journalDeleting, loadItemDetail, toast]);
 
   const handleImagesUpload = useCallback(
-    async (files: File[]) => {
+    async (rawFiles: File[]) => {
+      const files = await prepareImageFiles(rawFiles);
       if (!files.length) return;
       const current = itemRef.current;
       if (!current) return;
