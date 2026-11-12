@@ -8,6 +8,7 @@ import { noticesApi, type NoticeResponse } from '../../../api/site/notices';
 import { API_BASE } from '../../../api/core/client';
 import { formatYmd, parseDateLike } from '../../../utils/common/date';
 import RouteMetadata from '../../../components/seo/RouteMetadata';
+import SafeImage from '../../../components/ui/SafeImage';
 
 const PUBLIC_ASSET_BASE = API_BASE.replace(/\/api\/?$/, '');
 
@@ -157,8 +158,8 @@ export default function NoticeDetailPage() {
         )}
       </Reveal>
 
-      <Reveal delayMs={180} className="mt-6">
-        {images.length > 0 ? (
+      {images.length > 0 && (
+        <Reveal delayMs={180} className="mt-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {images.map((url, idx) => (
               <button
@@ -167,24 +168,16 @@ export default function NoticeDetailPage() {
                 onClick={() => setActiveImage(url)}
                 className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
               >
-                <img
+                <SafeImage
                   src={url}
                   alt={`${notice.title} 이미지 ${idx + 1}`}
                   className="h-64 w-full object-cover"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
                 />
               </button>
             ))}
           </div>
-        ) : (
-          <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/70 text-sm font-semibold text-slate-400">
-            등록된 이미지가 없어요
-          </div>
-        )}
-      </Reveal>
+        </Reveal>
+      )}
 
       {activeImage && (
         <div
@@ -192,7 +185,7 @@ export default function NoticeDetailPage() {
           onClick={() => setActiveImage(null)}
         >
           <div className="max-h-[80vh] max-w-[90vw] overflow-hidden rounded-2xl bg-white shadow-xl">
-            <img
+            <SafeImage
               src={activeImage}
               alt="공지 이미지 확대"
               className="h-full w-full object-contain"

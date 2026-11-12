@@ -6,6 +6,7 @@ import { noticesApi, type NoticeResponse } from '../../../api/site/notices';
 import { API_BASE } from '../../../api/core/client';
 import { formatYmd } from '../../../utils/common/date';
 import RouteMetadata from '../../../components/seo/RouteMetadata';
+import SafeImage from '../../../components/ui/SafeImage';
 
 const FILTER_OPTIONS = [
   { value: 'all', label: '전체' },
@@ -277,14 +278,10 @@ export default function NoticesPage() {
 
                 {imageUrl && (
                   <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                    <img
+                    <SafeImage
                       src={imageUrl}
                       alt={notice.title}
                       className="h-full w-full object-cover"
-                      onError={(e) => {
-                        const target = e.currentTarget as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
                     />
                   </div>
                 )}
