@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { snsApi } from '../../api/site/sns';
-import instagramLogo from '../../assets/logos/instagram.png';
+import instagramLogo from '../../assets/logos/instagram.webp';
 import kakaoLogo from '../../assets/logos/kakao.png';
 import { trackGA4ExternalLinkClick } from '../../utils/common/analytics';
 
