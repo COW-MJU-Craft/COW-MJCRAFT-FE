@@ -1,0 +1,65 @@
+/*
+ * index.html의 #app-splash: JS 번들이 실행되기 전(빈 #root)에만 보이는 초기 로딩 화면.
+ * 인라인 style을 쓰지 않는 이유: CSP(style-src 'self')를 지키기 위해서다.
+ * #root는 prerender가 채우는 자리라 그 안에 넣지 않고 형제 요소로 둔다.
+ * React가 마운트하거나 prerender 본문이 있으면 #root가 비어 있지 않으므로 숨겨진다.
+ */
+#root:not(:empty) + #app-splash {
+  display: none;
+}
+
+#app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #ffffff;
+}
+
+#app-splash .app-splash__title {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR',
+    'Malgun Gothic', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #022964;
+}
+
+#app-splash .app-splash__bar {
+  width: 96px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+
+#app-splash .app-splash__bar::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: 9999px;
+  background: #022964;
+  animation: app-splash-slide 1s ease-in-out infinite;
+}
+
+@keyframes app-splash-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-splash .app-splash__bar::after {
+    animation: none;
+    width: 100%;
+  }
+}
