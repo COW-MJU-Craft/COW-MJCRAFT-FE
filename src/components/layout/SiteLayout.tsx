@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Header from './Header';
+import PageFallback from '../ui/PageFallback';
 import GoogleAnalyticsFooterStatus from '../analytics/GoogleAnalyticsFooterStatus';
 import { noticesApi } from '../../api/site/notices';
 import { formatYmd, parseDateLike } from '../../utils/common/date';
@@ -203,7 +204,9 @@ export default function SiteLayout() {
           </div>
         )}
 
-        <Outlet />
+        <Suspense fallback={<PageFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <footer className="mt-14 md:mt-50 border-t border-slate-200 bg-white">
