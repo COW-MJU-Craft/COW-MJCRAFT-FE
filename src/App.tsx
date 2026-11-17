@@ -5,7 +5,6 @@ import MainPage from './pages/site/home/MainPage';
 import FloatingSns from './components/social/FloatingSns';
 import GoogleAnalytics from './components/analytics/GoogleAnalytics';
 import { ApplicationRouteMetadata } from './components/seo/RouteMetadata';
-import DeploymentVersion from './components/layout/DeploymentVersion';
 import PageFallback from './components/ui/PageFallback';
 
 const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
@@ -141,7 +140,6 @@ export default function App() {
         </Route>
       </Routes>
       {!hideFloatingSns && <FloatingSns />}
-      <DeploymentVersion />
     </>
   );
 }
