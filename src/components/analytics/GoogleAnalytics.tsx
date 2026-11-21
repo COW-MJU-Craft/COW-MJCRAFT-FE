@@ -13,12 +13,12 @@ export default function GoogleAnalytics() {
 
   useEffect(() => {
     if (lastTrackedPathRef.current === pagePath) return;
-    lastTrackedPathRef.current = pagePath;
 
     if (!isPublicAnalyticsPath(location.pathname)) return;
 
     const frameId = window.requestAnimationFrame(() => {
       trackGA4PageView(pagePath);
+      lastTrackedPathRef.current = pagePath;
     });
 
     return () => window.cancelAnimationFrame(frameId);
