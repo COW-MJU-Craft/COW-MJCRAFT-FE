@@ -37,7 +37,7 @@ type GtagCommand =
 
 declare global {
   interface Window {
-    dataLayer?: GtagCommand[];
+    dataLayer?: IArguments[];
     gtag?: (...args: GtagCommand) => void;
   }
 }
@@ -65,8 +65,10 @@ export const initializeGA4 = () => {
   window.dataLayer = window.dataLayer ?? [];
   window.gtag =
     window.gtag ??
-    ((...args: GtagCommand) => {
-      window.dataLayer?.push(args);
+    (function () {
+      // Google tag processes command arguments objects, not ordinary arrays.
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer?.push(arguments);
     });
 
   appendGtagScript();
