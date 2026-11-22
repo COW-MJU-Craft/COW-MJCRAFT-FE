@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { adminApi } from '../../api/admin/admin';
 import { clearAuth } from '../../utils/auth/auth';
+import { GA_REPORT_LINK } from '../../constants/adminLinks';
 
 const SWIPE_CLOSE_THRESHOLD = 60;
 
@@ -172,6 +173,20 @@ export default function AdminHeaderMobile({
               {item.label}
             </Link>
           ))}
+
+          <a
+            href={GA_REPORT_LINK.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={closeMenu}
+            className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+          >
+            {GA_REPORT_LINK.label}
+            <span className="ml-1 text-slate-400" aria-hidden="true">
+              ↗
+            </span>
+            <span className="sr-only"> (새 탭에서 열림)</span>
+          </a>
 
           <ExpandableMenu
             label="피드백"
