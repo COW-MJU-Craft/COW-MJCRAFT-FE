@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../api/admin/admin';
 import { clearAuth } from '../../utils/auth/auth';
+import { GA_REPORT_LINK } from '../../constants/adminLinks';
 
 const LEADING_NAV_ITEMS = [
   { key: 'edit', label: '회원정보', href: '/admin#edit' },
@@ -124,6 +125,19 @@ export default function AdminHeaderDesktop() {
             </Link>
           );
         })}
+
+        <a
+          href={GA_REPORT_LINK.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-full px-3 py-1 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-800"
+        >
+          {GA_REPORT_LINK.label}
+          <span className="ml-1 text-slate-400" aria-hidden="true">
+            ↗
+          </span>
+          <span className="sr-only"> (새 탭에서 열림)</span>
+        </a>
 
         <DropdownMenu
           label="피드백"
