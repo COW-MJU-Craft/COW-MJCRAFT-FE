@@ -39,6 +39,7 @@ const AdminNoticeEditorPage = lazy(() => import('./pages/admin/notices/AdminNoti
 const AdminNoticeDetailPage = lazy(() => import('./pages/admin/notices/AdminNoticeDetailPage'));
 const AdminApplicationsListPage = lazy(() => import('./pages/admin/applications/AdminApplicationsListPage'));
 const AdminApplicationDetailPage = lazy(() => import('./pages/admin/applications/AdminApplicationDetailPage'));
+const AdminAnalyticsPage = lazy(() => import('./pages/admin/analytics/AdminAnalyticsPage'));
 const AdminFormsListPage = lazy(() => import('./pages/admin/forms/AdminFormsListPage'));
 const AdminFormDetailPage = lazy(() => import('./pages/admin/forms/AdminFormDetailPage'));
 
@@ -124,6 +125,7 @@ export default function App() {
             path="/admin/notices/:noticeId/edit"
             element={<AdminNoticeEditorPage />}
           />
+          <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
           <Route path="/admin/forms" element={<AdminFormsListPage />} />
           <Route
             path="/admin/forms/:formId"

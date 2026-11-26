@@ -19,7 +19,7 @@ function renderHeader() {
 it('GA 보고서 링크를 새 탭으로 안전하게 연다', () => {
   renderHeader();
 
-  const link = screen.getByRole('link', { name: /분석/ });
+  const link = screen.getByRole('link', { name: /^GA/ });
 
   expect(link).toHaveAttribute('href', GA_REPORT_LINK.href);
   expect(link).toHaveAttribute('target', '_blank');
@@ -35,4 +35,13 @@ it('GA 링크는 외부 주소이고 관리자 내부 이동 링크와 섞이지
     'href',
     '/admin#payouts',
   );
+});
+
+it('유입 분석은 관리자 내부 화면으로 이동한다', () => {
+  renderHeader();
+
+  const link = screen.getByRole('link', { name: '유입 분석' });
+
+  expect(link).toHaveAttribute('href', '/admin/analytics');
+  expect(link).not.toHaveAttribute('target');
 });
