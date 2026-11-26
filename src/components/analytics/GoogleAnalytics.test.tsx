@@ -2,10 +2,14 @@ import { StrictMode } from 'react';
 import { cleanup, render, act, fireEvent, screen } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { trackGA4PageView } from '../../utils/common/analytics';
+import { setGA4Disabled, trackGA4PageView } from '../../utils/common/analytics';
+import { clearAuth, setAuth } from '../../utils/auth/auth';
 import GoogleAnalytics from './GoogleAnalytics';
 
-vi.mock('../../utils/common/analytics', () => ({ trackGA4PageView: vi.fn() }));
+vi.mock('../../utils/common/analytics', () => ({
+  trackGA4PageView: vi.fn(),
+  setGA4Disabled: vi.fn(),
+}));
 
 let frames: Map<number, FrameRequestCallback>;
 
@@ -40,6 +44,24 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  clearAuth();
+});
+
+it('keeps GA enabled for visitors who are not logged in', () => {
+  render(<MemoryRouter><GoogleAnalytics /></MemoryRouter>);
+  expect(setGA4Disabled).toHaveBeenLastCalledWith(false);
+});
+
+it('disables GA while an admin is logged in, including after the app has mounted', () => {
+  setAuth({ accessToken: 'admin-token', userName: 'admin' });
+  render(<MemoryRouter><GoogleAnalytics /></MemoryRouter>);
+  expect(setGA4Disabled).toHaveBeenLastCalledWith(true);
+
+  act(() => clearAuth());
+  expect(setGA4Disabled).toHaveBeenLastCalledWith(false);
+
+  act(() => setAuth({ accessToken: 'admin-token', userName: 'admin' }));
+  expect(setGA4Disabled).toHaveBeenLastCalledWith(true);
 });
 
 it('tracks the first visit once after StrictMode cancels and re-runs the effect', () => {
