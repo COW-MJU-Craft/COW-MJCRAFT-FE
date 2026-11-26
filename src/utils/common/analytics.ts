@@ -81,6 +81,18 @@ export const initializeGA4 = () => {
   initialized = true;
 };
 
+// GA 공식 수집 차단 스위치(window['ga-disable-측정ID'])를 켜고 끈다.
+// 켜져 있는 동안은 향상된 측정(브라우저 기록 변경 감지로 자동 전송되는 page_view 등)을
+// 포함해 gtag.js의 모든 전송이 막힌다. 코드에서 직접 호출하는 이벤트만 막는 방식으로는
+// 이 자동 전송을 막을 수 없다.
+export const setGA4Disabled = (disabled: boolean) => {
+  if (!isGA4Enabled || typeof window === 'undefined') return;
+
+  (window as unknown as Record<string, unknown>)[
+    `ga-disable-${GA4_MEASUREMENT_ID}`
+  ] = disabled;
+};
+
 export const trackGA4PageView = (path: string) => {
   if (!isGA4Enabled || typeof window === 'undefined') return;
 

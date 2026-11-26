@@ -41,6 +41,30 @@ describe('GA4 command queue', () => {
     expect(document.querySelectorAll('#ga4-gtag-script')).toHaveLength(1);
   });
 
+  it('toggles the official ga-disable switch for the measurement ID', async () => {
+    const { setGA4Disabled } = await import('./analytics');
+    const flagName = ['ga-disable', 'G-TEST12345'].join('-');
+    const flags = window as unknown as Record<string, unknown>;
+
+    setGA4Disabled(true);
+    expect(flags[flagName]).toBe(true);
+
+    setGA4Disabled(false);
+    expect(flags[flagName]).toBe(false);
+
+    delete flags[flagName];
+  });
+
+  it('does not set the disable switch without a measurement ID', async () => {
+    vi.stubEnv('VITE_GA4_MEASUREMENT_ID', '');
+    const { setGA4Disabled } = await import('./analytics');
+
+    setGA4Disabled(true);
+
+    const flagKeys = Object.keys(window).filter((k) => k.startsWith('ga-disable-'));
+    expect(flagKeys).toEqual([]);
+  });
+
   it('does not inject or queue commands without a measurement ID', async () => {
     vi.stubEnv('VITE_GA4_MEASUREMENT_ID', '');
     const { trackGA4PageView } = await import('./analytics');
