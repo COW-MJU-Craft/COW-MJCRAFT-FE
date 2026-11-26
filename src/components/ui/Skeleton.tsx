@@ -1,10 +1,16 @@
+import type { CSSProperties } from 'react';
+
 type SkeletonProps = {
   className?: string;
+  style?: CSSProperties;
 };
 
-export function Skeleton({ className = '' }: SkeletonProps) {
+export function Skeleton({ className = '', style }: SkeletonProps) {
   return (
-    <div className={`animate-pulse rounded bg-slate-200 ${className}`} />
+    <div
+      className={`animate-pulse rounded bg-slate-200 ${className}`}
+      style={style}
+    />
   );
 }
 
