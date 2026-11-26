@@ -43,16 +43,16 @@ describe('GA4 command queue', () => {
 
   it('toggles the official ga-disable switch for the measurement ID', async () => {
     const { setGA4Disabled } = await import('./analytics');
-    const key = 'ga-disable-G-TEST12345';
+    const flagName = ['ga-disable', 'G-TEST12345'].join('-');
     const flags = window as unknown as Record<string, unknown>;
 
     setGA4Disabled(true);
-    expect(flags[key]).toBe(true);
+    expect(flags[flagName]).toBe(true);
 
     setGA4Disabled(false);
-    expect(flags[key]).toBe(false);
+    expect(flags[flagName]).toBe(false);
 
-    delete flags[key];
+    delete flags[flagName];
   });
 
   it('does not set the disable switch without a measurement ID', async () => {
