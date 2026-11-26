@@ -7,6 +7,7 @@ import {
   type AdminAnalyticsDaily,
 } from '../../../api/admin/analytics';
 import { ApiError } from '../../../api/core/client';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import {
   channelName,
   conversionRate,
@@ -186,9 +187,7 @@ export default function AdminAnalyticsPage() {
       )}
 
       {rangeValid && report.isPending && (
-        <p role="status" className="py-8 text-sm text-slate-600">
-          분석 데이터를 불러오는 중...
-        </p>
+        <AnalyticsSkeleton />
       )}
 
       {report.isError && (
@@ -477,6 +476,89 @@ function ChannelTable({ channels }: { channels: AdminAnalyticsChannel[] }) {
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// 실제 화면과 같은 배치(요약 카드, 막대 그래프, 표)로 자리를 잡아 두어
+// 데이터가 들어와도 화면이 출렁이지 않게 한다.
+const SKELETON_BAR_HEIGHTS = [28, 45, 22, 60, 38, 75, 50, 34, 66, 42, 55, 30];
+
+function AnalyticsSkeleton() {
+  return (
+    <div role="status" aria-live="polite" className="motion-reduce:[&_*]:animate-none">
+      <span className="sr-only">분석 데이터를 불러오는 중이에요.</span>
+
+      <div aria-hidden="true">
+        <div className="grid grid-cols-2 gap-3 py-5 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-3"
+            >
+              <Skeleton className="h-3.5 w-20" />
+              <Skeleton className="mt-3 h-7 w-24" />
+              <Skeleton className="mt-2 h-3 w-16" />
+            </div>
+          ))}
+        </div>
+
+        <div className="border-b border-slate-200 pb-6">
+          <div className="flex items-baseline justify-between gap-2">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-3.5 w-40" />
+          </div>
+          <div className="mt-4 flex h-[220px] items-end gap-2 rounded-lg border border-slate-100 bg-white px-4 pb-6 pt-4">
+            {SKELETON_BAR_HEIGHTS.map((height, index) => (
+              <div
+                key={index}
+                className="flex h-full flex-1 items-end"
+              >
+                <Skeleton
+                  className="w-full rounded-t-md rounded-b-none bg-slate-200/80"
+                  style={{
+                    height: `${height}%`,
+                    animationDelay: `${index * 80}ms`,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="py-6">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="mt-2 h-3.5 w-72 max-w-full" />
+          <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <div className="flex gap-4 border-b border-slate-200 px-3 py-3">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="ml-auto h-3 w-12" />
+              <Skeleton className="hidden h-3 w-12 sm:block" />
+              <Skeleton className="hidden h-3 w-12 md:block" />
+              <Skeleton className="h-3 w-12" />
+            </div>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-4 border-b border-slate-100 px-3 py-3 last:border-0"
+              >
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3.5 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="ml-auto h-3.5 w-10" />
+                <Skeleton className="hidden h-3.5 w-10 sm:block" />
+                <Skeleton className="hidden h-3.5 w-10 md:block" />
+                <Skeleton className="h-3.5 w-12" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-slate-500">
+          Google Analytics에서 데이터를 가져오는 중이에요. 처음에는 몇 초 걸릴 수 있어요.
+        </p>
+      </div>
     </div>
   );
 }
