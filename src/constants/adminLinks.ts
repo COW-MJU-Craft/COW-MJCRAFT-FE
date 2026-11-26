@@ -11,6 +11,6 @@ export type AdminExternalLink = {
 // 속성 ID는 비밀값이 아니다. 열람하려면 해당 구글 계정에 GA 속성 권한이 있어야 한다.
 export const GA_REPORT_LINK: AdminExternalLink = {
   key: 'analytics',
-  label: '분석',
+  label: 'GA',
   href: 'https://analytics.google.com/analytics/web/#/p536574599/reports/intelligenthome',
 };

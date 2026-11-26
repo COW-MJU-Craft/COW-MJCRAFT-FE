@@ -17,6 +17,7 @@ const TRAILING_NAV_ITEMS = [
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'forms', label: '지원서 관리', href: '/admin/forms' },
+  { key: 'analytics', label: '유입 분석', href: '/admin/analytics' },
   { key: 'payouts', label: '정산', href: '/admin#payouts' },
 ];
 
